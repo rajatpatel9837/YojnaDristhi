@@ -9,18 +9,14 @@ console.log('====================================================');
 
 const rootDir = path.join(__dirname, '..');
 
-// 1. Start Server
 const server = spawn('npm', ['run', 'dev'], {
   cwd: path.join(rootDir, 'server'),
-  stdio: 'inherit',
-  shell: true
+  stdio: 'inherit'
 });
 
-// 2. Start Client
 const client = spawn('npm', ['run', 'dev'], {
   cwd: path.join(rootDir, 'client'),
-  stdio: 'inherit',
-  shell: true
+  stdio: 'inherit'
 });
 
 const shutdown = () => {
