@@ -4,11 +4,15 @@
   "description": "AI-Driven Scheme Matching & Financial Opportunity Platform (SIH Problem ID: SIH26092)",
   "main": "server/src/server.js",
   "scripts": {
+    "dev": "node scripts/dev.js",
     "start": "node server/src/server.js",
     "render-build": "cd client && npm install && npm run build && cd ../server && npm install",
     "start:server": "cd server && npm start",
     "dev:server": "cd server && npm run dev",
     "dev:client": "cd client && npm run dev",
     "build:client": "cd client && npm run build"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5"
   }
 }

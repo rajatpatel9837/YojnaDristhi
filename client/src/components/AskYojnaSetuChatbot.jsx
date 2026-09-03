@@ -67,8 +67,11 @@ export default function AskYojnaSetuChatbot() {
 
       recognition.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
-        setInputText(transcript);
+        setInputText('');
         setIsListening(false);
+        if (transcript && transcript.trim()) {
+          executeSend(transcript.trim(), true);
+        }
       };
 
       recognition.onerror = (err) => {
@@ -82,7 +85,7 @@ export default function AskYojnaSetuChatbot() {
 
       recognitionRef.current = recognition;
     }
-  }, []);
+  }, [language]);
 
   const toggleListening = () => {
     if (!recognitionRef.current) {
@@ -103,13 +106,10 @@ export default function AskYojnaSetuChatbot() {
     }
   };
 
-  const handleSendMessage = async (e) => {
-    if (e) e.preventDefault();
-    if (!inputText.trim()) return;
+  const executeSend = async (userQuestion, autoSpeak = false) => {
+    if (!userQuestion || !userQuestion.trim()) return;
 
-    const userQuestion = inputText.trim();
     const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
     setMessages((prev) => [...prev, { sender: 'user', text: userQuestion, timestamp }]);
     setInputText('');
     setLoading(true);
@@ -122,41 +122,82 @@ export default function AskYojnaSetuChatbot() {
 
       if (res.data && res.data.success) {
         const botReply = res.data.data.reply;
-        setMessages((prev) => [
-          ...prev,
-          {
-            sender: 'bot',
-            text: botReply,
-            detectedLanguageName: res.data.data?.detectedLanguageName,
-            suggestedScheme: res.data.data?.suggestedScheme,
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        const detectedLangName = res.data.data?.detectedLanguageName;
+        
+        setMessages((prev) => {
+          const nextMsgs = [
+            ...prev,
+            {
+              sender: 'bot',
+              text: botReply,
+              detectedLanguageName: detectedLangName,
+              suggestedScheme: res.data.data?.suggestedScheme,
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            }
+          ];
+          if (autoSpeak) {
+            setTimeout(() => speakBotResponse(botReply, nextMsgs.length - 1), 300);
           }
-        ]);
+          return nextMsgs;
+        });
       } else {
         throw new Error('No valid reply received');
       }
     } catch (err) {
       console.warn('Chat error fallback:', err.message);
-      const isHindiQuery = /[\u0900-\u097F]/.test(userQuestion) || /bhai|mujhe|dukaan|yojana|chahiye/i.test(userQuestion);
-      const isPunjabiQuery = /[\u0A00-\u0A7F]/.test(userQuestion) || /mainu|chahida|dasso/i.test(userQuestion);
+      const cleanQ = (userQuestion || '').toLowerCase();
+      let detectedFallbackLang = 'en';
+      
+      if (/[\u0900-\u097F]/.test(userQuestion) || /bhai|mujhe|mera|meri|hum|kya|kaise|karna|chahiye|dukaan|dukan|yojana|yojna|kitna|paisa|milega|sarkar|sarkari|loan|subsidy|patrata|kisan|krishi|mahila/i.test(cleanQ)) {
+        detectedFallbackLang = 'hi';
+      } else if (/[\u0A00-\u0A7F]/.test(userQuestion) || /mainu|tuhanu|chahida|dasso|karobar|hovega/i.test(cleanQ)) {
+        detectedFallbackLang = 'pa';
+      }
 
-      const fallbackReply = isHindiQuery
-        ? 'प्रधान मंत्री रोजगार सृजन कार्यक्रम (PMEGP) और मुद्रा योजना सूक्ष्म उद्यमियों के लिए सबसे उपयुक्त योजनाएँ हैं। इनमें 35% तक सब्सिडी और ₹10 लाख तक संपार्श्विक-मुक्त ऋण उपलब्ध है।'
-        : isPunjabiQuery
-        ? 'ਪ੍ਰਧਾਨ ਮੰਤਰੀ ਰੋਜ਼ਗਾਰ ਉਤਪਤੀ ਪ੍ਰੋਗਰਾਮ (PMEGP) ਅਤੇ ਮੁਦਰਾ ਯੋਜਨਾ ਛੋਟੇ ਉੱਦਮੀਆਂ ਲਈ ਉੱਤਮ ਯੋਜਨਾਵਾਂ ਹਨ।'
-        : 'The Prime Minister Employment Generation Programme (PMEGP) offers up to 35% capital subsidy, while MUDRA offers collateral-free loans up to ₹10 Lakhs.';
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          sender: 'bot',
-          text: fallbackReply,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      let fallbackReply = '';
+      let fallbackLangName = 'English';
+      if (detectedFallbackLang === 'hi') {
+        fallbackLangName = 'Hindi (हिंदी)';
+        if (cleanQ.includes('दुकान') || cleanQ.includes('dukan') || cleanQ.includes('shop') || cleanQ.includes('kirana')) {
+          fallbackReply = 'अगर आप नई दुकान खोलना चाहते हैं, तो **PM मुद्रा योजना** के तहत ₹10 लाख तक का बिना गारंटी लोन और **PMEGP** के तहत 35% तक सरकारी सब्सिडी उपलब्ध है।';
+        } else if (cleanQ.includes('महिला') || cleanQ.includes('mahila') || cleanQ.includes('woman')) {
+          fallbackReply = 'महिला उद्यमियों के लिए **मुख्यमंत्री महिला उद्यमिता योजना** (₹5 लाख अनुदान + ₹5 लाख ब्याज-मुक्त ऋण) और **Stand-Up India** (₹10 लाख से ₹1 करोड़) उपलब्ध हैं।';
+        } else if (cleanQ.includes('कारीगर') || cleanQ.includes('vishwakarma') || cleanQ.includes('दर्जी')) {
+          fallbackReply = '**PM विश्वकर्मा योजना** में पारंपरिक कारीगरों को ₹3 लाख का 5% ब्याज पर ऋण और ₹15,000 का टूलकिट अनुदान मिलता है।';
+        } else {
+          fallbackReply = 'योजना दृष्टि पर 15+ सरकारी योजनाएं (मुद्रा, PMEGP, विश्वकर्मा, स्टैंड-अप इंडिया) उपलब्ध हैं। आप अपनी भाषा में किसी भी योजना के बारे में पूछ सकते हैं।';
         }
-      ]);
+      } else if (detectedFallbackLang === 'pa') {
+        fallbackLangName = 'Punjabi (ਪੰਜਾਬੀ)';
+        fallbackReply = 'ਨਵੇਂ ਕਾਰੋਬਾਰ ਅਤੇ ਦੁਕਾਨ ਲਈ **PM MUDRA ਯੋਜਨਾ** (₹10 ਲੱਖ ਤੱਕ ਬਿਨਾਂ ਗਾਰੰਟੀ) ਅਤੇ **PMEGP ਯੋਜਨਾ** (35% ਸਬਸਿਡੀ) ਉਪਲਬਧ ਹਨ।';
+      } else {
+        fallbackReply = 'For new shops and enterprises, **PM MUDRA Yojana** (up to ₹10 Lakh collateral-free) and **PMEGP** (up to 35% capital subsidy) are available.';
+      }
+
+      setMessages((prev) => {
+        const nextMsgs = [
+          ...prev,
+          {
+            sender: 'bot',
+            text: fallbackReply,
+            detectedLanguageName: fallbackLangName,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          }
+        ];
+        if (autoSpeak) {
+          setTimeout(() => speakBotResponse(fallbackReply, nextMsgs.length - 1), 300);
+        }
+        return nextMsgs;
+      });
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSendMessage = async (e) => {
+    if (e) e.preventDefault();
+    if (!inputText.trim()) return;
+    executeSend(inputText.trim(), false);
   };
 
   const speakBotResponse = async (text, msgIdx) => {
