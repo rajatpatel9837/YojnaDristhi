@@ -1,23 +1,10 @@
 services:
   - type: web
-    name: yojnasetu-backend
+    name: yojna-drishti
     env: node
-    buildCommand: npm install && cd client && npm install && npm run build && cd ../server && npm install
+    plan: free
+    buildCommand: npm run render-build
     startCommand: node server/src/server.js
     envVars:
       - key: NODE_ENV
         value: production
-      - key: MONGO_URI
-        fromDatabase:
-          name: yojnasetu-db
-          property: connectionString
-
-  - type: web
-    name: yojnasetu-ml-service
-    env: python
-    buildCommand: cd ml_service && pip install -r requirements.txt
-    startCommand: uvicorn ml_service.main:app --host 0.0.0.0 --port $PORT
-
-databases:
-  - name: yojnasetu-db
-    databaseName: yojnasetu
