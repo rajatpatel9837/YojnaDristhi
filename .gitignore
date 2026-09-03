@@ -1,0 +1,31 @@
+# Node.js dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Production build output
+client/dist/
+dist/
+
+# Python virtual environment & cache
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+
+# Environment files
+.env
+server/.env
+ml_service/.env
+
+# Temporary staging zip files & archives
+*.zip
+_temp_zip_staging/
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.vercel
