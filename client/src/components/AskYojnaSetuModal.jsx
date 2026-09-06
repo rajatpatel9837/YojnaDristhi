@@ -26,7 +26,7 @@ export default function AskYojnaSetuModal({ isOpen, onClose, onSelectScheme }) {
     setLoading(true);
 
     try {
-      const res = await axios.post('/api/ai/chat', { question: prompt });
+      const res = await axios.post('/api/ai/chat', { question: prompt, language: 'auto' });
       const aiData = res.data.data;
 
       setMessages([
@@ -41,11 +41,21 @@ export default function AskYojnaSetuModal({ isOpen, onClose, onSelectScheme }) {
 
       speakText(aiData.reply);
     } catch (err) {
+      console.warn('AskYojnaSetuModal error:', err.message);
+      const isHindi = /[\u0900-\u097F]/.test(prompt) || /bhai|mujhe|mera|kya|kaise|paisa|loan|yojana/i.test(prompt);
+      const isPunjabi = /[\u0A00-\u0A7F]/.test(prompt) || /mainu|tuhanu|chahida/i.test(prompt);
+      
+      const errorMsg = isHindi
+        ? 'क्षमा करें, सर्वर से संपर्क स्थापित नहीं हो सका। कृपया अपना नेटवर्क जांचें या पुनः प्रयास करें।'
+        : isPunjabi
+        ? 'ਮਾਫ਼ ਕਰਨਾ, ਸਰਵਰ ਨਾਲ ਸੰਪਰਕ ਨਹੀਂ ਹੋ ਸਕਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਕੁਝ ਸਮੇਂ ਬਾਅਦ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।'
+        : 'Unable to connect to the knowledge service. Please verify your connection and try again.';
+
       setMessages([
         ...newMsgs,
         {
           sender: 'ai',
-          text: 'PMEGP (up to ₹50L subsidy) and MUDRA (collateral-free up to ₹10L) are top matches for small entrepreneurs. Complete your profile wizard to view complete eligibility!'
+          text: errorMsg
         }
       ]);
     } finally {

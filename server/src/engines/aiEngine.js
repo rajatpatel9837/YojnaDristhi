@@ -466,28 +466,23 @@ print("".join(reversed(text2)))
     return synthesizeDynamicSchemeAnswer(query, langCode);
   }
 
-  // ==========================================
-  // K. ARBITRARY UNIVERSAL FALLBACK FOR ANY RANDOM QUERY
-  // ==========================================
-  if (langCode === 'pa') {
-    return `ਤੁਹਾਡਾ ਸਵਾਲ ਬਹੁਤ ਦਿਲਚਸਪ ਹੈ! 
+  // Extract key topic from query
+  const queryClean = query.replace(/[?.,!]/g, '').trim();
 
-ਮੈਂ **Yojna दृष्टि** ਦਾ ਡਿਜੀਟਲ AI ਸਹਾਇਕ ਹਾਂ। ਮੈਂ ਕਿਸੇ ਵੀ ਸਵਾਲ — ਸਰਕਾਰੀ ਸਕੀਮਾਂ, ਲੋਨ, ਪੜ੍ਹਾਈ, ਕਾਰੋਬਾਰ ਜਾਂ ਰੋਜ਼ਾਨਾ ਜ਼ਿੰਦਗੀ ਬਾਰੇ ਤੁਹਾਡੀ ਪੂਰੀ ਮਦਦ ਕਰ ਸਕਦਾ ਹਾਂ। ਜੇਕਰ ਤੁਸੀਂ ਲਿਖਣਾ ਨਹੀਂ ਜਾਣਦੇ, ਤਾਂ ਮਾਈਕ ਬਟਨ ਦਬਾ ਕੇ ਬੋਲੋ। ਤੁਹਾਨੂੰ ਕਿਸ ਵਿਸ਼ੇ ਬਾਰੇ ਹੋਰ ਜਾਣਕਾਰੀ ਚਾਹੀਦੀ ਹੈ?`;
+  if (langCode === 'pa') {
+    return `ਤੁਹਾਡੇ ਸਵਾਲ ("${queryClean}") ਬਾਰੇ: 
+ਮੈਂ **Yojna दृष्टि** ਦਾ ਡਿਜੀਟਲ AI ਸਹਾਇਕ ਹਾਂ। ਭਾਵੇਂ ਇਹ ਵਿਸ਼ਾ ਸਰਕਾਰੀ ਸਕੀਮਾਂ, ਪੜ੍ਹਾਈ, ਕਾਰੋਬਾਰ, ਤਕਨੀਕ ਜਾਂ ਰੋਜ਼ਾਨਾ ਜ਼ਿੰਦਗੀ ਨਾਲ ਜੁੜਿਆ ਹੋਵੇ, ਮੈਂ ਤੁਹਾਡੀ ਹਰ ਸੰਭਵ ਮਦਦ ਕਰਾਂਗਾ। ਜੇਕਰ ਤੁਸੀਂ ਹੋਰ ਵਿਸਥਾਰ ਵਿੱਚ ਜਾਣਨਾ ਚਾਹੁੰਦੇ ਹੋ, ਤਾਂ ਬੇਝਿਜਕ ਪੁੱਛੋ ਜਾਂ ਮਾਈਕ (🎙️) ਰਾਹੀਂ ਬੋਲੋ!`;
   }
 
   if (langCode === 'en') {
-    return `That is an interesting question! 
-
-As the **Yojna दृष्टि Universal AI Assistant**, I am designed to assist you with any inquiry — whether it's related to central/state government schemes, collateral-free business loans, scholarships, document verification, technology, education, or everyday knowledge. 
-
-Feel free to ask follow-up questions or explore our **Scheme Discovery Wizard (/wizard)** and **8-Stage Tracking (/track)**!`;
+    return `Regarding your inquiry ("${queryClean}"):
+As the **Yojna दृष्टि Universal AI Assistant**, I am ready to help you explore this topic, alongside all central/state government welfare schemes, business loans, educational scholarships, and daily knowledge. Feel free to ask more specific details or speak via microphone (🎙️)!`;
   }
 
-  return `आपका यह सवाल बहुत रोचक है! 
+  return `आपके सवाल ("${queryClean}") के संबंध में:
+मैं **योजना दृष्टि** का डिजिटल AI सहायक हूँ। चाहे आपका सवाल सामान्य ज्ञान, विज्ञान, रोज़मर्रा की ज़िंदगी, किसी नए काम-धंधे या सरकारी योजनाओं और लोन से जुड़ा हो — मैं हर विषय में आपकी सहायता के लिए तैयार हूँ।
 
-मैं **योजना दृष्टि** का ऑल-इन-वन डिजिटल AI सहायक हूँ। आप मुझसे दुनिया के किसी भी विषय — सरकारी योजनाएं, बिना गारंटी के बैंक लोन, सब्सिडी, छात्रवृत्ति, कानूनी दस्तावेज़ सत्यापन, सामान्य ज्ञान, तकनीक, या दैनिक जीवन की किसी भी समस्या के बारे में खुलकर पूछ सकते हैं।
-
-💡 **सलाह**: अगर आपको कुछ पूछना हो तो आप बेझिझक पूछ सकते हैं या नीचे दिए गए **माइक (🎙️)** से बोलकर भी सवाल कर सकते हैं। बताइए, इस विषय में मैं आपकी और क्या मदद करूँ?`;
+💡 **सलाह**: आप इस विषय पर और विस्तार से कोई भी विशिष्ट प्रश्न पूछ सकते हैं या नीचे दिए गए **माइक (🎙️)** से बोलकर भी पूछ सकते हैं। बताइए, इसमें मैं आपकी और क्या मदद करूँ?`;
 };
 
 module.exports = {

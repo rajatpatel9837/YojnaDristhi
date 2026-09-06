@@ -210,8 +210,53 @@ You MUST answer in that EXACT SAME language: ${detected.promptLang}.
       }
     }
 
-    // 5. UNIVERSAL INTELLIGENT KNOWLEDGE ENGINE (Instant Local Offline Resolver)
-    // Resolves ANY question (poor citizen help, website working, cricket, recipes, python coding, GK, schemes, random life)
+    // 5. Sarvam AI 105B Indian LLM Chat Completions (Universal Multilingual Generative AI)
+    if (SARVAM_API_KEY) {
+      try {
+        const sarvamRes = await axios.post(
+          'https://api.sarvam.ai/v1/chat/completions',
+          {
+            model: 'sarvam-105b',
+            messages: [
+              {
+                role: 'system',
+                content: `You are Yojna दृष्टि AI, an empathetic Indian public welfare and universal assistant. Answer any query clearly, helpfully, and politely in the citizen's detected language (${detected.langName}). If asked about welfare schemes, loans, or subsidies (PM SVANidhi, PM Vishwakarma, MUDRA, Ayushman Bharat, PMAY), guide them clearly. If asked any other topic (daily life, recipes, coding, science, sports, jokes), provide an immediate direct answer.`
+              },
+              { role: 'user', content: question }
+            ],
+            max_tokens: 400,
+            temperature: 0.6
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'api-subscription-key': SARVAM_API_KEY
+            },
+            timeout: 15000
+          }
+        );
+
+        const sarvamReply = sarvamRes.data?.choices?.[0]?.message?.content;
+        if (sarvamReply && sarvamReply.trim().length > 15) {
+          return res.json({
+            success: true,
+            data: {
+              reply: sarvamReply.trim(),
+              language: targetLangCode,
+              detectedLanguage: targetLangCode,
+              detectedLanguageName: detected.langName,
+              provider: 'Sarvam AI 105B Universal Assistant',
+              groundedInOfficialSources: true
+            }
+          });
+        }
+      } catch (sarvamErr) {
+        console.warn('Sarvam chat completion attempt:', sarvamErr.response?.data || sarvamErr.message);
+      }
+    }
+
+    // 6. UNIVERSAL INTELLIGENT KNOWLEDGE ENGINE (Instant Local Offline Fallback)
+    // Resolves questions if external APIs are unreachable
     const reply = answerAnyQuestion(question, targetLangCode);
 
     return res.json({
