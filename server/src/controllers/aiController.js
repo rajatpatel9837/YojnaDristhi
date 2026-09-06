@@ -106,22 +106,22 @@ function buildSystemPrompt(detected) {
   return `You are Yojna दृष्टि AI, India's knowledgeable and empathetic public welfare and universal assistant (Tagline: "Discover. Apply. Track.").
 
 CRITICAL CONSTRAINTS:
-1. Do not claim that you saved, stored, remembered, logged, recorded, noted, or persisted any user information. You do not have memory or storage access through this chatbot conversation. Never say "I saved this", "I will remember this", "I've noted this", or equivalent statements. Answer the user's question directly.
-2. Never say "As an AI..." or discuss internal reasoning. Avoid unnecessary meta-commentary.
-3. Structure detailed scheme explanations using clear headings, short paragraphs, Markdown formatting, bold for important numbers/names/eligibility limits, and bullet points for lists.
-4. Reply in the citizen's detected language: ${detected.promptLang}.
+1. LANGUAGE ISOLATION: Reply ONLY in the citizen's detected language (${detected.promptLang}). Never write English translation thoughts, scratchpad notes, or preambles. Start directly with your ${detected.promptLang} answer.
+2. Do not claim that you saved, stored, remembered, logged, recorded, noted, or persisted any user information. You do not have memory or storage access through this chatbot conversation. Never say "I saved this", "I will remember this", "I've noted this", or equivalent statements. Answer the user's question directly.
+3. Never say "As an AI..." or discuss internal reasoning. Avoid unnecessary meta-commentary.
+4. Structure detailed scheme explanations using clear headings, short paragraphs, Markdown formatting, bold for important numbers/names/eligibility limits, and bullet points for lists.
 5. Topics: Welfare schemes (MUDRA, PMEGP, SVANidhi, PM Vishwakarma, Ayushman Bharat, PMAY, Stand-Up India), portal navigation (Wizard, 8-Stage Tracker, DocVerifier), education, recipes, coding, science, sports, and general life guidance.
 6. For poor, rural, or illiterate citizens, guide warmly with simple steps and mention nearby CSC / Jan Seva Kendra or Bank Sakhi where helpful.`;
 }
 
 // Minimal fallback prompt for retry attempts
 function buildMinimalPrompt(detected) {
-  return `Answer helpfully and directly in ${detected.promptLang}. Use clear Markdown with bullet points. Do not claim to save, store, or remember user data.`;
+  return `Answer directly and ONLY in ${detected.promptLang}. Do not output English thoughts or translation notes. Use clear Markdown.`;
 }
 
 // ─── Sarvam API Call Helper with Retry ──────────────────────────────
 
-async function callSarvamAI(systemContent, userContent, maxRetries = 2) {
+async function callSarvamAI(systemContent, userContent, detected, maxRetries = 2) {
   let lastError = null;
   
   for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -134,10 +134,8 @@ async function callSarvamAI(systemContent, userContent, maxRetries = 2) {
             { role: 'system', content: systemContent },
             { role: 'user', content: userContent }
           ],
-          // Sarvam 105B is a reasoning model — it uses tokens for internal reasoning
-          // before producing the final answer, so we need generous token limits
-          max_tokens: attempt === 0 ? 1500 : 1000,
-          temperature: 0.7
+          max_tokens: attempt === 0 ? 2200 : 1200,
+          temperature: 0.6
         },
         {
           headers: {
@@ -149,77 +147,131 @@ async function callSarvamAI(systemContent, userContent, maxRetries = 2) {
       );
 
       const msg = res.data?.choices?.[0]?.message;
-      // Sarvam 105B puts the final answer in 'content' and reasoning in 'reasoning_content'
-      // When max_tokens is too low, content is null and only reasoning_content is present
       let reply = msg?.content;
       
       if (!reply && msg?.reasoning_content) {
-        // Extract useful content from reasoning — take the last substantial paragraph
-        console.log('[Sarvam 105B] Content was null, extracting from reasoning_content');
-        reply = extractAnswerFromReasoning(msg.reasoning_content, userContent);
+        console.log('[Sarvam 105B] Content was null, extracting pure target language answer from reasoning');
+        reply = extractAnswerFromReasoning(msg.reasoning_content, userContent, detected);
       }
       
-      if (reply && reply.trim().length > 10) {
-        return reply.trim();
+      if (reply) {
+        const cleaned = cleanFinalReply(reply, userContent, detected);
+        if (cleaned && cleaned.length > 10) {
+          return cleaned;
+        }
       }
     } catch (err) {
       lastError = err;
       console.warn(`[Sarvam 105B] Attempt ${attempt + 1} failed:`, err.response?.data?.error?.message || err.message);
-      // Small delay before retry
       if (attempt < maxRetries - 1) {
         await new Promise(r => setTimeout(r, 500));
       }
     }
   }
   
-  return null; // All attempts failed
+  return null;
 }
 
 /**
- * When Sarvam 105B only returns reasoning_content (thinking) and content is null,
- * try to extract a useful answer from the reasoning text.
+ * Strips English reasoning preambles or translation scratchpad text from final reply.
  */
-function extractAnswerFromReasoning(reasoning, userQuestion) {
-  if (!reasoning || reasoning.length < 20) return null;
-  
-  // Find where the actual output response begins (e.g., at the first markdown heading ## or greeting)
-  const headingMatch = reasoning.search(/(?:^|\n)(?:##|\*\*PMEGP|\*\*PM|\*\*MUDRA|नमस्ते|ਸਤਿ ਸ਼੍ਰੀ ਅਕਾਲ|Hello|Dear)/i);
-  if (headingMatch !== -1) {
-    const candidate = reasoning.substring(headingMatch).trim();
-    if (candidate.length > 50) {
-      return candidate;
+function cleanFinalReply(reply, userQuestion, detected) {
+  if (!reply) return reply;
+  let text = String(reply).trim();
+
+  // Determine target script regex
+  const indicScripts = [
+    { code: 'hi', regex: /[\u0900-\u097F]/ }, // Hindi / Devanagari
+    { code: 'pa', regex: /[\u0A00-\u0A7F]/ }, // Punjabi
+    { code: 'bn', regex: /[\u0980-\u09FF]/ }, // Bengali
+    { code: 'ta', regex: /[\u0B80-\u0BFF]/ }, // Tamil
+    { code: 'te', regex: /[\u0C00-\u0C7F]/ }, // Telugu
+    { code: 'gu', regex: /[\u0A80-\u0AFF]/ }, // Gujarati
+    { code: 'kn', regex: /[\u0C80-\u0CFF]/ }, // Kannada
+    { code: 'ml', regex: /[\u0D00-\u0D7F]/ }, // Malayalam
+    { code: 'or', regex: /[\u0B00-\u0B7F]/ }, // Odia
+    { code: 'mr', regex: /[\u0900-\u097F]/ }, // Marathi
+  ];
+
+  let activeScript = indicScripts.find(s => s.code === detected?.langCode);
+  if (!activeScript) {
+    activeScript = indicScripts.find(s => s.regex.test(userQuestion) || s.regex.test(text));
+  }
+
+  if (activeScript) {
+    const scriptRegex = activeScript.regex;
+    
+    // Split into lines and filter out English thoughts/scratchpad
+    const rawLines = text.split('\n');
+    const filteredLines = [];
+    
+    for (const rawLine of rawLines) {
+      const line = rawLine.trim();
+      if (!line) {
+        if (filteredLines.length > 0 && filteredLines[filteredLines.length - 1] !== '') {
+          filteredLines.push('');
+        }
+        continue;
+      }
+      
+      const scriptMatches = (line.match(scriptRegex) || []).length;
+      const englishMatches = (line.match(/[a-zA-Z]/g) || []).length;
+      const isUrl = /^https?:\/\//i.test(line) || /^[a-z0-9.-]+\.(?:gov\.in|nic\.in|in|org|com)(?:\/[^\s]*)?$/i.test(line);
+      const isPureSymbols = /^[\s\d\-*#_>`|:;.,₹()/\\[\]%+=]+$/.test(line);
+      
+      // If line is predominantly English commentary (even if it quotes an Indic word)
+      if (englishMatches > 12 && englishMatches > scriptMatches && !isUrl) {
+        continue;
+      }
+
+      // Check for meta commentary indicators
+      if (/^(?:One thing|I used|I should|I will|The user|Note that|Let me|This is solid|Possible issue|Actually, looking)\b/i.test(line)) {
+        continue;
+      }
+      if (/using Yojna Drishti persona|Devanagari script|detected language|instruction says/i.test(line)) {
+        continue;
+      }
+      
+      if (scriptMatches > 0) {
+        // Strip English meta prefixes if any
+        const metaPrefixMatch = line.match(/^[-*#\s]*(?:Heading|Persona|Note|Prompt|Instruction|Constraint|Task|Thinking|Analysis|Actually|Let's|Wait|Here is|Draft):\s*/i);
+        if (metaPrefixMatch) {
+          const stripped = line.substring(metaPrefixMatch[0].length).trim();
+          if (stripped && scriptRegex.test(stripped)) {
+            filteredLines.push(stripped);
+          }
+        } else {
+          filteredLines.push(rawLine);
+        }
+      } else if (isUrl || isPureSymbols) {
+        filteredLines.push(rawLine);
+      }
+    }
+    
+    let cleaned = filteredLines.join('\n').trim();
+    if (cleaned.length > 20) {
+      text = cleaned;
     }
   }
 
-  const lines = reasoning.split('\n').filter(l => l.trim().length > 0);
-  
-  // Filter out internal analysis lines like "1. Do not claim...", "The user wants...", "Wait, no...", etc.
-  const cleanedLines = lines.filter(l => {
-    const trimmed = l.trim();
-    if (/^(?:The user|Analyze|Structure|Content|Wait,|Let's|I need to|Constraint|Guideline|1\. Do not|2\. Never|3\. Structure|4\. Reply|5\. Topics|6\. For poor)/i.test(trimmed)) {
-      return false;
-    }
-    return true;
-  });
-  
-  if (cleanedLines.length > 2) {
-    return cleanedLines.join('\n\n');
-  }
-  
-  return null;
+  // Remove leading meta-analysis tags for any language
+  text = text
+    .replace(/^(\*+\s*)?(?:The user wants|I should provide|Let's structure|Analyzing the question)[^\n]*\n+/gi, '')
+    .trim();
+
+  return text;
+}
+
+/**
+ * Extracts pure target language response from reasoning text.
+ */
+function extractAnswerFromReasoning(reasoning, userQuestion, detected) {
+  if (!reasoning || reasoning.length < 20) return null;
+  return cleanFinalReply(reasoning, userQuestion, detected);
 }
 
 // ─── Main Chat Handler ──────────────────────────────────────────────
 
-/**
- * UNIVERSAL AI ASSISTANT — Sarvam AI 105B First Architecture
- *
- * Priority Order:
- *   1. Sarvam AI 105B (PRIMARY — Indian multilingual LLM with retry)
- *   2. Sarvam AI 105B with minimal prompt (RETRY — shorter prompt for faster response)
- *   3. Gemini AI (BACKUP — only if API key available)
- *   4. Local Knowledge Engine (LAST RESORT — only if ALL APIs unreachable)
- */
 const askYojnaSetuAssistant = async (req, res) => {
   try {
     const userQuestion = req.body.question || req.body.message || req.body.prompt;
@@ -235,20 +287,18 @@ const askYojnaSetuAssistant = async (req, res) => {
     const targetLangCode = detected.langCode;
 
     // ═══════════════════════════════════════════════════════════════
-    // STEP 1 (PRIMARY): Sarvam AI 105B with full prompt + retry
+    // STEP 1 (PRIMARY): Sarvam AI 105B with retry
     // ═══════════════════════════════════════════════════════════════
     if (SARVAM_API_KEY) {
       console.log(`[Sarvam 105B] Processing: "${question.substring(0, 60)}..." (lang: ${detected.langName})`);
       
-      // Try with full system prompt first, then minimal prompt on retry
       const fullPrompt = buildSystemPrompt(detected);
-      let sarvamReply = await callSarvamAI(fullPrompt, question, 1);
+      let sarvamReply = await callSarvamAI(fullPrompt, question, detected, 1);
       
-      // If full prompt failed, retry with minimal prompt (faster)
       if (!sarvamReply) {
         console.log(`[Sarvam 105B] Retrying with minimal prompt...`);
         const minimalPrompt = buildMinimalPrompt(detected);
-        sarvamReply = await callSarvamAI(minimalPrompt, question, 2);
+        sarvamReply = await callSarvamAI(minimalPrompt, question, detected, 2);
       }
       
       if (sarvamReply) {

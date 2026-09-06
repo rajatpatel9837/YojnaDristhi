@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
   CheckCircle2, 
@@ -26,25 +26,43 @@ export default function PrefilledApplicationReview({
   onSubmitSuccess
 }) {
   const [activeTab, setActiveTab] = useState(0);
-  const [formsData, setFormsData] = useState(() => {
-    return prefilledApplications.map(app => {
-      const fieldMap = {};
-      (app.fields || []).forEach(f => {
-        fieldMap[f.formField] = f.value || '';
-      });
-      return {
-        ...app,
-        fieldValues: fieldMap
-      };
-    });
-  });
-
+  const [formsData, setFormsData] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [submittedResult, setSubmittedResult] = useState(null);
 
+  useEffect(() => {
+    if (prefilledApplications && prefilledApplications.length > 0) {
+      const mapped = prefilledApplications.map(app => {
+        const fieldMap = {};
+        (app.fields || []).forEach(f => {
+          fieldMap[f.formField] = f.value || '';
+        });
+        return {
+          ...app,
+          fieldValues: fieldMap
+        };
+      });
+      setFormsData(mapped);
+      setActiveTab(0);
+      setSubmittedResult(null);
+    }
+  }, [prefilledApplications, isOpen]);
+
   if (!isOpen) return null;
 
-  const currentForm = formsData[activeTab] || formsData[0];
+  if (formsData.length === 0 && !submittedResult) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#173B57]/70 backdrop-blur-sm animate-fadeIn">
+        <div className="bg-white rounded-2xl p-8 max-w-sm text-center space-y-3 shadow-2xl border border-[#E2E8F0]">
+          <RefreshCw className="w-8 h-8 text-[#0F766E] animate-spin mx-auto" />
+          <p className="text-xs font-bold text-[#173B57]">Generating Pre-Filled Application Dossier...</p>
+          <p className="text-[11px] text-slate-500">Resolving profile & DigiLocker e-KYC documents</p>
+        </div>
+      </div>
+    );
+  }
+
+  const currentForm = formsData[activeTab] || formsData[0] || { fields: [], fieldValues: {} };
 
   const handleFieldChange = (formIdx, fieldName, newValue) => {
     const updated = [...formsData];
