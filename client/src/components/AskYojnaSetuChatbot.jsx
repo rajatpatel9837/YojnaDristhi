@@ -313,6 +313,20 @@ export default function AskYojnaSetuChatbot() {
             </div>
           </div>
 
+          {/* Grassroots Voice Accessibility Callout */}
+          <div className="bg-[#F0FDFA] px-3.5 py-1.5 border-b border-[#CCFBF1] flex items-center justify-between text-[11px] text-[#0F766E]">
+            <span className="flex items-center gap-1.5 font-medium truncate pr-2">
+              <span className="w-2 h-2 rounded-full bg-[#0F766E] animate-ping shrink-0" />
+              <span className="truncate">लिखना नहीं आता? <strong>माइक दबाकर बोलिए</strong>, बोलकर जवाब मिलेगा!</span>
+            </span>
+            <button
+              onClick={toggleListening}
+              className="text-[10px] bg-[#0F766E] hover:bg-[#115E59] text-white px-2 py-0.5 rounded-md font-bold transition shrink-0 shadow-xs"
+            >
+              बोलें 🎙️
+            </button>
+          </div>
+
           {/* Messages Body */}
           <div className="flex-1 p-4 overflow-y-auto space-y-4 text-xs bg-[#F8FAFC]">
             {messages.map((msg, idx) => (
@@ -385,11 +399,11 @@ export default function AskYojnaSetuChatbot() {
           {/* Quick Suggestion Chips */}
           <div className="px-3 py-1.5 bg-[#F8FAFC] border-t border-[#E2E8F0] flex items-center gap-1.5 overflow-x-auto no-scrollbar">
             {[
-              { label: '💡 पोर्टल कैसे काम करता है?', q: 'यह वेबसाइट कैसे काम करती है और इसके मुख्य फीचर्स क्या हैं?' },
-              { label: '📋 8-Stage Tracking & PFMS', q: '8-stage application tracking और PFMS कैसे काम करता है?' },
-              { label: '🏪 दुकान हेतु मुद्रा लोन', q: 'मुझे दुकान खोलने के लिए मुद्रा लोन कैसे मिलेगा?' },
-              { label: '📄 AI दस्तावेज़ सत्यापन', q: 'DocVerifier AI से दस्तावेज़ सत्यापन कैसे होता है?' },
-              { label: '🎓 ScholarSetu छात्रवृत्ति', q: 'विद्यार्थियों के लिए ScholarSetu पोर्टल कैसे काम करता है?' }
+              { label: '🗣️ लिखना नहीं आता, मदद करो', q: 'मुझे लिखना-पढ़ना नहीं आता, मैं सरकारी योजना और लोन के लिए क्या करूँ?' },
+              { label: '📄 सिर्फ आधार कार्ड है', q: 'मेरे पास कोई कागजात नहीं हैं केवल आधार कार्ड है, मुझे कौन सा लोन मिलेगा?' },
+              { label: '🛒 ठेला / दुकान हेतु लोन', q: 'ठेला लगाने या छोटी दुकान के लिए PM स्वनिधि या मुद्रा लोन कैसे मिलेगा?' },
+              { label: '🌾 बकरी पालन / डेयरी लोन', q: 'बकरी पालन, मुर्गी पालन या डेयरी के लिए सरकारी लोन और सब्सिडी कैसे मिलेगी?' },
+              { label: '💡 पोर्टल कैसे काम करता है?', q: 'यह वेबसाइट कैसे काम करती है और 8-stage tracking क्या है?' }
             ].map((chip, cIdx) => (
               <button
                 key={cIdx}

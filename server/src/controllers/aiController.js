@@ -5,10 +5,11 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { mockSchemes } = require('../seed/seedData');
 const {
   detectLanguage,
-  evaluateDomainScope,
-  getPoliteDomainApology,
+  classifyQueryIntent,
+  generatePoorCitizenGuidance,
   generatePlatformProcessAnswer,
-  synthesizeDynamicSchemeAnswer
+  synthesizeDynamicSchemeAnswer,
+  generateRandomLifeAnswer
 } = require('../engines/aiEngine');
 
 const MODELDATA_DIR = path.join(__dirname, '../../../modeldata');
@@ -193,15 +194,13 @@ const detectUserLanguage = (text = '', requestedLang = 'auto') => {
 };
 
 /**
- * HIGH-ACCURACY DOMAIN-AWARE AI CHATBOT ENGINE
+ * HIGH-ACCURACY CITIZEN & PLATFORM AI ASSISTANT
  * 
- * 1. Responds strictly in the same language the user asked in (Hindi, Hinglish, Punjabi, English, etc.)
- * 2. Checks Domain Scope: If out-of-domain (sports, cooking, coding, movies, unrelated trivia),
- *    politely apologizes and guides the user back to schemes and platform.
- * 3. Deep Platform Process Knowledge: Can answer how the site works, 8-stage tracking,
- *    PFMS treasury processing, DocVerifier OCR, ScholarSetu, Provider KYB, Admin studio, etc.
- * 4. Dynamic Scheme Synthesizer: Queries live mockSchemes database dynamically without hardcoded if-else blocks.
- * 5. Gemini 1.5/2.0 Integration: Uses Google Gemini if key is provided, with fallback to dynamic engine.
+ * 1. Grassroots Citizen Support (गरीब और अनपढ़ नागरिकों की हर तरह से सहायता — नो पेपर्स, सिर्फ आधार कार्ड, अनपढ़, बैंक समस्या, रेहड़ी-पटरी, पशुपालन, घर, इलाज)
+ * 2. Deep Platform Architecture (वेबसाइट कैसे काम करती है, 8-Stage Tracking, PFMS, DocVerifier OCR, ScholarSetu, Provider, Sponsorship)
+ * 3. Dynamic Scheme Knowledge (15+ Central & State Schemes with live limits, subsidies, and DPRs)
+ * 4. Universal Query Resolver (किसी भी रैंडम सवाल का समझदारी व सहानुभूति से जवाब देना और सरकारी सशक्तिकरण से जोड़ना)
+ * 5. Same-Language Response (हिंदी, Hinglish, ਪੰਜਾਬੀ, English)
  */
 const askYojnaSetuAssistant = async (req, res) => {
   try {
@@ -213,48 +212,36 @@ const askYojnaSetuAssistant = async (req, res) => {
     }
     const question = String(userQuestion).trim();
 
-    // 1. Detect the exact language from the user's question
+    // 1. Detect language of question
     const detected = detectLanguage(question, requestedLang);
     const targetLangCode = detected.langCode;
 
-    // 2. Strict Domain Scope Evaluation
-    const scope = evaluateDomainScope(question);
-
-    // If query is OUT OF DOMAIN (e.g. cricket, cooking, coding, movies, unrelated trivia):
-    // Politely say sorry in the user's detected language!
-    if (!scope.isDomain) {
-      const apology = getPoliteDomainApology(targetLangCode);
-      return res.json({
-        success: true,
-        data: {
-          reply: apology,
-          language: targetLangCode,
-          detectedLanguage: targetLangCode,
-          detectedLanguageName: detected.langName,
-          isOutOfDomain: true,
-          provider: 'Yojna दृष्टि Domain Guardrail'
-        }
-      });
-    }
+    // 2. Classify User Intent
+    const intent = classifyQueryIntent(question);
 
     // 3. Conversational Greeting
-    if (scope.type === 'GREETING') {
+    if (intent === 'GREETING') {
       let greetingReply = '';
       if (targetLangCode === 'hi') {
-        greetingReply = `नमस्ते! मैं **योजना दृष्टि AI** सहायक हूँ।
+        greetingReply = `नमस्ते! मैं **योजना दृष्टि** का डिजिटल सहायक और आपका मार्गदर्शक हूँ। 
 
-मैं भारत सरकार और राज्य सरकारों की सभी योजनाओं (PMEGP, मुद्रा, PM विश्वकर्मा, स्टैंड-अप इंडिया), ऋण, सब्सिडी, छात्रवृत्ति, दस्तावेज़ सत्यापन और हमारे पोर्टल की कार्यप्रणाली (8-Stage Tracking, Wizard, DocVerifier) के बारे में आपकी सहायता कर सकता हूँ।
+मैं देश के हर नागरिक — चाहे आप किसान हों, छोटे दुकानदार, रेहड़ी-पटरी वाले, महिला उद्यमी, कारीगर, या विद्यार्थी — आपकी भाषा में पूरी सहायता कर सकता हूँ।
 
-आप क्या जानना चाहते हैं?`;
+💡 **विशेष सुविधा**: अगर आपको **लिखना-पढ़ना नहीं आता**, तो आप बस **माइक (🎙️)** का बटन दबाकर बोल सकते हैं, मैं बोलकर ही आपको पूरी योजना और लोन की जानकारी दूंगा!
+
+बताइए, आज मैं आपकी क्या मदद करूँ?`;
       } else if (targetLangCode === 'pa') {
-        greetingReply = `ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ! ਮੈਂ **Yojna दृष्टि AI** ਸਹਾਇਕ ਹਾਂ। ਮੈਂ ਸਰਕਾਰੀ ਸਕੀਮਾਂ, ਕਰਜ਼ਿਆਂ, ਸਬਸਿਡੀਆਂ, ਵਜ਼ੀਫ਼ਿਆਂ ਅਤੇ ਇਸ ਪੋਰਟਲ ਦੀ ਵਰਤੋਂ ਬਾਰੇ ਤੁਹਾਡੀ ਮਦਦ ਕਰ ਸਕਦਾ ਹਾਂ। ਤੁਸੀਂ ਕੀ ਜਾਣਨਾ ਚਾਹੁੰਦੇ ਹੋ?`;
+        greetingReply = `ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ! ਮੈਂ **Yojna दृष्टि** ਦਾ ਡਿਜੀਟਲ ਸਹਾਇਕ ਹਾਂ। ਮੈਂ ਹਰ ਨਾਗਰਿਕ, ਛੋਟੇ ਦੁਕਾਨਦਾਰ, ਕਿਸਾਨ ਅਤੇ ਵਿਦਿਆਰਥੀ ਨੂੰ ਸਰਕਾਰੀ ਸਕੀਮਾਂ, ਲੋਨ, ਸਬਸਿਡੀਆਂ ਅਤੇ ਵਜ਼ੀਫ਼ਿਆਂ ਬਾਰੇ ਜਾਣਕਾਰੀ ਦਿੰਦਾ ਹਾਂ। ਜੇਕਰ ਤੁਸੀਂ ਲਿਖਣਾ ਨਹੀਂ ਜਾਣਦੇ, ਤਾਂ ਮਾਈਕ ਬਟਨ ਦਬਾ ਕੇ ਬੋਲ ਸਕਦੇ ਹੋ। ਦੱਸੋ ਜੀ, ਮੈਂ ਤੁਹਾਡੀ ਕੀ ਮਦਦ ਕਰ ਸਕਦਾ ਹਾਂ?`;
       } else {
-        greetingReply = `Hello! I am your **Yojna दृष्टि AI** assistant.
+        greetingReply = `Hello! I am your **Yojna दृष्टि Digital Assistant**. 
 
-I can assist you with Central & State government financial schemes (PMEGP, MUDRA, PM Vishwakarma, Stand-Up India), subsidies, student scholarships, AI document verification, and navigating our platform (8-Stage Tracking, Discovery Wizard, DocVerifier).
+I empower citizens, small business owners, artisans, farmers, and students to discover and secure Central & State government schemes, loans, subsidies, and scholarships.
 
-How can I help you today?`;
+💡 **Accessibility**: You can use the **Microphone (🎙️)** to speak naturally in your preferred language without needing to type!
+
+How can I best assist you today?`;
       }
+
       return res.json({
         success: true,
         data: {
@@ -262,31 +249,27 @@ How can I help you today?`;
           language: targetLangCode,
           detectedLanguage: targetLangCode,
           detectedLanguageName: detected.langName,
-          provider: 'Yojna दृष्टि Conversational Assistant'
+          provider: 'Yojna दृष्टि Citizen Assistant'
         }
       });
     }
 
-    // 4. Grounded System Instruction for Gemini AI
-    const systemInstruction = `You are Yojna दृष्टि AI, India's national citizen financial and government scheme expert assistant for the 'Yojna दृष्टि' portal (Tagline: "Discover. Apply. Track.").
+    // 4. Grounded System Instruction for Gemini Generative AI
+    const systemInstruction = `You are Yojna दृष्टि AI, India's most empathetic and authoritative national citizen welfare, financial empowerment, and government scheme expert assistant (Tagline: "Discover. Apply. Track.").
 
-DOMAIN SCOPE:
-You exclusively answer questions about:
-1. All Indian Government Schemes (Central & State): PMEGP, PM MUDRA, PM Vishwakarma, Stand-Up India, PMFME, PM SVANidhi, Startup India Seed Fund, CGTMSE, Mukhyamantri Yuva Swarozgar, Bihar Mahila Udyamita, ScholarSetu scholarships, etc.
-2. Exact loan limits, capital subsidies (15-35%), interest subventions, collateral-free credit, required documents (Aadhaar, PAN, Udyam, DPR, caste/income certificates).
-3. 'Yojna दृष्टि' Platform Operations:
-   - Citizen Scheme Discovery Wizard (/wizard) & ML Credit Readiness Index
-   - 8-Stage Transparent Tracking (/track) with PFMS Treasury integration (Sanction vs Released vs Disbursed)
-   - DocVerifier AI OCR Studio (/document-verification)
-   - ScholarSetu for Students (/scholarsetu)
-   - Channel Partner Bank Branch locator
-   - Provider & CSR Portal (/provider)
-   - Sponsorship Campaigns (/sponsorship)
-   - Admin Verification Studio (/admin)
-
-CRITICAL OUT-OF-DOMAIN GUARDRAIL:
-If the user asks an unrelated question outside government schemes, business finance, or this website's operations (e.g. sports, cooking recipes, coding scripts, movies, general trivia):
-Politely apologize in the user's language, explain that you are dedicated solely to Yojna दृष्टि and government schemes, and invite them to ask a scheme or portal question.
+SPECIAL ACCESSIBILITY & GRASSROOTS MANDATE:
+You are built to assist everyday Indian citizens, especially poor, rural, and illiterate citizens who may not know how to read, write, or have formal paperwork:
+- If someone says they don't know how to read or write (लिखना-पढ़ना नहीं आता / अंगूठा लगाते हैं):
+  Reassure them with utmost respect and warmth. Explain that on this platform they can simply use the Voice Microphone (🎙️) to speak and listen. Guide them to their local Panchayat Bhawan, Common Service Center (CSC / जन सेवा केंद्र), or village Bank Sakhi (बैंक सखी) who will fill their form for a nominal ₹20-30 government fee.
+- If someone says they have NO PAPERS or ONLY AADHAAR CARD:
+  Explain schemes that require NO COLLATERAL and NO COMPLEX PAPERS:
+  1. PM SVANidhi: ₹10,000 to ₹50,000 collateral-free loan for street vendors, tea stalls, vegetable sellers, fruit carts.
+  2. PM Vishwakarma: ₹15,000 free toolkit voucher + ₹3 Lakh 5% loan for 18 artisan trades (tailors, carpenters, barbers, cobblers, weavers, potters) on Aadhaar alone.
+  3. MUDRA Shishu Loan: Up to ₹50,000 collateral-free credit on Aadhaar and bank passbook.
+- If someone mentions basic life distress (ration, sickness, roof leak, goat/poultry farming):
+  Warmly connect them to Ayushman Bharat (₹5 Lakh free treatment), PM Awas Yojana (₹1.2 Lakh housing grant), PM Kisan / Pashupalan KCC (₹2 Lakh animal husbandry credit), and PMGKAY free ration.
+- If someone asks ANY random question (curiosity, life advice, daily challenges, earning money):
+  Answer their question warmly and intelligently, and gently explain how starting a small enterprise or taking benefit of government schemes can empower them and their family.
 
 CRITICAL MULTILINGUAL MANDATE:
 The citizen asked in: ${detected.langName}.
@@ -296,7 +279,7 @@ You MUST answer in that EXACT SAME language: ${detected.promptLang}.
 - If the question is in English, reply in English.
 Do NOT reply in English if the user asked in Hindi, Hinglish, or Punjabi.`;
 
-    // 5. Try Gemini Generative AI SDK
+    // 5. Try Gemini Generative AI SDK (if available)
     if (genAI) {
       for (const modelName of ['gemini-1.5-flash-latest', 'gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-pro']) {
         try {
@@ -356,12 +339,18 @@ Do NOT reply in English if the user asked in Hindi, Hinglish, or Punjabi.`;
       }
     }
 
-    // 7. DYNAMIC DOMAIN-KNOWLEDGE SYNTHESIZER (Completely Dynamic, No Hardcoded Templates!)
+    // 7. MULTI-TIER INTELLIGENT KNOWLEDGE SYNTHESIZER (Local Engine)
     let dynamicReply = '';
-    if (scope.type === 'PLATFORM_OPERATION') {
+
+    if (intent === 'POOR_CITIZEN_SUPPORT') {
+      dynamicReply = generatePoorCitizenGuidance(question, targetLangCode);
+    } else if (intent === 'PLATFORM_OPERATION') {
       dynamicReply = generatePlatformProcessAnswer(question, targetLangCode);
-    } else {
+    } else if (intent === 'SCHEME_FINANCE') {
       dynamicReply = synthesizeDynamicSchemeAnswer(question, targetLangCode);
+    } else {
+      // GENERAL_LIFE_AND_CURIOSITY: Resolves ANY random life or curiosity query warmly
+      dynamicReply = generateRandomLifeAnswer(question, targetLangCode);
     }
 
     return res.json({
@@ -371,7 +360,7 @@ Do NOT reply in English if the user asked in Hindi, Hinglish, or Punjabi.`;
         language: targetLangCode,
         detectedLanguage: targetLangCode,
         detectedLanguageName: detected.langName,
-        provider: 'Yojna दृष्टि Dynamic Knowledge Synthesizer',
+        provider: 'Yojna दृष्टि Intelligent Citizen Engine',
         groundedInOfficialSources: true
       }
     });

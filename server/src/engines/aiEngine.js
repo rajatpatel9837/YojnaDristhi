@@ -1,46 +1,34 @@
 /**
- * Yojna दृष्टि — AI Conversational Knowledge & Domain Engine
+ * Yojna दृष्टि — Comprehensive AI Citizen & Platform Knowledge Engine
  * 
- * Features:
- * 1. Automatic Multilingual Detection (Hindi, Hinglish, Punjabi, English, regional languages)
- * 2. Strict Domain Scope Guardrail (Politely apologizes for queries outside government schemes / platform)
- * 3. Deep Platform Knowledge (Explains site working, 8-stage tracking, DocVerifier OCR, ScholarSetu, Provider KYB, Admin studio)
- * 4. Dynamic Scheme Synthesizer (Grounded in all 15+ Central & State schemes with live metadata)
- * 5. Gemini 1.5/2.0 Integration with fallback to Dynamic Knowledge Synthesizer
+ * Special Capabilities:
+ * 1. Grassroots Citizen Support (गरीब और अनपढ़ नागरिकों की हर तरह से सहायता — नो पेपर्स, सिर्फ आधार कार्ड, अनपढ़, बैंक अस्वीकृति, रेहड़ी-पटरी, पशुपालन, घर, इलाज)
+ * 2. Deep Platform Architecture (वेबसाइट कैसे काम करती है, 8-Stage Tracking, PFMS, DocVerifier OCR, ScholarSetu, Provider, Sponsorship)
+ * 3. Dynamic Scheme Knowledge (15+ Central & State Schemes with live limits, subsidies, and DPRs)
+ * 4. Universal Query Resolver (किसी भी रैंडम सवाल का समझदारी व सहानुभूति से जवाब देना और सरकारी सशक्तिकरण से जोड़ना)
+ * 5. Same-Language Response (हिंदी, Hinglish, ਪੰਜਾਬੀ, English)
  */
 
 const { mockSchemes } = require('../seed/seedData');
 
 /**
- * Detect language of user question
+ * 1. High-Accuracy Language & Script Detection
  */
 const detectLanguage = (text = '', requestedLang = 'auto') => {
   const clean = String(text || '').trim();
   if (!clean) return { langCode: 'en', langName: 'English', promptLang: 'English' };
 
-  // 1. Script checks (Unicode ranges)
-  if (/[\u0900-\u097F]/.test(clean)) {
-    return { langCode: 'hi', langName: 'Hindi (हिंदी)', promptLang: 'Hindi (हिंदी लिपि में)' };
-  }
-  if (/[\u0A00-\u0A7F]/.test(clean)) {
-    return { langCode: 'pa', langName: 'Punjabi (ਪੰਜਾਬੀ)', promptLang: 'Punjabi (ਗੁਰਮੁਖੀ ਲਿਪੀ ਵਿੱਚ)' };
-  }
-  if (/[\u0980-\u09FF]/.test(clean)) {
-    return { langCode: 'bn', langName: 'Bengali (বাংলা)', promptLang: 'Bengali (বাংলায়)' };
-  }
-  if (/[\u0B80-\u0BFF]/.test(clean)) {
-    return { langCode: 'ta', langName: 'Tamil (தமிழ்)', promptLang: 'Tamil (தமிழில்)' };
-  }
-  if (/[\u0C00-\u0C7F]/.test(clean)) {
-    return { langCode: 'te', langName: 'Telugu (తెలుగు)', promptLang: 'Telugu (తెలుగులో)' };
-  }
-  if (/[\u0A80-\u0AFF]/.test(clean)) {
-    return { langCode: 'gu', langName: 'Gujarati (ગુજરાતી)', promptLang: 'Gujarati (ગુજરાતીમાં)' };
-  }
+  // Unicode Script Checks
+  if (/[\u0900-\u097F]/.test(clean)) return { langCode: 'hi', langName: 'Hindi (हिंदी)', promptLang: 'Hindi (हिंदी लिपि में)' };
+  if (/[\u0A00-\u0A7F]/.test(clean)) return { langCode: 'pa', langName: 'Punjabi (ਪੰਜਾਬੀ)', promptLang: 'Punjabi (ਗੁਰਮੁਖੀ ਲਿਪੀ ਵਿੱਚ)' };
+  if (/[\u0980-\u09FF]/.test(clean)) return { langCode: 'bn', langName: 'Bengali (বাংলা)', promptLang: 'Bengali (বাংলায়)' };
+  if (/[\u0B80-\u0BFF]/.test(clean)) return { langCode: 'ta', langName: 'Tamil (தமிழ்)', promptLang: 'Tamil (தமிழில்)' };
+  if (/[\u0C00-\u0C7F]/.test(clean)) return { langCode: 'te', langName: 'Telugu (తెలుగు)', promptLang: 'Telugu (తెలుగులో)' };
+  if (/[\u0A80-\u0AFF]/.test(clean)) return { langCode: 'gu', langName: 'Gujarati (ગુજરાતી)', promptLang: 'Gujarati (ગુજરાતીમાં)' };
 
-  // 2. Romanized vocabulary checks (Hinglish & Roman Punjabi)
   const lower = clean.toLowerCase();
 
+  // Punjabi Roman Vocabulary
   const punjabiKeywords = [
     'mainu', 'tuhanu', 'assi', 'tussi', 'tusi', 'kiven', 'kiwe', 'kado', 'kithe', 'kinna',
     'kinne', 'kinni', 'kehra', 'kehri', 'chahida', 'chahidi', 'chahide', 'dasso', 'daso',
@@ -52,6 +40,7 @@ const detectLanguage = (text = '', requestedLang = 'auto') => {
     if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) punjabiMatches++;
   }
 
+  // Hinglish / Hindi Roman Vocabulary
   const hinglishKeywords = [
     'bhai', 'bhaiya', 'namaste', 'namaskar', 'pranam', 'mujhe', 'mera', 'meri',
     'mere', 'hum', 'humein', 'hamara', 'hamari', 'hamare', 'apna', 'apni', 'apne', 'kya',
@@ -66,7 +55,8 @@ const detectLanguage = (text = '', requestedLang = 'auto') => {
     'mukhyamantri', 'mudra', 'pmegp', 'vishwakarma', 'svanidhi', 'anudan', 'chhoot', 'byaj',
     'khata', 'kholna', 'kholni', 'kholne', 'shuru', 'kaun', 'konsi', 'kaunsi',
     'kis', 'kisko', 'kitna', 'kitni', 'kitne', 'lagta', 'bhasa', 'bhasha', 'uttar', 'sawal',
-    'madad', 'sahayata'
+    'madad', 'sahayata', 'garib', 'gareeb', 'anpadh', 'likhna', 'padhna', 'thela', 'rehri',
+    'bakri', 'murgi', 'gai', 'bhains', 'ghar', 'chhat', 'ilaj', 'dawai', 'bimar', 'ration'
   ];
   let hinglishMatches = 0;
   for (const w of hinglishKeywords) {
@@ -92,118 +82,260 @@ const detectLanguage = (text = '', requestedLang = 'auto') => {
 };
 
 /**
- * Strict Domain Scope Evaluator
- * Checks whether query pertains to Government Schemes, Business/Student Finance,
- * Document Verification, Application Tracking, or Platform Operations.
+ * 2. Multi-Tier Semantic Intent Classifier
  */
-const evaluateDomainScope = (query = '') => {
+const classifyQueryIntent = (query = '') => {
   const q = query.toLowerCase().trim();
-  if (!q) return { isDomain: false, reason: 'EMPTY' };
+  if (!q) return 'EMPTY';
 
-  // 1. Explicit Out-of-Domain topics (sports, cooking, coding, movies, non-scheme trivia, random banter)
-  const outOfDomainPatterns = [
-    /\b(cricket|ipl|football|fifa|messi|ronaldo|world cup|match score|batting|bowling)\b/i,
-    /\b(recipe|cake|cook|cooking|biryani|paneer|pizza|burger|bake|kitchen)\b/i,
-    /\b(python|javascript|react|html|css|c\+\+|coding|write a code|write a script|algorithm|program)\b/i,
-    /\b(movie|cinema|actor|actress|hollywood|bollywood|song|lyrics|singer|album)\b/i,
-    /\b(capital of|speed of light|quantum|black hole|solar system|planets|astronomy)\b/i,
-    /\b(tell me a joke|tell me a story|write a poem|shayari|love letter)\b/i,
-    /\b(who won the|history of rome|french revolution|weather forecast)\b/i
+  // A. Poor / Illiterate / Grassroots Assistance
+  const grassrootsPatterns = [
+    /\b(likhna|padhna|anpadh|illiterate|cannot write|cannot read|likhna nahi aata|padhna nahi aata|angutha)\b/i,
+    /\b(koi paper nahi|koi kagaz nahi|no document|no papers|sirf aadhar|only aadhaar|aadhar card hi hai)\b/i,
+    /\b(bank wale bhaga|bank mana|loan nahi dete|bank problem|bank manager|bribe|ghoos)\b/i,
+    /\b(thela|rehri|patri|feri|street vendor|sabji|chai ki dukan|pani puri|chaat|fal bechna)\b/i,
+    /\b(bakri|murgi|dairy|gai|bhains|pashupalan|poultry|goat|animal husbandry)\b/i,
+    /\b(silai|silai machine|tailor|sewing|darzi|bunkar|weaver|karigar|artisan|vishwakarma)\b/i,
+    /\b(ghar nahi|chhat tapak|kaccha ghar|jhopdi|awas|pmay|house loan)\b/i,
+    /\b(bimar|ilaj|dawai|hospital|treatment|ayushman|medical|operation)\b/i,
+    /\b(ration|anaj|khana|garib|gareeb|bhookh|roti|paisa nahi hai)\b/i,
+    /\b(gaon me|panchayat|gram pradhan|sarpanch|kisse mile|kahan jaye)\b/i
   ];
-
-  for (const pattern of outOfDomainPatterns) {
-    if (pattern.test(q)) {
-      // Check if it's explicitly tied to a scheme (e.g. "cooking business loan" or "food processing")
-      if (!/\b(scheme|yojana|loan|subsidy|business|mudra|pmegp|pmfme|fund|dpr)\b/i.test(q)) {
-        return { isDomain: false, reason: 'OUT_OF_DOMAIN_TOPIC' };
-      }
-    }
+  for (const p of grassrootsPatterns) {
+    if (p.test(q)) return 'POOR_CITIZEN_SUPPORT';
   }
 
-  // 2. Greetings and Identity (Always in domain for polite interaction)
+  // B. Platform & Website Working
+  const platformPatterns = [
+    /\b(website|portal|site|platform|yojna drishti|yojnasetu|app|kaise kaam|how does|process|working)\b/i,
+    /\b(track|tracking|status|stage|8-stage|pfms|sanction|disbursal|disbursed|release)\b/i,
+    /\b(wizard|score|eligibility|match|readiness|calculator)\b/i,
+    /\b(docverifier|ocr|document verification|aadhaar verify|pan verify)\b/i,
+    /\b(scholarsetu|scholarship portal|student portal)\b/i,
+    /\b(provider|csr|corporate|kyb|partner bank|nearby|branch locator)\b/i,
+    /\b(sponsor|sponsorship|crowdfund|artisan support)\b/i,
+    /\b(admin|audit|nodal officer)\b/i,
+    /\b(voice|bolkar|mic|microphone|awaaz)\b/i
+  ];
+  for (const p of platformPatterns) {
+    if (p.test(q)) return 'PLATFORM_OPERATION';
+  }
+
+  // C. Greetings and Bot Identity
   const greetingPatterns = [
-    /\b(hi|hello|hey|namaste|namaskar|pranam|satshriakal|good morning|good afternoon|good evening)\b/i,
-    /\b(who are you|what is your name|aap kaun ho|tum kaun ho|tussi kaun ho)\b/i,
-    /\b(help|help me|madad|kya kar sakte ho|what can you do)\b/i
+    /\b(hi|hello|hey|namaste|namaskar|pranam|satshriakal|good morning|good evening|good afternoon)\b/i,
+    /\b(who are you|aap kaun ho|tum kaun ho|tussi kaun ho|what is your name)\b/i,
+    /\b(kya kar sakte ho|what can you do|help me|madad karo)\b/i
   ];
-  for (const pattern of greetingPatterns) {
-    if (pattern.test(q)) return { isDomain: true, type: 'GREETING' };
+  for (const p of greetingPatterns) {
+    if (p.test(q)) return 'GREETING';
   }
 
-  // 3. Platform & Website Operations Keywords
-  const platformKeywords = [
-    'yojna', 'drishti', 'yojnasetu', 'website', 'site', 'portal', 'platform', 'app', 'system',
-    'kaam', 'working', 'process', 'feature', 'features', 'flow', 'steps', 'how does', 'kaise kaam',
-    'track', 'tracking', 'status', 'stage', 'stages', 'pfms', 'sanction', 'disbursal', 'release',
-    'wizard', 'match', 'readiness', 'score', 'ml', 'calculator',
-    'docverifier', 'document', 'ocr', 'verify', 'verification', 'aadhaar', 'pan', 'income certificate',
-    'scholarsetu', 'scholarship', 'student', 'school', 'college', 'vidyarthi', 'chhatravritti',
-    'provider', 'csr', 'corporate', 'organization', 'kyb', 'partner', 'bank', 'branch',
-    'sponsor', 'sponsorship', 'campaign', 'artisan', 'crowdfunding',
-    'admin', 'audit', 'nodal'
+  // D. Schemes & Finance Keywords
+  const schemePatterns = [
+    /\b(scheme|yojana|yojna|loan|subsidy|grant|credit|byaj|interest|pmegp|mudra|vishwakarma|pmfme|svanidhi|stand-up|startup|cgtmse|kisan|kcc)\b/i,
+    /\b(dukan|dukaan|shop|store|business|vyapar|karobar|startup|factory|udyam|msme)\b/i,
+    /\b(mahila|woman|women|female|sc|st|obc|minority|youth|yuva|student|scholarship)\b/i,
+    /\b(apply|aavedan|form|registration|panjikaran|dastavez|kagaz)\b/i
   ];
-  for (const kw of platformKeywords) {
-    if (new RegExp(`\\b${kw}\\b`, 'i').test(q) || q.includes(kw)) {
-      return { isDomain: true, type: 'PLATFORM_OPERATION' };
-    }
+  for (const p of schemePatterns) {
+    if (p.test(q)) return 'SCHEME_FINANCE';
   }
 
-  // 4. Scheme & Government Benefit Keywords
-  const schemeKeywords = [
-    'scheme', 'schemes', 'yojana', 'yojna', 'loan', 'loans', 'subsidy', 'subsidies', 'grant', 'grants',
-    'credit', 'collateral', 'guarantee', 'interest', 'byaj', 'chhoot', 'anudan', 'paisa', 'paise', 'fund',
-    'pmegp', 'mudra', 'vishwakarma', 'stand-up', 'standup', 'pmfme', 'svanidhi', 'cgtmse', 'startup',
-    'aspire', 'sfurti', 'kvic', 'msme', 'nabard', 'nsp',
-    'shop', 'dukan', 'dukaan', 'retail', 'kirana', 'business', 'vyapar', 'karobar', 'startup', 'store',
-    'kisan', 'krishi', 'dairy', 'poultry', 'fisheries', 'farming', 'food processing', 'tailor', 'darzi',
-    'silai', 'artisan', 'karigar', 'weaver', 'bunkar', 'carpenter', 'badhai', 'barber', 'potter',
-    'mahila', 'woman', 'women', 'female', 'sc', 'st', 'obc', 'minority', 'youth', 'yuva',
-    'apply', 'aavedan', 'registration', 'panjikaran', 'form', 'paper', 'dastavez', 'eligibility', 'patrata'
-  ];
-  for (const kw of schemeKeywords) {
-    if (new RegExp(`\\b${kw}\\b`, 'i').test(q) || q.includes(kw)) {
-      return { isDomain: true, type: 'SCHEME_FINANCE' };
-    }
-  }
-
-  // If query is very short or unclear, assume in-domain query to offer help
-  if (q.split(/\s+/).length <= 3) {
-    return { isDomain: true, type: 'BRIEF_INQUIRY' };
-  }
-
-  return { isDomain: false, reason: 'OUT_OF_DOMAIN_UNMATCHED' };
+  // E. Random Life / Curiosity Queries (General questions)
+  return 'GENERAL_LIFE_AND_CURIOSITY';
 };
 
 /**
- * Polite Out-of-Domain Apology Builder
+ * 3. Compassionate Grassroots Assistance for Poor & Illiterate Citizens
+ * (गरीब, अनपढ़ और बिना कागजात वाले नागरिकों के लिए विशेष सरल मार्गदर्शन)
  */
-const getPoliteDomainApology = (langCode = 'en') => {
-  if (langCode === 'hi') {
-    return `क्षमा करें, मैं केवल **योजना दृष्टि** पोर्टल की कार्यप्रणाली, सरकारी योजनाओं (ऋण, सब्सिडी, अनुदान, छात्रवृत्ति), दस्तावेज़ सत्यापन (OCR) और आवेदन ट्रैकिंग से जुड़े विषयों में सहायता करने के लिए अधिकृत हूँ।
-
-कृपया सरकारी योजनाओं, व्यावसायिक सहायता, छात्रवृत्ति या इस पोर्टल के उपयोग से संबंधित कोई भी प्रश्न पूछें — मुझे आपकी मदद करने में बहुत खुशी होगी!`;
-  }
-  if (langCode === 'pa') {
-    return `ਮਾਫ਼ ਕਰਨਾ, ਮੈਂ ਸਿਰਫ਼ **Yojna दृष्टि** ਪੋਰਟਲ, ਸਰਕਾਰੀ ਸਕੀਮਾਂ (ਕਰਜ਼ੇ, ਸਬਸਿਡੀਆਂ, ਵਜ਼ੀਫ਼ੇ), ਦਸਤਾਵੇਜ਼ ਤਸਦੀਕ ਅਤੇ ਅਰਜ਼ੀ ਟਰੈਕਿੰਗ ਨਾਲ ਸਬੰਧਤ ਸਵਾਲਾਂ ਦੇ ਜਵਾਬ ਦੇਣ ਲਈ ਤਿਆਰ ਕੀਤਾ ਗਿਆ ਹਾਂ।
-
-ਕਿਰਪਾ ਕਰਕੇ ਸਰਕਾਰੀ ਸਕੀਮਾਂ ਜਾਂ ਇਸ ਪੋਰਟਲ ਦੀ ਵਰਤੋਂ ਬਾਰੇ ਪੁੱਛੋ — ਮੈਨੂੰ ਤੁਹਾਡੀ ਮਦਦ ਕਰਨ ਵਿੱਚ ਖੁਸ਼ੀ ਹੋਵੇਗੀ!`;
-  }
-  return `I apologize, but I am specifically authorized to assist with **Yojna दृष्टि** platform operations, government financial schemes (loans, subsidies, grants, scholarships), AI document verification, and PFMS application tracking.
-
-Please feel free to ask any question regarding central or state government schemes, business eligibility, or navigating this portal, and I will be delighted to guide you!`;
-};
-
-/**
- * Dynamic Platform Workings Knowledge Generator
- * Answers queries about how Yojna दृष्टि works, its 8-stage tracking, DocVerifier, ScholarSetu, etc.
- */
-const generatePlatformProcessAnswer = (query = '', langCode = 'en') => {
+const generatePoorCitizenGuidance = (query = '', langCode = 'hi') => {
   const q = query.toLowerCase();
 
-  // 1. 8-Stage Tracking / PFMS / Status
-  if (q.includes('track') || q.includes('stage') || q.includes('pfms') || q.includes('status') || q.includes('disburs') || q.includes('sanction') || q.includes('स्टेटस') || q.includes('ट्रैक')) {
-    if (langCode === 'hi') {
-      return `**योजना दृष्टि 8-चरणीय पारदर्शी आवेदन ट्रैकिंग प्रणाली (/track):**
+  // A. Illiterate / Cannot read or write (लिखना-पढ़ना नहीं आता)
+  if (q.includes('likhna') || q.includes('padhna') || q.includes('anpadh') || q.includes('illiterate') || q.includes('cannot write') || q.includes('angutha')) {
+    if (langCode === 'pa') {
+      return `**ਪਿਆਰੇ ਵੀਰ/ਭੈਣ, ਤੁਹਾਨੂੰ ਲਿਖਣ-ਪੜ੍ਹਨ ਦੀ ਬਿਲਕੁਲ ਲੋੜ ਨਹੀਂ ਹੈ! ਸਰਕਾਰ ਅਤੇ ਸਾਡਾ ਪੋਰਟਲ ਤੁਹਾਡੀ ਇਸ ਤਰ੍ਹਾਂ ਮਦਦ ਕਰੇਗਾ:**
+
+1. **ਆਵਾਜ਼ ਨਾਲ ਗੱਲ ਕਰੋ (Voice Assistant)**:
+   - ਸਕ੍ਰੀਨ ਦੇ ਹੇਠਾਂ ਦਿੱਤੇ **ਮਾਈਕ (🎙️)** ਬਟਨ ਨੂੰ ਦਬਾਓ ਅਤੇ ਆਪਣੀ ਬੋਲੀ ਵਿੱਚ ਬੋਲੋ। ਸਾਡਾ ਸਹਾਇਕ ਤੁਹਾਨੂੰ ਬੋਲ ਕੇ ਹੀ ਸਾਰੀ ਜਾਣਕਾਰੀ ਸੁਣਾਵੇਗਾ।
+
+2. **ਪਿੰਡ ਦੇ ਸਾਂਝੇ ਸੇਵਾ ਕੇਂਦਰ (CSC / Jan Seva Kendra) ਜਾਓ**:
+   - ਆਪਣੇ ਪਿੰਡ ਜਾਂ ਨੇੜਲੇ ਕਸਬੇ ਦੇ **ਜਨ ਸੇਵਾ ਕੇਂਦਰ (CSC)** ਜਾਓ।
+   - ਉੱਥੇ ਸਿਰਫ਼ ਆਪਣਾ ਆਧਾਰ ਕਾਰਡ ਦਿਓ, ਕੇਂਦਰ ਦਾ ਆਪਰੇਟਰ ₹20-30 ਦੀ ਸਰਕਾਰੀ ਫੀਸ 'ਤੇ ਤੁਹਾਡਾ ਪੂਰਾ ਫਾਰਮ ਕੰਪਿਊਟਰ 'ਤੇ ਭਰ ਦੇਵੇਗਾ।
+
+3. **ਬੈਂਕ ਸਖੀ / ਬੈਂਕ ਮਿੱਤਰ ਨਾਲ ਮਿਲੋ**:
+   - ਪਿੰਡ ਦੀ ਪੰਚਾਇਤ ਜਾਂ ਸਵੈ-ਸਹਾਇਤਾ ਸਮੂਹ (SHG) ਦੀ **ਬੈਂਕ ਸਖੀ** ਨਾਲ ਮਿਲੋ। ਉਹ ਅੰਗੂਠਾ ਲਗਵਾ ਕੇ ਤੁਹਾਡਾ ਖਾਤਾ ਖੋਲ੍ਹਣ ਅਤੇ ਲੋਨ ਦਿਵਾਉਣ ਵਿੱਚ ਪੂਰੀ ਮਦਦ ਕਰਦੀ ਹੈ।`;
+    }
+    return `**प्रिय नागरिक, अगर आपको पढ़ना-लिखना नहीं आता तो बिल्कुल चिंता मत कीजिए! सरकार और हमारा पोर्टल आपकी पूरी मदद करेगा:**
+
+1. **इस वेबसाइट पर बोलकर बात करें (आवाज़ से मदद)**:
+   - आपको कुछ भी टाइप नहीं करना है! नीचे दिए गए **माइक (🎙️)** के बटन को एक बार दबाएं और अपनी भाषा में बोलें। मैं आपकी बात सुनकर **बोलकर ही जवाब दूंगा**।
+
+2. **गाँव के 'जन सेवा केंद्र' (CSC / ग्राहक सेवा केंद्र) जाएं**:
+   - अपने गाँव या पास के बाज़ार में **CSC / जन सेवा केंद्र** पर जाएं।
+   - वहाँ केवल अपना **आधार कार्ड** और बैंक पासबुक लेकर जाएं। संचालक कंप्यूटर पर आपका सरकारी फॉर्म भर देगा (इसकी सरकारी फीस मात्र ₹20-30 होती है)।
+
+3. **'बैंक सखी' या 'बैंक मित्र' से मिलें**:
+   - अपने गाँव की पंचायत या महिला स्वयं सहायता समूह (SHG) की **बैंक सखी** से मिलें।
+   - वे बायोमेट्रिक मशीन पर आपका **अंगूठा लगवाकर** आपका खाता खोल देंगी और लोन का आवेदन करवा देंगी।
+
+💡 **सलाह**: किसी भी अनजान व्यक्ति या दलाल को पैसे न दें। सरकारी योजनाओं का आवेदन पूरी तरह पारदर्शी है।`;
+  }
+
+  // B. No documents or Only Aadhaar Card (कागजात नहीं हैं या सिर्फ आधार कार्ड है)
+  if (q.includes('koi paper nahi') || q.includes('koi kagaz nahi') || q.includes('no document') || q.includes('sirf aadhar') || q.includes('only aadhaar') || q.includes('aadhar card hi hai')) {
+    return `**अगर आपके पास ज्यादा कागजात नहीं हैं और केवल आधार कार्ड है, तो ये 3 बड़ी योजनाएं आपके लिए हैं:**
+
+1. **PM स्वनिधि योजना (PM SVANidhi — रेहड़ी, ठेला, छोटे दुकानदारों हेतु)**:
+   - **ऋण राशि**: **₹10,000 से ₹50,000 तक** बिना किसी गारंटी (No Collateral)।
+   - **दस्तावेज़**: केवल **आधार कार्ड** और बैंक पासबुक। किसी जमीन, इनकम टैक्स या गारंटर की ज़रूरत नहीं है।
+   - **ब्याज**: समय पर चुकाने पर 7% की ब्याज छूट और ₹1,200 सालाना कैशबैक।
+
+2. **PM विश्वकर्मा योजना (कारीगरों व दस्तकारों हेतु)**:
+   - **सहायता**: **₹15,000 का मुफ्त टूलकिट वाउचर** + **₹3 लाख तक का लोन** मात्र 5% ब्याज पर।
+   - **पात्र**: दर्जी, बढ़ई, नाई, मोची, कुम्हार, लोहार, राजमिस्त्री, धोबी, मालाकार आदि।
+   - **कागजात**: केवल आधार कार्ड और मोबाइल नंबर।
+
+3. **मुद्रा शिशु लोन (MUDRA Shishu Loan)**:
+   - **ऋण राशि**: ₹50,000 तक का बिजनेस लोन।
+   - **कागजात**: आधार कार्ड, पैन कार्ड (यदि हो) और 6 महीने की बैंक पासबुक।`;
+  }
+
+  // C. Street Vendors / Thela / Rehri / Feri (रेहड़ी-पटरी, ठेला, फेरीवाले)
+  if (q.includes('thela') || q.includes('rehri') || q.includes('patri') || q.includes('feri') || q.includes('vendor') || q.includes('sabji') || q.includes('chai')) {
+    return `**सब्जी, फल, चाय, नाश्ता, चाट या ठेला-पटरी लगाने वाले भाइयों के लिए योजना:**
+
+- **योजना का नाम**: **प्रधानमंत्री स्वनिधि योजना (PM SVANidhi)**
+- **कितना पैसा मिलता है**:
+  - पहली बार में: **₹10,000**
+  - समय पर चुकाने पर: **₹20,000**
+  - तीसरी बार में: **₹50,000**
+- **विशेष लाभ**:
+  - कोई बैंक गारंटी या संपत्ति गिरवी नहीं रखनी होती।
+  - अगर आप फोनपे/गूगलपे से डिजिटल पेमेंट लेते हैं, तो सरकार ₹100 प्रति माह (₹1,200/साल) अतिरिक्त कैशबैक देती है।
+- **कहाँ जाना होगा**:
+  - अपने नगर निगम / नगर पालिका / ग्राम पंचायत के टाउन वेंडिंग सेल में जाएं, या नजदीकी सरकारी बैंक (SBI, PNB, Bank of Baroda) में जाकर कहें: *"मुझे PM स्वनिधि का फॉर्म भरना है"*, या किसी CSC केंद्र से आवेदन करवाएं।`;
+  }
+
+  // D. Animal Husbandry / Dairy / Bakri / Murgi (पशुपालन, बकरी पालन, मुर्गी पालन, डेयरी)
+  if (q.includes('bakri') || q.includes('murgi') || q.includes('dairy') || q.includes('gai') || q.includes('bhains') || q.includes('pashu') || q.includes('goat') || q.includes('poultry')) {
+    return `**बकरी पालन, मुर्गी पालन और डेयरी (गाय-भैंस) के लिए सरकारी योजनाएं:**
+
+1. **पशुपालन किसान क्रेडिट कार्ड (Pashupalan KCC)**:
+   - गाय/भैंस, बकरी (10+1 यूनिट) या मुर्गी पालन के लिए **₹2 लाख तक का लोन बिना किसी जमीन के** केवल 4% ब्याज पर मिलता है।
+   - इसका फॉर्म अपने ब्लॉक के **पशु चिकित्सालय (Veterinary Hospital)** या बैंक से मिलता है।
+
+2. **राष्ट्रीय पशुधन मिशन (NLM — National Livestock Mission)**:
+   - बकरी पालन / मुर्गी फार्मिंग प्रोजेक्ट पर सरकार **50% तक की भारी सब्सिडी (अनुदान)** देती है।
+
+3. **डेयरी उद्यमिता विकास (DEDS / PMEGP Dairy)**:
+   - दुग्ध प्रोसेसिंग या छोटी डेयरी यूनिट लगाने के लिए PMEGP के तहत 35% सरकारी सब्सिडी उपलब्ध है।`;
+  }
+
+  // E. Tailoring / Silai Machine (सिलाई मशीन / दर्जी / हस्तशिल्प)
+  if (q.includes('silai') || q.includes('tailor') || q.includes('darzi') || q.includes('kapde') || q.includes('machine')) {
+    return `**सिलाई का काम करने वाली महिलाओं और दर्जियों के लिए सरकारी मदद:**
+
+- **योजना**: **PM विश्वकर्मा योजना (दर्जी वर्ग / Tailor Category)**
+- **फायदे**:
+  1. **₹15,000 का मुफ्त वाउचर**: जिससे आप आधुनिक सिलाई मशीन और उपकरण खरीद सकते हैं (यह पैसा वापस नहीं करना होता)।
+  2. **मुफ्त ट्रेनिंग**: 5 से 15 दिनों की आधुनिक सिलाई ट्रेनिंग + **₹500 प्रतिदिन का स्टाइपेंड (खर्चा)**।
+  3. **कम ब्याज पर लोन**: सिलाई की दुकान या बुटीक खोलने के लिए **₹3 लाख तक का लोन** केवल 5% ब्याज पर।
+- **आवेदन कैसे करें**: नजदीकी जन सेवा केंद्र (CSC) जाएं और अपना आधार कार्ड देकर PM विश्वकर्मा पोर्टल (pmvishwakarma.gov.in) पर दर्जी वर्ग में पंजीकरण कराएं।`;
+  }
+
+  // F. Bank refusal / Bank Turn Away (बैंक वाले मना कर रहे हैं)
+  if (q.includes('bank') && (q.includes('bhaga') || q.includes('mana') || q.includes('nahi dete') || q.includes('problem'))) {
+    return `**अगर बैंक वाले आपको लोन देने से मना कर रहे हैं या टरका रहे हैं, तो ये 4 कदम उठाएं:**
+
+1. **लिखित में कारण (Reason in Writing) मांगें**:
+   - बैंक मैनेजर से विनम्रता से कहें: *"सर, कृपया मुझे रिजेक्शन मेमो (कारण पर्ची) दे दीजिए कि मेरा फॉर्म किस नियम के तहत खारिज हुआ है।"* अक्सर लिखित मांगने पर बैंक फॉर्म प्रोसेस कर देते हैं।
+
+2. **जिला उद्योग केंद्र (DIC) के अधिकारी से संपर्क करें**:
+   - अगर यह PMEGP या मुद्रा लोन है, तो अपने जिले के **DIC (जिला उद्योग केंद्र)** या **KVIC कार्यालय** जाएं। वहां के नोडल अधिकारी बैंक से जवाब तलब करते हैं।
+
+3. **लीड बैंक मैनेजर (LDM) से मिलें**:
+   - हर जिले में एक 'लीड बैंक मैनेजर' होता है जो सभी बैंकों में सरकारी योजनाओं का नोडल प्रभारी होता है।
+
+4. **181 या PM पोर्टल पर शिकायत दर्ज कराएं**:
+   - भारत सरकार के पोर्टल **pgportal.gov.in (CPGRAMS)** पर या राज्य की CM हेल्पलाइन (181) पर फ्री कॉल करके शिकायत दर्ज कराएं।`;
+  }
+
+  // G. House / Roof / PMAY (घर, छत, आवास)
+  if (q.includes('ghar') || q.includes('chhat') || q.includes('jhopdi') || q.includes('awas') || q.includes('house')) {
+    return `**कच्चा घर पक्का करने या नया मकान बनाने हेतु सहायता:**
+
+- **योजना**: **प्रधानमंत्री आवास योजना - ग्रामीण (PMAY-G)**
+- **कितनी सहायता मिलती है**:
+  - मैदानी क्षेत्रों में: **₹1,20,000 सीधे बैंक खाते में (अनुदान / फ्री पैसा)**।
+  - पहाड़ी/दुर्गम क्षेत्रों में: **₹1,30,000**।
+  - साथ में शौचालय निर्माण हेतु **₹12,000** और मनरेगा के तहत 90-95 दिनों की मजदूरी भी मिलती है।
+- **किसे मिलता है**: कच्चे मकान, बेघर, गरीब ग्रामीण परिवारों को जिनका नाम आवास-प्लस सूची में हो।
+- **कहाँ जाना होगा**: अपने गाँव के **ग्राम प्रधान / मुखिया** या ब्लॉक कार्यालय में **पंचायत सचिव (VDO)** से मिलें।`;
+  }
+
+  // H. Illness / Medicine / Hospital (बीमारी, इलाज, दवाई)
+  if (q.includes('bimar') || q.includes('ilaj') || q.includes('dawai') || q.includes('hospital') || q.includes('ayushman')) {
+    return `**बीमारी या अस्पताल में मुफ्त इलाज हेतु सहायता:**
+
+- **योजना**: **आयुष्मान भारत (PM-JAY गोल्डन कार्ड)**
+- **कितना लाभ**: हर गरीब परिवार को सालाना **₹5,00,000 तक का पूरी तरह मुफ्त इलाज** (दवाई, जांच, भर्ती, ऑपरेशन)।
+- **कहाँ मान्य है**: सभी सरकारी अस्पतालों और सूचीबद्ध बड़े प्राइवेट अस्पतालों में।
+- **कार्ड कैसे बनवाएं**:
+  - नजदीकी सरकारी अस्पताल (PHC/CHC) या CSC केंद्र पर अपना आधार कार्ड और राशन कार्ड लेकर जाएं।
+  - यदि आपका नाम सूची में है, तो 5 मिनट में आयुष्मान कार्ड बन जाता है।
+  - टोल-फ्री हेल्पलाइन: **14555** पर कॉल करके पात्रता पूछ सकते हैं।`;
+  }
+
+  // Default Grassroots Help
+  return `**गरीब एवं ग्रामीण नागरिकों के लिए सरकार की प्रमुख जनकल्याणकारी योजनाएं:**
+
+- **छोटा काम/दुकान**: PM स्वनिधि (₹10,000-50,000 बिना गारंटी लोन) और PM मुद्रा शिशु लोन।
+- **कारीगर व दस्तकार**: PM विश्वकर्मा (₹15,000 टूलकिट अनुदान + ₹3 लाख 5% लोन)।
+- **खेती-किसानी व पशुपालन**: PM किसान (₹6,000/वर्ष) और पशुपालन KCC (₹2 लाख 4% ब्याज पर)।
+- **पक्का मकान**: PM आवास योजना (₹1.20 लाख सीधे खाते में)।
+- **मुफ्त इलाज**: आयुष्मान भारत कार्ड (₹5 लाख/वर्ष मुफ्त इलाज)।
+
+यदि आपको कोई फॉर्म भरना है, तो अपने गाँव के **जन सेवा केंद्र (CSC)** या पंचायत भवन जाएं।`;
+};
+
+/**
+ * 4. Deep Platform Architecture & Workflow Knowledge
+ * (Yojna दृष्टि पोर्टल की सम्पूर्ण कार्यप्रणाली)
+ */
+const generatePlatformProcessAnswer = (query = '', langCode = 'hi') => {
+  const q = query.toLowerCase();
+
+  // Voice Navigation / How to use with voice
+  if (q.includes('voice') || q.includes('bolkar') || q.includes('mic') || q.includes('awaaz') || q.includes('बोलकर') || q.includes('माइक')) {
+    return `**Yojna दृष्टि वॉइस असिस्टेंट (बोलकर इस्तेमाल करने का तरीका):**
+
+1. **माइक बटन दबाएं**: स्क्रीन के नीचे दाएं कोने में बने **माइक (🎙️)** आइकॉन पर क्लिक करें।
+2. **अपनी भाषा में बोलें**: आप हिंदी, हिंग्लिश, पंजाबी या अंग्रेजी में जैसा बोलना चाहें बोलें (जैसे: *"मुझे किराना दुकान के लिए लोन चाहिए"* या *"8-stage tracking क्या है?"*)।
+3. **ऑटो-सेंड व ऑटो-स्पीक**: बोलते ही आपका सवाल अपने आप चला जाएगा और हमारा AI असिस्टेंट **उसी भाषा में बोलकर उत्तर सुनाएगा**।
+4. **लिखने की ज़रूरत नहीं**: जो नागरिक पढ़ या लिख नहीं सकते, वे पूरी वेबसाइट केवल आवाज़ से इस्तेमाल कर सकते हैं!`;
+  }
+
+  // 8-Stage Tracking & PFMS
+  if (q.includes('track') || q.includes('stage') || q.includes('pfms') || q.includes('status') || q.includes('disburs') || q.includes('sanction') || q.includes('ट्रैक') || q.includes('स्टेटस')) {
+    if (langCode === 'pa') {
+      return `**Yojna दृष्टि 8-ਪੜਾਵੀ ਪਾਰਦਰਸ਼ੀ ਅਰਜ਼ੀ ਟਰੈਕਿੰਗ (/track):**
+
+ਸਾਡਾ ਪੋਰਟਲ ਸਰਕਾਰੀ ਲੋਨ ਅਤੇ ਸਬਸਿਡੀ ਅਰਜ਼ੀਆਂ ਨੂੰ 8 ਸਪਸ਼ਟ ਪੜਾਵਾਂ ਵਿੱਚ ਟਰੈਕ ਕਰਦਾ ਹੈ:
+1. **ਅਰਜ਼ੀ ਜਮ੍ਹਾਂ (Application Submitted)** — ਨਾਗਰਿਕ ਵੱਲੋਂ ਵੇਰਵੇ ਦਰਜ।
+2. **ਦਸਤਾਵੇਜ਼ ਤਸਦੀਕ (Document Verification)** — AI OCR ਰਾਹੀਂ ਆਧਾਰ/ਪੈਨ ਦੀ ਜਾਂਚ।
+3. **ਵਿਭਾਗੀ ਨਿਰੀਖਣ (Department Review)** — ਤਕਨੀਕੀ ਮੁਲਾਂਕਣ।
+4. **ਮਨਜ਼ੂਰੀ ਪੱਤਰ (Sanction Generated)** — ਸਰਕਾਰੀ ਮਨਜ਼ੂਰੀ ਰਾਸ਼ੀ ਤੈਅ।
+5. **PFMS ਪ੍ਰੋਸੈਸਿੰਗ (PFMS Treasury Processing)** — ਸਰਕਾਰੀ ਟ੍ਰੈਜ਼ਰੀ ਆਈਡੀ ਬਣਨਾ।
+6. **ਫੰਡ ਰਿਲੀਜ਼ (Fund Released)** — ਸਬਸਿਡੀ ਰਿਲੀਜ਼ ਹੋਣਾ।
+7. **ਬੈਂਕ ਡਿਸਬਰਸਲ (Bank Disbursal)** — ਬੈਂਕ ਵੱਲੋਂ ਖਾਤੇ ਵਿੱਚ ਪੈਸੇ ਪਾਉਣਾ।
+8. **ਲਾਭ ਪ੍ਰਾਪਤੀ (Benefit Received)** — ਯੂਨਿਟ ਸ਼ੁਰੂ ਹੋਣਾ।
+
+💡 **ਵਿੱਤੀ ਪਾਰਦਰਸ਼ਤਾ**: ਪੋਰਟਲ 'ਤੇ Sanctioned, Released ਅਤੇ Disbursed ਰਕਮਾਂ ਵੱਖ-ਵੱਖ ਦਿਖਾਈ ਦਿੰਦੀਆਂ ਹਨ।`;
+    }
+    return `**योजना दृष्टि 8-चरणीय पारदर्शी आवेदन ट्रैकिंग प्रणाली (/track):**
 
 हमारा पोर्टल किसी भी सरकारी योजना या ऋण आवेदन को 8 स्पष्ट चरणों में ट्रैक करता है:
 
@@ -217,131 +349,53 @@ const generatePlatformProcessAnswer = (query = '', langCode = 'en') => {
 8. **चरण 8: लाभ प्राप्ति (Benefit Received)** — संयंत्र/मशीनरी स्थापना और माइलस्टोन पूर्ण।
 
 💡 **वित्तीय स्पष्टता**: पोर्टल **Sanctioned Amount** (स्वीकृत राशि), **Released Amount** (जारी राशि) और **Disbursed Amount** (खाते में प्राप्त राशि) को अलग-अलग पारदर्शी रूप से दिखाता है।`;
-    }
-    if (langCode === 'pa') {
-      return `**Yojna दृष्टि 8-ਪੜਾਵੀ ਪਾਰਦਰਸ਼ੀ ਅਰਜ਼ੀ ਟਰੈਕਿੰਗ ਸਿਸਟਮ (/track):**
-
-ਸਾਡਾ ਪੋਰਟਲ ਸਰਕਾਰੀ ਸਕੀਮਾਂ ਅਤੇ ਕਰਜ਼ਿਆਂ ਨੂੰ 8 ਸਪਸ਼ਟ ਪੜਾਵਾਂ ਵਿੱਚ ਟਰੈਕ ਕਰਦਾ ਹੈ:
-1. ਅਰਜ਼ੀ ਜਮ੍ਹਾਂ (Application Submitted)
-2. ਦਸਤਾਵੇਜ਼ ਤਸਦੀਕ (Document Verification via AI OCR)
-3. ਵਿਭਾਗੀ ਸਮੀਖਿਆ (Department Review)
-4. ਮਨਜ਼ੂਰੀ ਪੱਤਰ (Sanction Generated)
-5. PFMS ਟ੍ਰੈਜ਼ਰੀ ਪ੍ਰੋਸੈਸਿੰਗ (PFMS Processing)
-6. ਫੰਡ ਜਾਰੀ (Fund Released)
-7. ਬੈਂਕ ਡਿਸਬਰਸਲ (Bank Disbursal to Account)
-8. ਲਾਭ ਪ੍ਰਾਪਤੀ (Benefit Received)
-
-ਤੁਸੀਂ **'Sync Government Status (PFMS)'** ਬਟਨ 'ਤੇ ਕਲਿੱਕ ਕਰਕੇ ਲਾਈਵ ਅੱਪਡੇਟ ਵੇਖ ਸਕਦੇ ਹੋ।`;
-    }
-    return `**Yojna दृष्टि 8-Stage Transparent Tracking Architecture (/track):**
-
-Our platform tracks every government scheme or enterprise loan through 8 tamper-evident lifecycle stages:
-
-1. **Stage 1: Application Submitted** — Citizen profile & initial application logged.
-2. **Stage 2: Document Verification** — Verified by AI OCR engine and nodal officers.
-3. **Stage 3: Department Review & Inspection** — Technical & economic feasibility assessment.
-4. **Stage 4: Sanction Generated** — Formal sanction letter generated with approved financial limit.
-5. **Stage 5: PFMS Processing** — Direct Public Financial Management System (PFMS) tracking ID assigned.
-6. **Stage 6: Fund Released** — Capital subsidy / grant quota released by Government Treasury.
-7. **Stage 7: Bank Disbursal** — Partner nodal bank credits funds directly into applicant's account.
-8. **Stage 8: Benefit Received / Milestone Complete** — Equipment procured and utilization certificate logged.
-
-💡 **Financial Separation**: The platform transparently tracks **Sanctioned Amount**, **Released Amount**, and **Disbursed Amount** independently to eliminate corruption.`;
   }
 
-  // 2. Scheme Discovery Wizard & ML Readiness Score
-  if (q.includes('wizard') || q.includes('score') || q.includes('match') || q.includes('readiness') || q.includes('विज़ार्ड') || q.includes('स्कोर') || q.includes('पात्रता')) {
-    if (langCode === 'hi') {
-      return `**योजना डिस्कवरी विज़ार्ड और ML स्कोरिंग प्रणाली (/wizard):**
+  // Scheme Discovery Wizard (/wizard)
+  if (q.includes('wizard') || q.includes('score') || q.includes('match') || q.includes('readiness') || q.includes('विज़ार्ड') || q.includes('पात्रता')) {
+    return `**नागरिक योजना डिस्कवरी विज़ार्ड एवं ML रेडीनेस स्कोर (/wizard):**
 
-1. **4-चरणीय स्मार्ट प्रोफाइलिंग**:
-   - **व्यक्तिगत विवरण**: जाति श्रेणी (SC/ST/OBC/General), लिंग, आयु, राज्य और दिव्यांगता स्थिति।
-   - **व्यवसाय विवरण**: क्षेत्र (फूड प्रोसेसिंग, विनिर्माण, रिटेल, टेक्सटाइल), उद्यम का प्रकार और चरण।
-   - **वित्तीय आवश्यकता**: आवश्यक लोन राशि, अनुमानित वार्षिक टर्नओवर और क्रेडिट/CIBIL स्कोर।
-   - **दस्तावेज़ स्थिति**: आपके पास उपलब्ध कागजात (आधार, पैन, उद्यम, प्रोजेक्ट रिपोर्ट)।
+1. **4-चरणीय सरल प्रोफाइलिंग**:
+   - **व्यक्तिगत विवरण**: जाति श्रेणी (SC/ST/OBC/General), लिंग, आयु और राज्य।
+   - **काम/व्यवसाय विवरण**: फूड प्रोसेसिंग, विनिर्माण, दुकान/किराना, सिलाई, हैंडीक्राफ्ट आदि।
+   - **वित्तीय आवश्यकता**: कितना लोन चाहिए और अनुमानित टर्नओवर।
+   - **दस्तावेज़**: आपके पास उपलब्ध कागजात (आधार, पैन, उद्यम आदि)।
 
-2. **AI & ML स्कोरिंग इंजन**:
-   - **Scheme Match Compatibility (0-100%)**: आपके प्रोफाइल के आधार पर केंद्र और राज्य की सभी 15+ योजनाओं से मिलान।
-   - **Credit Readiness Index**: बैंक ऋण स्वीकृति की संभावना और सब्सिडी प्राप्त करने की तैयारी का अनुमानित स्तर।
-   - **Nearby Bank Partners**: आपके जिले में निकटतम सत्यापित बैंक शाखाएं और Common Service Centres (CSC) दिखाता है।`;
-    }
-    return `**Citizen Scheme Discovery Wizard & ML Scoring Engine (/wizard):**
-
-1. **4-Step Guided Profiling**:
-   - Captures social demographic profile (Gender, Category, Age, State).
-   - Enterprise specifics (Sector: Food processing, Manufacturing, Retail, Handicrafts; Stage: New or Expansion).
-   - Financial needs (Loan requirement, Projected turnover, Credit/CIBIL score).
-   - Available documentation readiness.
-
-2. **Algorithmic Evaluation**:
-   - **Scheme Compatibility Engine**: Matches rules across all 15+ Central & State schemes.
-   - **ML Credit Readiness Index**: Estimates bank loan feasibility and subsidy eligibility probability.
-   - **Bank Branch Geolocation**: Identifies nearby verified public sector bank branches (PSBs) and CSC centres using Haversine distance calculations.`;
+2. **AI & ML गणना इंजन**:
+   - **Compatibility Match Score (0-100%)**: 15+ केंद्रीय और राज्य योजनाओं में से सर्वोत्तम मिलान।
+   - **Credit Readiness Index**: बैंक द्वारा ऋण स्वीकृत होने की संभावना का अनुमान।
+   - **Nearby Bank Partners**: आपके जिले में नजदीकी बैंक शाखाओं और जन सेवा केंद्रों (CSC) की दूरी व पता।`;
   }
 
-  // 3. Document Verification / DocVerifier AI OCR
-  if (q.includes('docverifier') || q.includes('ocr') || q.includes('document') || q.includes('dastavez') || q.includes('कागज') || q.includes('सत्यापन') || q.includes('दस्तावेज')) {
-    if (langCode === 'hi') {
-      return `**DocVerifier — AI दस्तावेज़ सत्यापन स्टूडियो (/document-verification):**
+  // DocVerifier AI OCR (/document-verification)
+  if (q.includes('docverifier') || q.includes('ocr') || q.includes('document') || q.includes('dastavez') || q.includes('कागज') || q.includes('सत्यापन')) {
+    return `**DocVerifier — AI दस्तावेज़ सत्यापन स्टूडियो (/document-verification):**
 
 - **स्वचालित AI OCR**: आधार कार्ड, पैन कार्ड, आय प्रमाण पत्र, जाति प्रमाण पत्र और उद्यम रजिस्ट्रेशन प्रमाण पत्र की डिजिटल स्कैनिंग और टेक्स्ट निष्कर्षण।
 - **मिसिंग दस्तावेज़ चेकलिस्ट**: चुनी गई सरकारी योजना (जैसे PMEGP या मुद्रा) के अनुसार आवश्यक कागजातों की रीयल-टाइम जांच करता है और बताता है कि कौन सा दस्तावेज बाकी है।
 - **सुरक्षा व गोपनीयता**: सभी दस्तावेज सुरक्षित एन्क्रिप्शन के साथ प्रोसेस होते हैं और केवल आधिकारिक सत्यापन हेतु उपयोग किए जाते हैं।`;
-    }
-    return `**DocVerifier — AI Document Verification Studio (/document-verification):**
-
-- **Automated AI OCR Engine**: Extracts and cross-references data from Aadhaar, PAN Cards, Income Certificates, Caste Certificates, and Udyam Registration.
-- **Dynamic Scheme Checklist**: Automatically computes the exact required document checklist based on chosen schemes (e.g., PMEGP DPR requirements vs MUDRA identity requirements).
-- **Audit & Privacy**: Encrypted processing with immutable audit logs ensuring complete data integrity.`;
   }
 
-  // 4. ScholarSetu (Student Portal)
-  if (q.includes('scholarsetu') || q.includes('scholarship') || q.includes('student') || q.includes('विद्यार्थी') || q.includes('छात्रवृत्ति') || q.includes('स्कॉलर')) {
-    if (langCode === 'hi') {
-      return `**ScholarSetu — विद्यार्थी वित्तीय अवसर पोर्टल (/scholarsetu):**
+  // ScholarSetu (/scholarsetu)
+  if (q.includes('scholarsetu') || q.includes('scholarship') || q.includes('student') || q.includes('विद्यार्थी') || q.includes('छात्रवृत्ति')) {
+    return `**ScholarSetu — विद्यार्थी वित्तीय अवसर पोर्टल (/scholarsetu):**
 
 - **विशेष रूप से छात्रों हेतु**: प्री-मैट्रिक, पोस्ट-मैट्रिक, उच्च शिक्षा और बालिका प्रोत्साहन छात्रवृत्तियों की सीधी पात्रता जांच।
 - **पारदर्शी मानदंड**: पारिवारिक आय सीमा, पिछले शैक्षणिक अंक, और श्रेणी (SC/ST/OBC/Minority/EWS) के अनुसार राष्ट्रीय छात्रवृत्ति पोर्टल (NSP) की योजनाओं से सीधा मिलान।
 - **आवेदन सुविधा**: छात्र बिना किसी बिचौलिए के सही सरकारी छात्रवृत्ति खोजकर सीधे आवेदन कर सकते हैं।`;
-    }
-    return `**ScholarSetu — Student Financial Opportunity Portal (/scholarsetu):**
-
-- **Dedicated for Students**: Matches pre-matric, post-matric, higher education, and girl-child scholarships.
-- **Criteria Matching**: Evaluates family income thresholds, academic marks, and affirmative action categories against National Scholarship Portal (NSP) programs.
-- **Direct Access**: Eliminates middlemen by providing verified official application links.`;
   }
 
-  // 5. Provider, CSR, Sponsorship & Admin Portals
-  if (q.includes('provider') || q.includes('csr') || q.includes('sponsor') || q.includes('admin') || q.includes('प्रदाता') || q.includes('सीएसआर') || q.includes('एडमिन')) {
-    if (langCode === 'hi') {
-      return `**योजना दृष्टि संगठनात्मक व प्रशासनिक मॉड्यूल:**
+  // Provider, Sponsorship & Admin
+  if (q.includes('provider') || q.includes('csr') || q.includes('sponsor') || q.includes('admin')) {
+    return `**योजना दृष्टि संगठनात्मक व प्रशासनिक मॉड्यूल:**
 
-1. **Provider & CSR पोर्टल (/provider)**:
-   - कॉर्पोरेट CSR फाउंडेशन, NGO और ट्रस्ट अपनी CIN, PAN और CSR-1 रजिस्ट्रेशन के साथ पंजीकरण कर सकते हैं।
-   - Two-tier KYB (Know Your Business) सत्यापन के बाद ही उन्हें ग्रांट और सब्सिडी पोस्ट करने की अनुमति मिलती है।
-
-2. **Sponsorship माइक्रो-अभियान (/sponsorship)**:
-   - ग्रामीण महिला समूहों, जनजातीय कारीगरों और छोटे चक्की/हथकरघा उद्यमियों हेतु पारदर्शी क्राउड-सपोर्ट लेजर।
-
-3. **Admin Verification Studio (/admin)**:
-   - सरकारी नोडल अधिकारी और ऑडिटर पार्टनर संगठनों, योजनाओं और दस्तावेजों की समीक्षा करके डिजिटल अप्रूवल या रिजेक्शन ऑडिट लॉग दर्ज करते हैं।`;
-    }
-    return `**Yojna दृष्टि Organizational & Admin Ecosystem:**
-
-1. **Provider & CSR Portal (/provider)**:
-   - CSR Foundations, NGOs, and Corporate donors register with CIN, PAN, and MCA Form CSR-1.
-   - Undergoes rigorous Two-tier KYB verification before granting official partner credentials.
-
-2. **Sponsorship Portal (/sponsorship)**:
-   - Micro-funding campaigns supporting rural artisans, women cooperatives, and village entrepreneurs with a transparent contributions ledger.
-
-3. **Admin Verification Studio (/admin)**:
-   - Dedicated dashboard for government auditors and nodal officers to inspect dossiers, issue sanction audits, and maintain compliance records.`;
+1. **Provider & CSR पोर्टल (/provider)**: कॉर्पोरेट CSR फाउंडेशन, NGO और ट्रस्ट अपनी CIN, PAN और CSR-1 रजिस्ट्रेशन के साथ Two-tier KYB सत्यापन करा सकते हैं।
+2. **Sponsorship माइक्रो-अभियान (/sponsorship)**: ग्रामीण महिला समूहों, जनजातीय कारीगरों और छोटे चक्की/हथकरघा उद्यमियों हेतु पारदर्शी क्राउड-सपोर्ट लेजर।
+3. **Admin Verification Studio (/admin)**: सरकारी नोडल अधिकारी और ऑडिटर पार्टनर संगठनों, योजनाओं और दस्तावेजों की समीक्षा करके डिजिटल अप्रूवल या रिजेक्शन ऑडिट लॉग दर्ज करते हैं।`;
   }
 
-  // 6. Complete Website Overview / General How it Works
-  if (langCode === 'hi') {
-    return `**योजना दृष्टि (Yojna दृष्टि) पोर्टल की सम्पूर्ण कार्यप्रणाली:**
+  // General Portal Overview
+  return `**योजना दृष्टि (Yojna दृष्टि) पोर्टल की सम्पूर्ण कार्यप्रणाली:**
 
 'योजना दृष्टि' भारत सरकार और राज्य सरकारों की वित्तीय योजनाओं, ऋण, सब्सिडी और छात्रवृत्तियों को आम नागरिकों तक पारदर्शी तरीके से पहुंचाने वाला आधुनिक प्लेटफॉर्म है (टैगलाइन: *"Discover. Apply. Track."*)।
 
@@ -353,45 +407,17 @@ Our platform tracks every government scheme or enterprise loan through 8 tamper-
 5. **प्रदाता (CSR) व स्पॉन्सरशिप (/provider व /sponsorship)**: सत्यापित संस्थानों द्वारा अनुदान और ग्रामीण कारीगरों को सहायता।
 
 आप इनमें से किसी भी सुविधा के बारे में विस्तार से पूछ सकते हैं!`;
-  }
-
-  if (langCode === 'pa') {
-    return `**Yojna दृष्टि ਪੋਰਟਲ ਦੀ ਕਾਰਜਪ੍ਰਣਾਲੀ (Discover. Apply. Track.):**
-
-'Yojna दृष्टि' ਸਰਕਾਰੀ ਯੋਜਨਾਵਾਂ, ਸਬਸਿਡੀਆਂ ਅਤੇ ਕਰਜ਼ਿਆਂ ਨੂੰ ਨਾਗਰਿਕਾਂ ਤੱਕ ਆਸਾਨੀ ਨਾਲ ਪਹੁੰਚਾਉਣ ਵਾਲਾ ਪਲੇਟਫਾਰਮ ਹੈ।
-
-ਮੁੱਖ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ:
-1. **ਯੋਜਨਾ ਖੋਜ ਵਿਜ਼ਾਰਡ (/wizard)**: ਆਪਣੀ ਯੋਗਤਾ ਅਨੁਸਾਰ ਸਰਕਾਰੀ ਸਕੀਮਾਂ ਲੱਭੋ।
-2. **8-ਪੜਾਵੀ ਲਾਈਵ ਟਰੈਕਿੰਗ (/track)**: ਅਰਜ਼ੀ ਤੋਂ ਲੈ ਕੇ ਬੈਂਕ ਖਾਤੇ ਵਿੱਚ ਪੈਸੇ ਆਉਣ ਤੱਕ ਹਰ ਪੜਾਅ ਦੀ ਜਾਣਕਾਰੀ।
-3. **AI ਦਸਤਾਵੇਜ਼ ਤਸਦੀਕ (/document-verification)**: ਆਧਾਰ, ਪੈਨ ਕਾਰਡ ਦੀ ਤੁਰੰਤ ਜਾਂਚ।
-4. **ScholarSetu (/scholarsetu)**: ਵਿਦਿਆਰਥੀਆਂ ਲਈ ਵਜ਼ੀਫ਼ਾ ਪੋਰਟਲ।
-5. **CSR ਅਤੇ ਸਪਾਂਸਰਸ਼ਿਪ (/provider ਤੇ /sponsorship)**: ਕਾਰੋਬਾਰੀਆਂ ਅਤੇ ਕਾਰੀਗਰਾਂ ਲਈ ਸਹਾਇਤਾ।`;
-  }
-
-  return `**How Yojna दृष्टि Works (Discover. Apply. Track.):**
-
-Yojna दृष्टि is an authoritative, end-to-end platform bridging citizens to Central & State government schemes, capital subsidies, and educational scholarships.
-
-**Key Functional Pillars:**
-1. **Citizen Scheme Discovery Wizard (/wizard)**: Enter your profile (Sector, Investment needed, Social category, State) to receive real-time compatibility match scores and an ML Credit Readiness Index across 15+ official schemes.
-2. **8-Stage Transparent Tracking (/track)**: Track applications from preliminary submission through Department Inspection, Formal Sanction, PFMS Treasury release, to final Bank Account Disbursal.
-3. **DocVerifier Studio (/document-verification)**: Instant AI OCR verification for Aadhaar, PAN, and Income certificates with automated missing document alerts.
-4. **ScholarSetu Portal (/scholarsetu)**: Direct scholarship mapping for students based on academic performance and affirmative action quotas.
-5. **Provider CSR & Sponsorship (/provider & /sponsorship)**: KYB-verified corporate grants and micro-sponsorships for rural grassroots entrepreneurs.`;
 };
 
 /**
- * Dynamic Scheme Knowledge Synthesizer
- * Dynamically matches schemes from mockSchemes database and formats rich answers
+ * 5. Dynamic Scheme Knowledge Synthesizer
  */
-const synthesizeDynamicSchemeAnswer = (query = '', langCode = 'en') => {
+const synthesizeDynamicSchemeAnswer = (query = '', langCode = 'hi') => {
   const q = query.toLowerCase();
 
-  // Search through all schemes in mockSchemes
   let matchedSchemes = mockSchemes.filter(s => {
     const sName = s.name.toLowerCase();
     const sSlug = s.slug.toLowerCase();
-    const sDesc = (s.description || '').toLowerCase();
     const sSecs = (s.sectors || []).map(x => x.toLowerCase()).join(' ');
     const sBens = (s.targetBeneficiaries || []).map(x => x.toLowerCase()).join(' ');
 
@@ -407,31 +433,11 @@ const synthesizeDynamicSchemeAnswer = (query = '', langCode = 'en') => {
     if (q.includes('shop') || q.includes('dukan') || q.includes('dukaan') || q.includes('किराना') || q.includes('दुकान')) return sSlug.includes('mudra') || sSlug.includes('pmegp') || sSlug.includes('svanidhi');
     if (q.includes('scholarship') || q.includes('student') || q.includes('छात्रवृत्ति')) return s.category === 'Scholarship';
 
-    // Generic match
     return sName.split(' ').some(w => w.length > 3 && q.includes(w)) || sSecs.includes(q) || sBens.includes(q);
   });
 
   if (matchedSchemes.length === 0) {
-    matchedSchemes = mockSchemes.slice(0, 4); // Default to top 4 flagship schemes
-  }
-
-  // Format dynamically in requested language
-  if (langCode === 'hi') {
-    let out = `**आपकी खोज के आधार पर सत्यापित सरकारी योजनाएं:**\n\n`;
-    matchedSchemes.slice(0, 3).forEach((s, idx) => {
-      out += `${idx + 1}. **${s.name}**:\n`;
-      out += `   - **वित्तीय सहायता**: ₹${(s.maximumSupport / 100000).toFixed(1)} लाख तक (${s.fundingType || 'ऋण/सब्सिडी'})।\n`;
-      if (s.subsidyPercentage) {
-        out += `   - **सब्सिडी**: परियोजना लागत पर **${s.subsidyPercentage}% तक सरकारी अनुदान**।\n`;
-      }
-      if (s.interestRate) {
-        out += `   - **ब्याज दर**: ${s.interestRate}% प्रति वर्ष (रियायती)।\n`;
-      }
-      out += `   - **पात्र क्षेत्र**: ${(s.sectors || ['सभी क्षेत्र']).slice(0, 4).join(', ')}।\n`;
-      out += `   - **आवश्यक कागजात**: ${(s.requiredDocuments || ['आधार कार्ड', 'पैन कार्ड', 'उद्यम रजिस्ट्रेशन']).slice(0, 4).join(', ')}।\n\n`;
-    });
-    out += `💡 **आवेदन कैसे करें**: योजना दृष्टि के **Scheme Discovery Wizard (/wizard)** में अपनी प्रोफाइल भरें या संबंधित नोडल बैंक में संपर्क करें।`;
-    return out;
+    matchedSchemes = mockSchemes.slice(0, 3);
   }
 
   if (langCode === 'pa') {
@@ -439,37 +445,99 @@ const synthesizeDynamicSchemeAnswer = (query = '', langCode = 'en') => {
     matchedSchemes.slice(0, 3).forEach((s, idx) => {
       out += `${idx + 1}. **${s.name}**:\n`;
       out += `   - **ਵਿੱਤੀ ਸਹਾਇਤਾ**: ₹${(s.maximumSupport / 100000).toFixed(1)} ਲੱਖ ਤੱਕ।\n`;
-      if (s.subsidyPercentage) {
-        out += `   - **ਸਬਸਿਡੀ**: **${s.subsidyPercentage}% ਤੱਕ ਸਰਕਾਰੀ ਗ੍ਰਾਂਟ**।\n`;
-      }
-      out += `   - **ਲੋੜੀਂਦੇ ਦਸਤਾਵੇਜ਼**: ${(s.requiredDocuments || ['ਆਧਾਰ ਕਾਰਡ', 'ਪੈਨ ਕਾਰਡ']).slice(0, 3).join(', ')}।\n\n`;
+      if (s.subsidyPercentage) out += `   - **ਸਬਸਿਡੀ**: **${s.subsidyPercentage}% ਤੱਕ ਸਰਕਾਰੀ ਗ੍ਰਾਂਟ**।\n`;
+      out += `   - **ਲੋੜੀਂਦੇ ਦਸਤਾਵੇਜ਼**: ${(s.requiredDocuments || ['ਆਧਾਰ ਕਾਰਡ', 'ਪੈਨ ਕਾਰਡ']).slice(0, 4).join(', ')}।\n\n`;
     });
     out += `💡 **ਅਰਜ਼ੀ ਕਿਵੇਂ ਦੇਣੀ ਹੈ**: Yojna दृष्टि ਵਿਜ਼ਾਰਡ (/wizard) ਰਾਹੀਂ ਅਪਲਾਈ ਕਰੋ।`;
     return out;
   }
 
-  // English
-  let out = `**Verified Government Financial Schemes for Your Query:**\n\n`;
+  if (langCode === 'en') {
+    let out = `**Verified Government Financial Schemes for Your Query:**\n\n`;
+    matchedSchemes.slice(0, 3).forEach((s, idx) => {
+      out += `${idx + 1}. **${s.name}**:\n`;
+      out += `   - **Financial Limit**: Up to ₹${(s.maximumSupport / 100000).toFixed(1)} Lakh (${s.fundingType || 'Loan / Subsidy'}).\n`;
+      if (s.subsidyPercentage) out += `   - **Government Subsidy**: Up to **${s.subsidyPercentage}% capital subsidy**.\n`;
+      if (s.interestRate) out += `   - **Interest Rate**: ${s.interestRate}% p.a.\n`;
+      out += `   - **Documentation**: ${(s.requiredDocuments || ['Aadhaar', 'PAN', 'Project DPR']).slice(0, 4).join(', ')}.\n\n`;
+    });
+    out += `💡 **Next Steps**: Fill your profile in the **Scheme Discovery Wizard (/wizard)** or visit your nearest public sector bank.`;
+    return out;
+  }
+
+  // Hindi Default
+  let out = `**आपकी खोज के आधार पर सत्यापित सरकारी योजनाएं:**\n\n`;
   matchedSchemes.slice(0, 3).forEach((s, idx) => {
     out += `${idx + 1}. **${s.name}**:\n`;
-    out += `   - **Financial Limit**: Up to ₹${(s.maximumSupport / 100000).toFixed(1)} Lakh (${s.fundingType || 'Loan / Subsidy'}).\n`;
+    out += `   - **वित्तीय सहायता**: ₹${(s.maximumSupport / 100000).toFixed(1)} लाख तक (${s.fundingType || 'ऋण/सब्सिडी'})।\n`;
     if (s.subsidyPercentage) {
-      out += `   - **Government Subsidy**: Up to **${s.subsidyPercentage}% capital subsidy**.\n`;
+      out += `   - **सब्सिडी**: परियोजना लागत पर **${s.subsidyPercentage}% तक सरकारी अनुदान**।\n`;
     }
     if (s.interestRate) {
-      out += `   - **Subsidized Interest**: ${s.interestRate}% p.a.\n`;
+      out += `   - **ब्याज दर**: ${s.interestRate}% प्रति वर्ष (रियायती)।\n`;
     }
-    out += `   - **Eligible Sectors**: ${(s.sectors || ['All eligible sectors']).slice(0, 4).join(', ')}.\n`;
-    out += `   - **Documentation**: ${(s.requiredDocuments || ['Aadhaar', 'PAN', 'Project DPR']).slice(0, 4).join(', ')}.\n\n`;
+    out += `   - **पात्र क्षेत्र**: ${(s.sectors || ['सभी क्षेत्र']).slice(0, 4).join(', ')}।\n`;
+    out += `   - **आवश्यक कागजात**: ${(s.requiredDocuments || ['आधार कार्ड', 'पैन कार्ड', 'उद्यम रजिस्ट्रेशन']).slice(0, 4).join(', ')}।\n\n`;
   });
-  out += `💡 **Next Steps**: Complete your profile in the **Scheme Discovery Wizard (/wizard)** or locate partner banks near you!`;
+  out += `💡 **आवेदन कैसे करें**: योजना दृष्टि के **Scheme Discovery Wizard (/wizard)** में अपनी प्रोफाइल भरें या संबंधित नोडल बैंक में संपर्क करें।`;
   return out;
+};
+
+/**
+ * 6. Empathetic Universal Life & Curiosity Resolver
+ * (किसी भी रैंडम सवाल का समझदारी व संवेदनशीलता से जवाब देकर सरकारी सशक्तिकरण से जोड़ना)
+ */
+const generateRandomLifeAnswer = (query = '', langCode = 'hi') => {
+  const q = query.toLowerCase();
+
+  // How to earn money / berojgari (पैसा कैसे कमाएं / बेरोजगारी)
+  if (q.includes('paisa kaise kamaye') || q.includes('kamai') || q.includes('berojgar') || q.includes('naukri') || q.includes('earn money') || q.includes('job')) {
+    return `**रोजगार और कमाई शुरू करने के सबसे सुरक्षित व आसान सरकारी रास्ते:**
+
+1. **छोटा व्यापार / दुकान शुरू करें**:
+   - यदि आप किराना, चाय, फल-सब्जी या रिपेयरिंग का काम करना चाहते हैं, तो सरकार **PM स्वनिधि** (₹10,000-50,000) और **PM मुद्रा योजना** (₹50,000 से ₹10 लाख) में बिना किसी गारंटी के आसान लोन देती है।
+
+2. **पारंपरिक हुनर से कमाई (PM विश्वकर्मा)**:
+   - सिलाई, बढ़ई, नाई, मोची, राजमिस्त्री आदि के लिए सरकार ₹15,000 के आधुनिक औजार मुफ्त देती है और ₹3 लाख का 5% ब्याज पर लोन देती है।
+
+3. **फ्री कौशल प्रशिक्षण (PMKVY - Skill India)**:
+   - अगर आप कोई नया हुनर (कंप्यूटर, मोबाइल रिपेयर, सोलर पैनल, ऑटोमोबाइल) सीखना चाहते हैं, तो प्रधानमंत्री कौशल विकास योजना में फ्री ट्रेनिंग और सर्टिफिकेट मिलता है।
+
+💡 योजना दृष्टि पोर्टल के **विज़ार्ड (/wizard)** पर अपना विवरण भरें, हमारा AI आपको आपकी स्थिति के अनुसार सबसे उपयुक्त काम और योजना सुझाएगा!`;
+  }
+
+  // General happiness / Life stress (खुश कैसे रहें / जिंदगी)
+  if (q.includes('khush') || q.includes('zindagi') || q.includes('life') || q.includes('stress') || q.includes('tension')) {
+    return `जिंदगी में खुश और तनावमुक्त रहने के लिए अपने स्वास्थ्य का ध्यान रखें, परिवार के साथ समय बिताएं और छोटे-छोटे लक्ष्यों पर काम करें।
+
+आत्मनिर्भरता और स्वाभिमान इंसान को सबसे बड़ी खुशी देते हैं। यदि आप या आपके परिवार का कोई सदस्य अपने पैरों पर खड़ा होने के लिए कोई छोटा काम या उद्यम शुरू करना चाहता है, तो भारत सरकार की कई योजनाएं (मुद्रा, विश्वकर्मा, महिला उद्यमिता) आपकी मदद के लिए तैयार हैं।
+
+हमारा **योजना दृष्टि** पोर्टल आपके हर कदम पर सही योजना चुनने और लोन प्राप्त करने में सहायता करेगा!`;
+  }
+
+  // General Curiosity / Conversational Out of Box
+  if (langCode === 'pa') {
+    return `ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ! ਮੈਂ **Yojna दृष्टि** ਦਾ ਡਿਜੀਟਲ ਸਹਾਇਕ ਹਾਂ। ਮੇਰਾ ਮੁੱਖ ਮਕਸਦ ਦੇਸ਼ ਦੇ ਹਰ ਨਾਗਰਿਕ, ਗਰੀਬ ਪਰਿਵਾਰਾਂ, ਕਾਰੋਬਾਰੀਆਂ ਅਤੇ ਵਿਦਿਆਰਥੀਆਂ ਨੂੰ ਸਰਕਾਰੀ ਯੋਜਨਾਵਾਂ, ਲੋਨ, ਸਬਸਿਡੀਆਂ ਅਤੇ ਸਕਾਲਰਸ਼ਿਪਾਂ ਦੀ ਸਹੀ ਜਾਣਕਾਰੀ ਦੇਣਾ ਹੈ।
+
+ਤੁਹਾਡਾ ਸਵਾਲ ਬਹੁਤ ਦਿਲਚਸਪ ਹੈ! ਜੇਕਰ ਤੁਹਾਨੂੰ ਕਿਸੇ ਸਰਕਾਰੀ ਯੋਜਨਾ, ਛੋਟੇ ਕਾਰੋਬਾਰੀ ਲੋਨ ਜਾਂ ਇਸ ਵੈੱਬਸਾਈਟ ਦੀ ਵਰਤੋਂ ਬਾਰੇ ਕੋਈ ਮਦਦ ਚਾਹੀਦੀ ਹੈ, ਤਾਂ ਬੇਝਿਜਕ ਪੁੱਛੋ।`;
+  }
+
+  if (langCode === 'en') {
+    return `Hello! I am your **Yojna दृष्टि Digital Assistant**. My core mission is to empower every citizen, small entrepreneur, student, and underprivileged household by connecting them transparently to Central & State government schemes, loans, subsidies, and scholarships.
+
+Thank you for your question! While I am specially trained in citizen welfare and financial opportunities, please feel free to ask anything about starting a small enterprise, getting collateral-free loans, verifying documents, or tracking government funds. How may I best assist your livelihood today?`;
+  }
+
+  return `नमस्ते! मैं **योजना दृष्टि** का डिजिटल मित्र और सहायक हूँ। मेरा मुख्य उद्देश्य देश के हर नागरिक, गरीब परिवारों, छोटे व्यवसायियों और विद्यार्थियों को बिना किसी दलाल के सरकारी योजनाओं, ऋण, सब्सिडी और छात्रवृत्तियों का सीधा लाभ पहुंचाना है।
+
+आपका प्रश्न बहुत अच्छा है! मैं विशेष रूप से जनकल्याण, रोजगार और सरकारी योजनाओं के लिए प्रशिक्षित हूँ। यदि आप कोई नया काम शुरू करना चाहते हैं, सरकारी लोन/सब्सिडी पाना चाहते हैं, या इस वेबसाइट की मदद लेना चाहते हैं, तो कृपया बताइए — मैं आपकी पूरी मदद करूँगा!`;
 };
 
 module.exports = {
   detectLanguage,
-  evaluateDomainScope,
-  getPoliteDomainApology,
+  classifyQueryIntent,
+  generatePoorCitizenGuidance,
   generatePlatformProcessAnswer,
-  synthesizeDynamicSchemeAnswer
+  synthesizeDynamicSchemeAnswer,
+  generateRandomLifeAnswer
 };
