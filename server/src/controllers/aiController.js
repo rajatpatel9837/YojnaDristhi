@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { mockSchemes } = require('../seed/seedData');
 const {
   detectLanguage,
@@ -13,14 +12,7 @@ const MODELDATA_DIR = path.join(__dirname, '../../../modeldata');
 const SARVAM_API_KEY = process.env.SARVAM_API_KEY || 'sk_zjphpukw_Z3PVufghQWRHAvJnV0HC926F';
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_KEY || '';
 
-let genAI = null;
-if (GEMINI_API_KEY) {
-  try {
-    genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-  } catch (err) {
-    console.warn('Gemini AI initialization warning:', err.message);
-  }
-}
+// ─── ML Models Status ───────────────────────────────────────────────
 
 const getMLModelsStatus = async (req, res) => {
   try {
@@ -68,7 +60,7 @@ const getMLModelsStatus = async (req, res) => {
       data: {
         totalModels: modelsSummary.length,
         models: modelsSummary,
-        environment: 'Node.js + Python ML + Gemini AI (Text) + Sarvam AI (Voice)',
+        environment: 'Node.js + Python ML + Sarvam AI 105B (Chat) + Sarvam AI (Voice)',
         datasetPath: MODELDATA_DIR
       }
     });
@@ -76,6 +68,8 @@ const getMLModelsStatus = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// ─── ML Prediction ──────────────────────────────────────────────────
 
 const predictMLMatch = async (req, res) => {
   try {
@@ -108,16 +102,123 @@ const predictMLMatch = async (req, res) => {
   }
 };
 
+function buildSystemPrompt(detected) {
+  return `You are Yojna दृष्टि AI, India's knowledgeable and empathetic public welfare and universal assistant (Tagline: "Discover. Apply. Track.").
 
+CRITICAL CONSTRAINTS:
+1. Do not claim that you saved, stored, remembered, logged, recorded, noted, or persisted any user information. You do not have memory or storage access through this chatbot conversation. Never say "I saved this", "I will remember this", "I've noted this", or equivalent statements. Answer the user's question directly.
+2. Never say "As an AI..." or discuss internal reasoning. Avoid unnecessary meta-commentary.
+3. Structure detailed scheme explanations using clear headings, short paragraphs, Markdown formatting, bold for important numbers/names/eligibility limits, and bullet points for lists.
+4. Reply in the citizen's detected language: ${detected.promptLang}.
+5. Topics: Welfare schemes (MUDRA, PMEGP, SVANidhi, PM Vishwakarma, Ayushman Bharat, PMAY, Stand-Up India), portal navigation (Wizard, 8-Stage Tracker, DocVerifier), education, recipes, coding, science, sports, and general life guidance.
+6. For poor, rural, or illiterate citizens, guide warmly with simple steps and mention nearby CSC / Jan Seva Kendra or Bank Sakhi where helpful.`;
+}
+
+// Minimal fallback prompt for retry attempts
+function buildMinimalPrompt(detected) {
+  return `Answer helpfully and directly in ${detected.promptLang}. Use clear Markdown with bullet points. Do not claim to save, store, or remember user data.`;
+}
+
+// ─── Sarvam API Call Helper with Retry ──────────────────────────────
+
+async function callSarvamAI(systemContent, userContent, maxRetries = 2) {
+  let lastError = null;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const res = await axios.post(
+        'https://api.sarvam.ai/v1/chat/completions',
+        {
+          model: 'sarvam-105b',
+          messages: [
+            { role: 'system', content: systemContent },
+            { role: 'user', content: userContent }
+          ],
+          // Sarvam 105B is a reasoning model — it uses tokens for internal reasoning
+          // before producing the final answer, so we need generous token limits
+          max_tokens: attempt === 0 ? 1500 : 1000,
+          temperature: 0.7
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'api-subscription-key': SARVAM_API_KEY
+          },
+          timeout: attempt === 0 ? 30000 : 35000
+        }
+      );
+
+      const msg = res.data?.choices?.[0]?.message;
+      // Sarvam 105B puts the final answer in 'content' and reasoning in 'reasoning_content'
+      // When max_tokens is too low, content is null and only reasoning_content is present
+      let reply = msg?.content;
+      
+      if (!reply && msg?.reasoning_content) {
+        // Extract useful content from reasoning — take the last substantial paragraph
+        console.log('[Sarvam 105B] Content was null, extracting from reasoning_content');
+        reply = extractAnswerFromReasoning(msg.reasoning_content, userContent);
+      }
+      
+      if (reply && reply.trim().length > 10) {
+        return reply.trim();
+      }
+    } catch (err) {
+      lastError = err;
+      console.warn(`[Sarvam 105B] Attempt ${attempt + 1} failed:`, err.response?.data?.error?.message || err.message);
+      // Small delay before retry
+      if (attempt < maxRetries - 1) {
+        await new Promise(r => setTimeout(r, 500));
+      }
+    }
+  }
+  
+  return null; // All attempts failed
+}
 
 /**
- * HIGH-ACCURACY CITIZEN & PLATFORM AI ASSISTANT
- * 
- * 1. Grassroots Citizen Support (गरीब और अनपढ़ नागरिकों की हर तरह से सहायता — नो पेपर्स, सिर्फ आधार कार्ड, अनपढ़, बैंक समस्या, रेहड़ी-पटरी, पशुपालन, घर, इलाज)
- * 2. Deep Platform Architecture (वेबसाइट कैसे काम करती है, 8-Stage Tracking, PFMS, DocVerifier OCR, ScholarSetu, Provider, Sponsorship)
- * 3. Dynamic Scheme Knowledge (15+ Central & State Schemes with live limits, subsidies, and DPRs)
- * 4. Universal Query Resolver (किसी भी रैंडम सवाल का समझदारी व सहानुभूति से जवाब देना और सरकारी सशक्तिकरण से जोड़ना)
- * 5. Same-Language Response (हिंदी, Hinglish, ਪੰਜਾਬੀ, English)
+ * When Sarvam 105B only returns reasoning_content (thinking) and content is null,
+ * try to extract a useful answer from the reasoning text.
+ */
+function extractAnswerFromReasoning(reasoning, userQuestion) {
+  if (!reasoning || reasoning.length < 20) return null;
+  
+  // Find where the actual output response begins (e.g., at the first markdown heading ## or greeting)
+  const headingMatch = reasoning.search(/(?:^|\n)(?:##|\*\*PMEGP|\*\*PM|\*\*MUDRA|नमस्ते|ਸਤਿ ਸ਼੍ਰੀ ਅਕਾਲ|Hello|Dear)/i);
+  if (headingMatch !== -1) {
+    const candidate = reasoning.substring(headingMatch).trim();
+    if (candidate.length > 50) {
+      return candidate;
+    }
+  }
+
+  const lines = reasoning.split('\n').filter(l => l.trim().length > 0);
+  
+  // Filter out internal analysis lines like "1. Do not claim...", "The user wants...", "Wait, no...", etc.
+  const cleanedLines = lines.filter(l => {
+    const trimmed = l.trim();
+    if (/^(?:The user|Analyze|Structure|Content|Wait,|Let's|I need to|Constraint|Guideline|1\. Do not|2\. Never|3\. Structure|4\. Reply|5\. Topics|6\. For poor)/i.test(trimmed)) {
+      return false;
+    }
+    return true;
+  });
+  
+  if (cleanedLines.length > 2) {
+    return cleanedLines.join('\n\n');
+  }
+  
+  return null;
+}
+
+// ─── Main Chat Handler ──────────────────────────────────────────────
+
+/**
+ * UNIVERSAL AI ASSISTANT — Sarvam AI 105B First Architecture
+ *
+ * Priority Order:
+ *   1. Sarvam AI 105B (PRIMARY — Indian multilingual LLM with retry)
+ *   2. Sarvam AI 105B with minimal prompt (RETRY — shorter prompt for faster response)
+ *   3. Gemini AI (BACKUP — only if API key available)
+ *   4. Local Knowledge Engine (LAST RESORT — only if ALL APIs unreachable)
  */
 const askYojnaSetuAssistant = async (req, res) => {
   try {
@@ -129,70 +230,62 @@ const askYojnaSetuAssistant = async (req, res) => {
     }
     const question = String(userQuestion).trim();
 
-    // 1. Detect language of question
+    // 1. Detect language
     const detected = detectLanguage(question, requestedLang);
     const targetLangCode = detected.langCode;
 
-    // 2. Grounded System Instruction for Gemini Generative AI (Universal)
-    const systemInstruction = `You are Yojna दृष्टि AI, India's most empathetic, helpful, and universal AI assistant (Tagline: "Discover. Apply. Track.").
-
-CRITICAL MANDATE:
-You must answer ANY question asked by the user accurately, helpfully, and warmly — whether it is about:
-1. Government welfare schemes, subsidies, loans, scholarships, 8-stage tracking (/track), wizard (/wizard), or document verification (/document-verification).
-2. Special assistance for poor, rural, and illiterate citizens (Voice input 🎙️, CSC / जन सेवा केंद्र, Bank Sakhi, Aadhaar-only collateral-free loans like PM SVANidhi, PM Vishwakarma, MUDRA, Ayushman Bharat, PMAY housing).
-3. Sports & cricket (FIFA, World Cups, players), cooking & food recipes, programming & coding (Python, JS, React), science, general knowledge, jokes & poetry, daily life advice, or any random question.
-NEVER refuse to answer or say "I cannot answer this" or "this is out of domain". Always give an accurate and warm answer.
-
-MULTILINGUAL MANDATE:
-The citizen asked in: ${detected.langName}.
-You MUST answer in that EXACT SAME language: ${detected.promptLang}.
-- If Hindi / Hinglish: reply in clear, polite Hindi (हिंदी).
-- If Punjabi: reply in Punjabi (ਪੰਜਾਬੀ).
-- If English: reply in English.`;
-
-    // 3. Try Gemini Generative AI SDK (if available)
-    if (genAI) {
-      for (const modelName of ['gemini-1.5-flash-latest', 'gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-pro']) {
-        try {
-          const model = genAI.getGenerativeModel({ model: modelName });
-          const result = await model.generateContent(`${systemInstruction}\n\nUser Question: ${question}`);
-          const response = await result.response;
-          const replyText = response.text();
-
-          if (replyText && replyText.trim().length > 20) {
-            return res.json({
-              success: true,
-              data: {
-                reply: replyText.trim(),
-                language: targetLangCode,
-                detectedLanguage: targetLangCode,
-                detectedLanguageName: detected.langName,
-                provider: `Gemini AI (${modelName})`,
-                groundedInOfficialSources: true
-              }
-            });
+    // ═══════════════════════════════════════════════════════════════
+    // STEP 1 (PRIMARY): Sarvam AI 105B with full prompt + retry
+    // ═══════════════════════════════════════════════════════════════
+    if (SARVAM_API_KEY) {
+      console.log(`[Sarvam 105B] Processing: "${question.substring(0, 60)}..." (lang: ${detected.langName})`);
+      
+      // Try with full system prompt first, then minimal prompt on retry
+      const fullPrompt = buildSystemPrompt(detected);
+      let sarvamReply = await callSarvamAI(fullPrompt, question, 1);
+      
+      // If full prompt failed, retry with minimal prompt (faster)
+      if (!sarvamReply) {
+        console.log(`[Sarvam 105B] Retrying with minimal prompt...`);
+        const minimalPrompt = buildMinimalPrompt(detected);
+        sarvamReply = await callSarvamAI(minimalPrompt, question, 2);
+      }
+      
+      if (sarvamReply) {
+        console.log(`[Sarvam 105B] ✅ Success (${sarvamReply.length} chars)`);
+        return res.json({
+          success: true,
+          data: {
+            reply: sarvamReply,
+            language: targetLangCode,
+            detectedLanguage: targetLangCode,
+            detectedLanguageName: detected.langName,
+            provider: 'Sarvam AI 105B',
+            groundedInOfficialSources: true
           }
-        } catch (geminiErr) {
-          // try next model
-        }
+        });
       }
     }
 
-    // 4. Try Direct Gemini REST API Endpoint
+    // ═══════════════════════════════════════════════════════════════
+    // STEP 2 (BACKUP): Gemini AI (only if API key exists)
+    // ═══════════════════════════════════════════════════════════════
     if (GEMINI_API_KEY) {
       try {
-        const geminiRestRes = await axios.post(
+        console.log(`[Gemini REST] Attempting backup...`);
+        const geminiRes = await axios.post(
           `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
           {
             contents: [{
-              parts: [{ text: `${systemInstruction}\n\nUser Question: ${question}` }]
+              parts: [{ text: `${systemPrompt}\n\nUser Question: ${question}` }]
             }]
           },
-          { timeout: 5000 }
+          { timeout: 10000 }
         );
 
-        const reply = geminiRestRes.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        const reply = geminiRes.data?.candidates?.[0]?.content?.parts?.[0]?.text;
         if (reply && reply.trim().length > 20) {
+          console.log(`[Gemini REST] ✅ Success`);
           return res.json({
             success: true,
             data: {
@@ -200,63 +293,20 @@ You MUST answer in that EXACT SAME language: ${detected.promptLang}.
               language: targetLangCode,
               detectedLanguage: targetLangCode,
               detectedLanguageName: detected.langName,
-              provider: 'Gemini AI (REST API)',
+              provider: 'Gemini AI',
               groundedInOfficialSources: true
             }
           });
         }
       } catch (err) {
-        console.warn('Gemini REST API attempt:', err.message);
+        console.warn(`[Gemini REST] ❌ Failed:`, err.message);
       }
     }
 
-    // 5. Sarvam AI 105B Indian LLM Chat Completions (Universal Multilingual Generative AI)
-    if (SARVAM_API_KEY) {
-      try {
-        const sarvamRes = await axios.post(
-          'https://api.sarvam.ai/v1/chat/completions',
-          {
-            model: 'sarvam-105b',
-            messages: [
-              {
-                role: 'system',
-                content: `You are Yojna दृष्टि AI, an empathetic Indian public welfare and universal assistant. Answer any query clearly, helpfully, and politely in the citizen's detected language (${detected.langName}). If asked about welfare schemes, loans, or subsidies (PM SVANidhi, PM Vishwakarma, MUDRA, Ayushman Bharat, PMAY), guide them clearly. If asked any other topic (daily life, recipes, coding, science, sports, jokes), provide an immediate direct answer.`
-              },
-              { role: 'user', content: question }
-            ],
-            max_tokens: 400,
-            temperature: 0.6
-          },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              'api-subscription-key': SARVAM_API_KEY
-            },
-            timeout: 15000
-          }
-        );
-
-        const sarvamReply = sarvamRes.data?.choices?.[0]?.message?.content;
-        if (sarvamReply && sarvamReply.trim().length > 15) {
-          return res.json({
-            success: true,
-            data: {
-              reply: sarvamReply.trim(),
-              language: targetLangCode,
-              detectedLanguage: targetLangCode,
-              detectedLanguageName: detected.langName,
-              provider: 'Sarvam AI 105B Universal Assistant',
-              groundedInOfficialSources: true
-            }
-          });
-        }
-      } catch (sarvamErr) {
-        console.warn('Sarvam chat completion attempt:', sarvamErr.response?.data || sarvamErr.message);
-      }
-    }
-
-    // 6. UNIVERSAL INTELLIGENT KNOWLEDGE ENGINE (Instant Local Offline Fallback)
-    // Resolves questions if external APIs are unreachable
+    // ═══════════════════════════════════════════════════════════════
+    // STEP 3 (LAST RESORT): Local offline engine — only when ALL APIs fail
+    // ═══════════════════════════════════════════════════════════════
+    console.warn(`[Offline Fallback] All LLM APIs unreachable. Using local engine.`);
     const reply = answerAnyQuestion(question, targetLangCode);
 
     return res.json({
@@ -266,7 +316,7 @@ You MUST answer in that EXACT SAME language: ${detected.promptLang}.
         language: targetLangCode,
         detectedLanguage: targetLangCode,
         detectedLanguageName: detected.langName,
-        provider: 'Yojna दृष्टि Intelligent Universal Engine',
+        provider: 'Yojna दृष्टि Offline Engine (API unavailable)',
         groundedInOfficialSources: true
       }
     });
@@ -277,10 +327,8 @@ You MUST answer in that EXACT SAME language: ${detected.promptLang}.
   }
 };
 
-/**
- * VOICE READING (Text-To-Speech) via Sarvam AI API
- * Automatically detects the language of the speech text
- */
+// ─── Voice (TTS) via Sarvam AI ──────────────────────────────────────
+
 const generateSpeech = async (req, res) => {
   try {
     const { text, language = 'auto' } = req.body;

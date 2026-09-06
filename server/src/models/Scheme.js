@@ -49,6 +49,34 @@ const schemeSchema = new mongoose.Schema({
   applicationStart: { type: Date },
   applicationDeadline: { type: Date },
 
+  // Task 2: Auto-Fill Form Mapping Fields
+  applicationFormFields: [
+    {
+      formField: { type: String, required: true },
+      sourcePath: { type: String, required: true }, // e.g. "profile.fullName", "digilocker.aadhaar.maskedNumber"
+      required: { type: Boolean, default: true }
+    }
+  ],
+
+  // Task 3: Guided Application Co-Pilot Walkthrough Steps
+  applicationWalkthrough: [
+    {
+      stepNumber: { type: Number, required: true },
+      stepTitle: { type: String, required: true },
+      instruction: { type: String, required: true },
+      screenshotUrl: { type: String },
+      fieldsNeeded: [
+        {
+          fieldLabel: { type: String, required: true },
+          sourcePath: { type: String, required: true },
+          tip: { type: String }
+        }
+      ],
+      commonPitfall: { type: String },
+      isPlaceholderContent: { type: Boolean, default: true }
+    }
+  ],
+
   // Official Source & Verification
   officialUrl: { type: String, required: true },
   sourceUrl: { type: String },

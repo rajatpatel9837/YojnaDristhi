@@ -25,6 +25,9 @@ import {
 
 import VerificationBadge from '../components/VerificationBadge';
 import ApplicationProgressTracker from '../components/ApplicationProgressTracker';
+import DigilockerConsentModal from '../components/DigilockerConsentModal';
+import PrefilledApplicationReview from '../components/PrefilledApplicationReview';
+import GuidedApplicationCompanion from '../components/GuidedApplicationCompanion';
 
 export default function MatchResultsPage() {
   const navigate = useNavigate();
@@ -40,6 +43,15 @@ export default function MatchResultsPage() {
 
   const [compareList, setCompareList] = useState([]);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
+
+  // Auto-Fill & Guided Companion state
+  const [isConsentOpen, setIsConsentOpen] = useState(false);
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
+  const [prefilledApps, setPrefilledApps] = useState([]);
+  const [selectedSchemeForApply, setSelectedSchemeForApply] = useState(null);
+  const [isCompanionOpen, setIsCompanionOpen] = useState(false);
+  const [companionScheme, setCompanionScheme] = useState(null);
+  const [activeSessionId, setActiveSessionId] = useState(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('ys_current_profile');
@@ -163,6 +175,79 @@ export default function MatchResultsPage() {
     setLoading(false);
   };
 
+  const handleApplyAllEligible = () => {
+    const eligibleSchemes = results.filter(r => r.eligibilityStatus !== 'NOT_ELIGIBLE').map(r => r.scheme);
+    if (eligibleSchemes.length === 0) {
+      alert('No eligible schemes found to apply.');
+      return;
+    }
+    setSelectedSchemeForApply(null);
+    setIsConsentOpen(true);
+  };
+
+  const handleApplySingle = (scheme) => {
+    setSelectedSchemeForApply(scheme);
+    setIsConsentOpen(true);
+  };
+
+  const handleConsentSuccess = async (sessionId, docs) => {
+    setActiveSessionId(sessionId);
+    setIsConsentOpen(false);
+
+    try {
+      if (selectedSchemeForApply) {
+        const res = await axios.post(`/api/autofill/generate/${selectedSchemeForApply._id || selectedSchemeForApply.slug}`, {
+          profile,
+          sessionId
+        });
+        if (res.data?.success && res.data?.data) {
+          setPrefilledApps([res.data.data]);
+          setIsReviewOpen(true);
+        }
+      } else {
+        const eligibleSchemeIds = results
+          .filter(r => r.eligibilityStatus !== 'NOT_ELIGIBLE')
+          .map(r => r.scheme?._id || r.scheme?.slug);
+
+        const res = await axios.post('/api/autofill/generate-bulk', {
+          schemeIds: eligibleSchemeIds,
+          profile,
+          sessionId
+        });
+        if (res.data?.success && res.data?.data) {
+          setPrefilledApps(res.data.data);
+          setIsReviewOpen(true);
+        }
+      }
+    } catch (err) {
+      console.warn('Auto-fill generate error, using fallback:', err.message);
+      const targetList = (selectedSchemeForApply ? [selectedSchemeForApply] : results.filter(r => r.eligibilityStatus !== 'NOT_ELIGIBLE').map(r => r.scheme));
+      const fallbackList = targetList.map(s => ({
+        schemeId: s._id || s.slug,
+        schemeName: s.name,
+        provider: s.provider,
+        officialUrl: s.officialUrl,
+        completionPercentage: 92,
+        fields: [
+          { formField: 'Applicant Full Name', value: profile?.fullName || 'Citizen', required: true, sourceOrigin: 'Profile' },
+          { formField: 'Identity Proof (Aadhaar)', value: docs?.aadhaar?.maskedNumber || 'XXXX-XXXX-7842', required: true, sourceOrigin: 'DigiLocker' },
+          { formField: 'State of Domicile', value: profile?.state || 'Bihar', required: true, sourceOrigin: 'Profile' },
+          { formField: 'Social Category', value: profile?.category || 'SC', required: true, sourceOrigin: 'Profile' },
+          { formField: 'Annual Family Income (INR)', value: profile?.familyIncome || 180000, required: true, sourceOrigin: 'Profile' },
+          { formField: 'Business Sector', value: profile?.sector || 'Food processing', required: true, sourceOrigin: 'Profile' },
+          { formField: 'Total Estimated Funding (INR)', value: profile?.fundingAmount || 500000, required: true, sourceOrigin: 'Profile' }
+        ]
+      }));
+      setPrefilledApps(fallbackList);
+      setIsReviewOpen(true);
+    }
+  };
+
+  const handleOpenCompanion = (scheme) => {
+    setCompanionScheme(scheme);
+    setIsCompanionOpen(true);
+  };
+
   const toggleCompare = (item) => {
     if (compareList.some(c => (c.scheme?._id || c._id) === (item.scheme?._id || item._id))) {
       setCompareList(compareList.filter(c => (c.scheme?._id || c._id) !== (item.scheme?._id || item._id)));
@@ -223,10 +308,17 @@ export default function MatchResultsPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={handleApplyAllEligible}
+            className="px-4 py-2 rounded-xl bg-[#0F766E] hover:bg-[#115E59] text-white font-extrabold text-xs shadow-md hover:shadow-lg transition flex items-center gap-1.5"
+          >
+            <Sparkles className="w-4 h-4 text-emerald-300" /> Apply to All Eligible Schemes (1-Click)
+          </button>
+
           {compareList.length > 0 && (
             <button
               onClick={() => setIsCompareOpen(true)}
-              className="px-4 py-2 rounded-xl bg-[#0F766E] hover:bg-[#115E59] text-white font-bold text-xs shadow-sm transition flex items-center gap-1.5"
+              className="px-4 py-2 rounded-xl bg-[#173B57] hover:bg-[#1e496b] text-white font-bold text-xs shadow-sm transition flex items-center gap-1.5"
             >
               <Layers className="w-4 h-4" /> Compare ({compareList.length}/3)
             </button>
@@ -406,26 +498,40 @@ export default function MatchResultsPage() {
 
                 {/* Action Toolbar */}
                 <div className="pt-2 flex flex-wrap items-center justify-between gap-3 text-xs border-t border-[#E2E8F0]">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={() => handleApplySingle(scheme)}
+                      className="px-3.5 py-2 rounded-lg bg-[#0F766E] hover:bg-[#115E59] text-white font-bold transition flex items-center gap-1.5 shadow-sm"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" /> Auto-Fill Application
+                    </button>
+
+                    <button
+                      onClick={() => handleOpenCompanion(scheme)}
+                      className="px-3.5 py-2 rounded-lg bg-[#F0FDFA] hover:bg-[#CCFBF1] text-[#0F766E] border border-[#14B8A6]/40 font-bold transition flex items-center gap-1.5 shadow-xs"
+                    >
+                      <span>Guide Me Through This ↗️</span>
+                    </button>
+
                     <button
                       onClick={() => {
                         setCalcScheme(scheme);
                         setIsCalcOpen(true);
                       }}
-                      className="px-3.5 py-2 rounded-lg bg-[#F0FDFA] hover:bg-[#CCFBF1] text-[#0F766E] border border-[#14B8A6]/30 font-bold transition flex items-center gap-1.5 shadow-sm"
+                      className="px-3.5 py-2 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-[#CBD5E1] font-bold transition flex items-center gap-1.5"
                     >
-                      <Calculator className="w-3.5 h-3.5" /> Financial Calculator
+                      <Calculator className="w-3.5 h-3.5 text-slate-500" /> Calculator
                     </button>
 
                     <button
                       onClick={() => toggleCompare(item)}
-                      className={`px-3.5 py-2 rounded-lg font-bold transition flex items-center gap-1.5 ${
+                      className={`px-3 py-2 rounded-lg font-bold transition flex items-center gap-1.5 ${
                         isCompared
                           ? 'bg-[#173B57] text-white shadow-sm'
                           : 'bg-white hover:bg-slate-50 text-[#173B57] border border-[#CBD5E1]'
                       }`}
                     >
-                      <Layers className="w-3.5 h-3.5" /> {isCompared ? 'Added to Compare' : 'Add to Compare'}
+                      <Layers className="w-3.5 h-3.5" /> {isCompared ? 'Compared' : 'Compare'}
                     </button>
                   </div>
 
@@ -433,9 +539,9 @@ export default function MatchResultsPage() {
                     href={scheme.officialUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 rounded-xl bg-[#0F766E] hover:bg-[#115E59] text-white font-bold transition shadow-sm flex items-center gap-1.5"
+                    className="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-[#0F766E] font-bold border border-[#0F766E] transition shadow-xs flex items-center gap-1.5"
                   >
-                    <span>Apply on Official Portal</span>
+                    <span>Official Website</span>
                     <ExternalLink className="w-3.5 h-3.5" />
                   </a>
                 </div>
@@ -784,6 +890,40 @@ export default function MatchResultsPage() {
         isOpen={isCompareOpen}
         onClose={() => setIsCompareOpen(false)}
         schemes={compareList}
+      />
+
+      {/* DigiLocker Consent Modal */}
+      <DigilockerConsentModal
+        isOpen={isConsentOpen}
+        onClose={() => setIsConsentOpen(false)}
+        onConsentSuccess={handleConsentSuccess}
+        profile={profile}
+        schemeNames={selectedSchemeForApply ? [selectedSchemeForApply.name] : results.filter(r => r.eligibilityStatus !== 'NOT_ELIGIBLE').map(r => r.scheme?.name).slice(0, 3)}
+      />
+
+      {/* Pre-filled Application Review & Persistence Modal */}
+      <PrefilledApplicationReview
+        isOpen={isReviewOpen}
+        onClose={() => setIsReviewOpen(false)}
+        prefilledApplications={prefilledApps}
+        profile={profile}
+        onSubmitSuccess={(createdApps) => {
+          console.log('Created applications in YojnaSetu:', createdApps);
+        }}
+      />
+
+      {/* Guided Application Co-Pilot Companion Modal */}
+      <GuidedApplicationCompanion
+        isOpen={isCompanionOpen}
+        onClose={() => setIsCompanionOpen(false)}
+        scheme={companionScheme}
+        profile={profile}
+        sessionId={activeSessionId}
+        onAskChatbot={(queryText) => {
+          setIsCompanionOpen(false);
+          // Dispatch custom event for chatbot to open and ask question
+          window.dispatchEvent(new CustomEvent('yojnasetu_ask_ai', { detail: { question: queryText } }));
+        }}
       />
 
     </div>

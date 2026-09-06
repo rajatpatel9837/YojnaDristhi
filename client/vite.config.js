@@ -6,10 +6,11 @@ const backendPort = process.env.BACKEND_PORT || (process.platform === 'darwin' ?
 export default defineConfig({
   plugins: [react()],
   server: {
+    host: '0.0.0.0',
     port: 5173,
     proxy: {
       '/api': {
-        target: `http://localhost:${backendPort}`,
+        target: `http://127.0.0.1:${backendPort}`,
         changeOrigin: true
       }
     }

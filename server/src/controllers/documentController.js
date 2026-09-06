@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 const { scanDocumentOCR } = require('../engines/ocrEngine');
 
 /**
@@ -35,6 +36,14 @@ const scanDocument = async (req, res) => {
     });
   } catch (error) {
     console.error('Document OCR controller error:', error);
+    // Clean up uploaded file if processing failed
+    if (req.file && req.file.path && fs.existsSync(req.file.path)) {
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (unlinkErr) {
+        console.warn('Failed to clean up orphaned file:', unlinkErr.message);
+      }
+    }
     res.status(500).json({
       success: false,
       message: error.message || 'Failed to scan document.'

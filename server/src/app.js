@@ -19,6 +19,7 @@ const opportunityRoutes = require('./routes/opportunityRoutes');
 const adminVerificationRoutes = require('./routes/adminVerificationRoutes');
 const documentRoutes = require('./routes/documentRoutes');
 const trackingRoutes = require('./routes/trackingRoutes');
+const autofillRoutes = require('./routes/autofillRoutes');
 
 const app = express();
 
@@ -75,13 +76,14 @@ app.use('/api/organizations', organizationRoutes);
 app.use('/api/opportunities', opportunityRoutes);
 app.use('/api/admin/verification', adminVerificationRoutes);
 app.use('/api/documents', documentRoutes);
+app.use('/api/autofill', autofillRoutes);
 app.use('/api', trackingRoutes);
 
 // Static Client Serving for Production
 const clientDistPath = path.join(__dirname, '../../client/dist');
 if (fs.existsSync(clientDistPath)) {
   app.use(express.static(clientDistPath));
-  app.get('*', (req, res, next) => {
+  app.use((req, res, next) => {
     if (req.originalUrl.startsWith('/api')) return next();
     res.sendFile(path.join(clientDistPath, 'index.html'));
   });

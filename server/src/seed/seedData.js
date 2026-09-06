@@ -56,6 +56,76 @@ const mockSchemes = [
       'Project Report',
       'Udyam Certificate'
     ],
+    applicationFormFields: [
+      { formField: 'Applicant Full Name', sourcePath: 'profile.fullName', required: true },
+      { formField: 'Identity Proof (Aadhaar)', sourcePath: 'digilocker.aadhaar.maskedNumber', required: true },
+      { formField: 'Gender', sourcePath: 'profile.gender', required: true },
+      { formField: 'Date of Birth / Age', sourcePath: 'digilocker.aadhaar.dateOfBirth', required: true },
+      { formField: 'State of Domicile', sourcePath: 'profile.state', required: true },
+      { formField: 'District', sourcePath: 'profile.district', required: true },
+      { formField: 'Social Category', sourcePath: 'profile.category', required: true },
+      { formField: 'Category Certificate No.', sourcePath: 'digilocker.casteCertificate.certificateNumber', required: false },
+      { formField: 'Annual Family Income (INR)', sourcePath: 'profile.familyIncome', required: true },
+      { formField: 'Income Certificate No.', sourcePath: 'digilocker.incomeCertificate.certificateNumber', required: false },
+      { formField: 'Business / Project Sector', sourcePath: 'profile.sector', required: true },
+      { formField: 'Total Estimated Project Cost (INR)', sourcePath: 'profile.fundingAmount', required: true },
+      { formField: 'Udyam MSME Registration No.', sourcePath: 'digilocker.udyamCertificate.udyamNumber', required: false },
+      { formField: 'Enterprise Name', sourcePath: 'digilocker.udyamCertificate.enterpriseName', required: false }
+    ],
+    applicationWalkthrough: [
+      {
+        stepNumber: 1,
+        stepTitle: 'Access KVIC Online Portal & Register as New Individual',
+        instruction: 'Visit the official PMEGP e-Portal (https://www.kviconline.gov.in/pmegpeportal/pmegphome/index.jsp) and click on "Online Application Form for Individual".',
+        screenshotUrl: '/screenshots/pmegp_step1.png',
+        fieldsNeeded: [
+          { fieldLabel: 'Applicant Full Name', sourcePath: 'profile.fullName', tip: 'Enter matching Aadhaar card exactly' },
+          { fieldLabel: 'Aadhaar Number', sourcePath: 'digilocker.aadhaar.maskedNumber', tip: '12-digit UID' },
+          { fieldLabel: 'Social Category', sourcePath: 'profile.category', tip: 'Select SC/ST/OBC/General matching caste certificate' }
+        ],
+        commonPitfall: 'Ensure sponsoring agency (KVIC/KVIB/DIC) selected corresponds to your business district.',
+        isPlaceholderContent: true
+      },
+      {
+        stepNumber: 2,
+        stepTitle: 'Fill Project Details & Proposed Unit Location',
+        instruction: 'Specify your manufacturing or service activity, enterprise address, and whether unit is in rural or urban area.',
+        screenshotUrl: '/screenshots/pmegp_step2.png',
+        fieldsNeeded: [
+          { fieldLabel: 'Proposed Unit State', sourcePath: 'profile.state', tip: 'State of enterprise' },
+          { fieldLabel: 'District', sourcePath: 'profile.district', tip: 'District of enterprise' },
+          { fieldLabel: 'Industry Sector', sourcePath: 'profile.sector', tip: 'Select from NIC classification' },
+          { fieldLabel: 'Enterprise Name', sourcePath: 'digilocker.udyamCertificate.enterpriseName', tip: 'Proposed business name' }
+        ],
+        commonPitfall: 'Rural units receive 35% margin money subsidy while urban units receive 25%; verify correct village/panchayat status.',
+        isPlaceholderContent: true
+      },
+      {
+        stepNumber: 3,
+        stepTitle: 'Input Financial Cost Estimates & Bank Preference',
+        instruction: 'Enter capital expenditure (machinery/tools) + working capital requirement, and select financing bank branch.',
+        screenshotUrl: '/screenshots/pmegp_step3.png',
+        fieldsNeeded: [
+          { fieldLabel: 'Total Project Cost (INR)', sourcePath: 'profile.fundingAmount', tip: 'Max ₹50L manufacturing, ₹20L service' },
+          { fieldLabel: 'Annual Family Income (INR)', sourcePath: 'profile.familyIncome', tip: 'Matching Tehsildar income certificate' }
+        ],
+        commonPitfall: 'Project cost exceeding ₹10L for manufacturing or ₹5L for service requires minimum 8th class pass educational certificate.',
+        isPlaceholderContent: true
+      },
+      {
+        stepNumber: 4,
+        stepTitle: 'Upload Documents & Submit Dossier',
+        instruction: 'Upload passport photo, Aadhaar, Caste Certificate, Detailed Project Report (DPR), and EDP Training certificate if completed.',
+        screenshotUrl: '/screenshots/pmegp_step4.png',
+        fieldsNeeded: [
+          { fieldLabel: 'Caste Certificate No.', sourcePath: 'digilocker.casteCertificate.certificateNumber', tip: 'State Social Welfare Certificate' },
+          { fieldLabel: 'Income Certificate No.', sourcePath: 'digilocker.incomeCertificate.certificateNumber', tip: 'State Revenue Department' },
+          { fieldLabel: 'Udyam Registration No.', sourcePath: 'digilocker.udyamCertificate.udyamNumber', tip: 'Optional for greenfield' }
+        ],
+        commonPitfall: 'PDF file size must be less than 2MB per document. Note down the generated Application ID for tracking.',
+        isPlaceholderContent: true
+      }
+    ],
     officialUrl: 'https://www.kviconline.gov.in/pmegpeportal/pmegphome/index.jsp',
     sourceUrl: 'https://msme.gov.in/pmegp',
     sourceName: 'Official KVIC Portal',
@@ -99,6 +169,42 @@ const mockSchemes = [
       'Aadhaar/Identity',
       'Bank Statement',
       'Business Registration'
+    ],
+    applicationFormFields: [
+      { formField: 'Applicant Full Name', sourcePath: 'profile.fullName', required: true },
+      { formField: 'Identity Proof (Aadhaar)', sourcePath: 'digilocker.aadhaar.maskedNumber', required: true },
+      { formField: 'Business Sector / Category', sourcePath: 'profile.sector', required: true },
+      { formField: 'Proposed Enterprise Name', sourcePath: 'digilocker.udyamCertificate.enterpriseName', required: true },
+      { formField: 'Loan Category (Shishu/Kishore/Tarun)', sourcePath: 'profile.stage', required: true },
+      { formField: 'Loan Amount Required (INR)', sourcePath: 'profile.fundingAmount', required: true },
+      { formField: 'Business Address & State', sourcePath: 'profile.state', required: true }
+    ],
+    applicationWalkthrough: [
+      {
+        stepNumber: 1,
+        stepTitle: 'Access Udyamimitra / MUDRA Portal',
+        instruction: 'Visit the official MUDRA application portal (https://www.mudra.org.in/) or Udyamimitra and select "Apply for Mudra Loan".',
+        screenshotUrl: '/screenshots/mudra_step1.png',
+        fieldsNeeded: [
+          { fieldLabel: 'Applicant Full Name', sourcePath: 'profile.fullName', tip: 'Matching Aadhaar card' },
+          { fieldLabel: 'Mobile Number', sourcePath: 'profile.phone', tip: 'Aadhaar linked mobile' }
+        ],
+        commonPitfall: 'Choose Shishu (up to ₹50K), Kishore (₹50K-₹5L), or Tarun (₹5L-₹10L) correctly based on requirement.',
+        isPlaceholderContent: true
+      },
+      {
+        stepNumber: 2,
+        stepTitle: 'Enter Enterprise Details & Preferred Lending Bank',
+        instruction: 'Provide business activity description, estimated turnover, and select the bank branch where you hold an active account.',
+        screenshotUrl: '/screenshots/mudra_step2.png',
+        fieldsNeeded: [
+          { fieldLabel: 'Business Sector', sourcePath: 'profile.sector', tip: 'Manufacturing / Trading / Service' },
+          { fieldLabel: 'Loan Amount Requested', sourcePath: 'profile.fundingAmount', tip: 'Max ₹10,00,000 under Tarun' },
+          { fieldLabel: 'Enterprise Location State', sourcePath: 'profile.state', tip: 'State of business location' }
+        ],
+        commonPitfall: 'No collateral or third-party guarantee is required under RBI guidelines for loans up to ₹10 Lakh.',
+        isPlaceholderContent: true
+      }
     ],
     officialUrl: 'https://www.mudra.org.in/',
     sourceUrl: 'https://www.mudra.org.in/Offerings',
@@ -145,6 +251,42 @@ const mockSchemes = [
       'Business Registration',
       'Project Report',
       'Udyam Certificate'
+    ],
+    applicationFormFields: [
+      { formField: 'Applicant Full Name', sourcePath: 'profile.fullName', required: true },
+      { formField: 'Identity Proof (Aadhaar)', sourcePath: 'digilocker.aadhaar.maskedNumber', required: true },
+      { formField: 'Social Category (SC/ST/Woman)', sourcePath: 'profile.category', required: true },
+      { formField: 'Caste Certificate No.', sourcePath: 'digilocker.casteCertificate.certificateNumber', required: true },
+      { formField: 'Greenfield Enterprise Name', sourcePath: 'digilocker.udyamCertificate.enterpriseName', required: true },
+      { formField: 'Project Cost / Loan Request (INR)', sourcePath: 'profile.fundingAmount', required: true },
+      { formField: 'State of Proposed Enterprise', sourcePath: 'profile.state', required: true }
+    ],
+    applicationWalkthrough: [
+      {
+        stepNumber: 1,
+        stepTitle: 'Access Stand-Up Mitra Portal & Select Borrower Category',
+        instruction: 'Go to https://www.standupmitra.in/ and click "Register as Trainee / Ready Borrower" to initiate your greenfield loan.',
+        screenshotUrl: '/screenshots/standup_step1.png',
+        fieldsNeeded: [
+          { fieldLabel: 'Applicant Full Name', sourcePath: 'profile.fullName', tip: 'Must be SC/ST or Woman entrepreneur' },
+          { fieldLabel: 'Aadhaar UID', sourcePath: 'digilocker.aadhaar.maskedNumber', tip: 'UIDAI standard' },
+          { fieldLabel: 'Category Certificate No.', sourcePath: 'digilocker.casteCertificate.certificateNumber', tip: 'Required for SC/ST applicants' }
+        ],
+        commonPitfall: 'The business must be a greenfield project (first-time venture in manufacturing, services, or trading).',
+        isPlaceholderContent: true
+      },
+      {
+        stepNumber: 2,
+        stepTitle: 'Submit Detailed Project Report & Bank Matching',
+        instruction: 'Upload project appraisal report and select preferred commercial bank branch for lead routing.',
+        screenshotUrl: '/screenshots/standup_step2.png',
+        fieldsNeeded: [
+          { fieldLabel: 'Total Project Cost (INR)', sourcePath: 'profile.fundingAmount', tip: 'Between ₹10 Lakh and ₹1 Crore' },
+          { fieldLabel: 'State Location', sourcePath: 'profile.state', tip: 'State where enterprise will operate' }
+        ],
+        commonPitfall: 'Non-individual enterprises must have at least 51% shareholding held by SC/ST or woman entrepreneur.',
+        isPlaceholderContent: true
+      }
     ],
     officialUrl: 'https://www.standupmitra.in/',
     sourceUrl: 'https://www.standupmitra.in/Home/SUIScheme',

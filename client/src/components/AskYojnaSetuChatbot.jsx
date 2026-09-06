@@ -57,6 +57,19 @@ export default function AskYojnaSetuChatbot() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
+  // Listen for Co-Pilot 'yojnasetu_ask_ai' events
+  useEffect(() => {
+    const handleAskAiEvent = (e) => {
+      const question = e.detail?.question;
+      if (question) {
+        setIsOpen(true);
+        executeSend(question, false);
+      }
+    };
+    window.addEventListener('yojnasetu_ask_ai', handleAskAiEvent);
+    return () => window.removeEventListener('yojnasetu_ask_ai', handleAskAiEvent);
+  }, []);
+
   // Initialize Speech Recognition (Mic Input)
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
