@@ -144,51 +144,31 @@ export default function AskYojnaSetuChatbot() {
         throw new Error('No valid reply received');
       }
     } catch (err) {
-      console.warn('Chat error fallback:', err.message);
-      const cleanQ = (userQuestion || '').toLowerCase();
+      console.warn('Chat error:', err.message);
       let detectedFallbackLang = 'en';
-      
-      if (/[\u0900-\u097F]/.test(userQuestion) || /bhai|mujhe|mera|meri|hum|kya|kaise|karna|chahiye|dukaan|dukan|yojana|yojna|kitna|paisa|milega|sarkar|sarkari|loan|subsidy|patrata|kisan|krishi|mahila/i.test(cleanQ)) {
+      if (/[\u0900-\u097F]/.test(userQuestion) || /bhai|mujhe|mera|meri|hum|kya|kaise|karna|chahiye|yojana|yojna|paisa|sarkar/i.test(userQuestion)) {
         detectedFallbackLang = 'hi';
-      } else if (/[\u0A00-\u0A7F]/.test(userQuestion) || /mainu|tuhanu|chahida|dasso|karobar|hovega/i.test(cleanQ)) {
+      } else if (/[\u0A00-\u0A7F]/.test(userQuestion) || /mainu|tuhanu|chahida|dasso/i.test(userQuestion)) {
         detectedFallbackLang = 'pa';
       }
 
-      let fallbackReply = '';
-      let fallbackLangName = 'English';
-      if (detectedFallbackLang === 'hi') {
-        fallbackLangName = 'Hindi (हिंदी)';
-        if (cleanQ.includes('दुकान') || cleanQ.includes('dukan') || cleanQ.includes('shop') || cleanQ.includes('kirana')) {
-          fallbackReply = 'अगर आप नई दुकान खोलना चाहते हैं, तो **PM मुद्रा योजना** के तहत ₹10 लाख तक का बिना गारंटी लोन और **PMEGP** के तहत 35% तक सरकारी सब्सिडी उपलब्ध है।';
-        } else if (cleanQ.includes('महिला') || cleanQ.includes('mahila') || cleanQ.includes('woman')) {
-          fallbackReply = 'महिला उद्यमियों के लिए **मुख्यमंत्री महिला उद्यमिता योजना** (₹5 लाख अनुदान + ₹5 लाख ब्याज-मुक्त ऋण) और **Stand-Up India** (₹10 लाख से ₹1 करोड़) उपलब्ध हैं।';
-        } else if (cleanQ.includes('कारीगर') || cleanQ.includes('vishwakarma') || cleanQ.includes('दर्जी')) {
-          fallbackReply = '**PM विश्वकर्मा योजना** में पारंपरिक कारीगरों को ₹3 लाख का 5% ब्याज पर ऋण और ₹15,000 का टूलकिट अनुदान मिलता है।';
-        } else {
-          fallbackReply = 'योजना दृष्टि पर 15+ सरकारी योजनाएं (मुद्रा, PMEGP, विश्वकर्मा, स्टैंड-अप इंडिया) उपलब्ध हैं। आप अपनी भाषा में किसी भी योजना के बारे में पूछ सकते हैं।';
-        }
-      } else if (detectedFallbackLang === 'pa') {
-        fallbackLangName = 'Punjabi (ਪੰਜਾਬੀ)';
-        fallbackReply = 'ਨਵੇਂ ਕਾਰੋਬਾਰ ਅਤੇ ਦੁਕਾਨ ਲਈ **PM MUDRA ਯੋਜਨਾ** (₹10 ਲੱਖ ਤੱਕ ਬਿਨਾਂ ਗਾਰੰਟੀ) ਅਤੇ **PMEGP ਯੋਜਨਾ** (35% ਸਬਸਿਡੀ) ਉਪਲਬਧ ਹਨ।';
-      } else {
-        fallbackReply = 'For new shops and enterprises, **PM MUDRA Yojana** (up to ₹10 Lakh collateral-free) and **PMEGP** (up to 35% capital subsidy) are available.';
-      }
+      const connectionErrorReply = detectedFallbackLang === 'hi'
+        ? 'क्षमा करें, सर्वर से संपर्क स्थापित नहीं हो पा रहा है। कृपया अपना इंटरनेट कनेक्शन जांचें या थोड़ी देर बाद पुनः प्रयास करें।'
+        : detectedFallbackLang === 'pa'
+        ? 'ਮਾਫ਼ ਕਰਨਾ, ਸਰਵਰ ਨਾਲ ਸੰਪਰਕ ਨਹੀਂ ਹੋ ਸਕਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਕੁਝ ਸਮੇਂ ਬਾਅਦ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।'
+        : 'I apologize, but unable to connect to the Yojna दृष्टि knowledge service. Please check your connection and try again.';
 
-      setMessages((prev) => {
-        const nextMsgs = [
-          ...prev,
-          {
-            sender: 'bot',
-            text: fallbackReply,
-            detectedLanguageName: fallbackLangName,
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          }
-        ];
-        if (autoSpeak) {
-          setTimeout(() => speakBotResponse(fallbackReply, nextMsgs.length - 1), 300);
+      const langName = detectedFallbackLang === 'hi' ? 'Hindi (हिंदी)' : detectedFallbackLang === 'pa' ? 'Punjabi (ਪੰਜਾਬੀ)' : 'English';
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: 'bot',
+          text: connectionErrorReply,
+          detectedLanguageName: langName,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
-        return nextMsgs;
-      });
+      ]);
     } finally {
       setLoading(false);
     }
@@ -400,6 +380,26 @@ export default function AskYojnaSetuChatbot() {
               </div>
             )}
             <div ref={messagesEndRef} />
+          </div>
+
+          {/* Quick Suggestion Chips */}
+          <div className="px-3 py-1.5 bg-[#F8FAFC] border-t border-[#E2E8F0] flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+            {[
+              { label: '💡 पोर्टल कैसे काम करता है?', q: 'यह वेबसाइट कैसे काम करती है और इसके मुख्य फीचर्स क्या हैं?' },
+              { label: '📋 8-Stage Tracking & PFMS', q: '8-stage application tracking और PFMS कैसे काम करता है?' },
+              { label: '🏪 दुकान हेतु मुद्रा लोन', q: 'मुझे दुकान खोलने के लिए मुद्रा लोन कैसे मिलेगा?' },
+              { label: '📄 AI दस्तावेज़ सत्यापन', q: 'DocVerifier AI से दस्तावेज़ सत्यापन कैसे होता है?' },
+              { label: '🎓 ScholarSetu छात्रवृत्ति', q: 'विद्यार्थियों के लिए ScholarSetu पोर्टल कैसे काम करता है?' }
+            ].map((chip, cIdx) => (
+              <button
+                key={cIdx}
+                type="button"
+                onClick={() => executeSend(chip.q, false)}
+                className="whitespace-nowrap px-2.5 py-1 rounded-full bg-white hover:bg-[#CCFBF1] text-[#0F766E] border border-[#14B8A6]/30 text-[10px] font-bold transition shrink-0 shadow-xs"
+              >
+                {chip.label}
+              </button>
+            ))}
           </div>
 
           {/* Input & Voice Controls */}
