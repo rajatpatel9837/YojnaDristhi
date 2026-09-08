@@ -725,7 +725,7 @@ export default function PhoneCallAssistantModal({ isOpen, onClose }) {
                   <div className="w-14 h-14 mx-auto rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400 mb-2">
                     <AlertTriangle className="w-7 h-7" />
                   </div>
-                  <h3 className="text-base font-black text-white">Twilio कॉल कनेक्ट नहीं हो सकी</h3>
+                  <h3 className="text-base font-black text-white">Twilio सुरक्षा नियम (Trial Account)</h3>
                   {realCallInfo?.twilioCode && (
                     <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-[10px] font-mono font-bold border border-rose-500/30">
                       Error {realCallInfo.twilioCode}
@@ -733,18 +733,28 @@ export default function PhoneCallAssistantModal({ isOpen, onClose }) {
                   )}
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 text-[11px] text-slate-300 space-y-2">
+                <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 text-[11px] text-slate-300 space-y-2.5">
                   <p className="text-rose-300 font-medium leading-relaxed">
-                    {realCallInfo?.hint || realCallInfo?.message}
+                    {realCallInfo?.hint || (realCallInfo?.message?.includes('500') ? 'Twilio Trial सुरक्षा नियम: आपका नंबर Twilio Console में अभी सत्यापित नहीं है।' : realCallInfo?.message)}
                   </p>
                   <p className="text-[10px] text-slate-400 leading-relaxed">
-                    Twilio Trial अकाउंट सुरक्षा नियमों के तहत, केवल उन्ही फोन नंबरों पर आउटबाउंड कॉल की अनुमति देता है जो <strong>console.twilio.com ➔ Verified Caller IDs</strong> में OTP द्वारा जोड़े गए हों।
+                    चूँकि आपका Twilio खाता Free/Trial है, Twilio केवल उन्ही फ़ोन नंबरों पर कॉल जाने देता है जो आपके Twilio Console में <strong>OTP द्वारा Verified</strong> हों।
                   </p>
+                  
+                  <a
+                    href="https://console.twilio.com/us1/develop/phone-numbers/manage/verified"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition flex items-center justify-center gap-1.5 shadow-sm"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Twilio में अपना नंबर जोड़ें (OTP Verify) ↗</span>
+                  </a>
                 </div>
 
                 <div className="space-y-2 pt-1 text-center">
                   <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                    — स्क्रीन पर बिना रुकावट टेस्ट करें —
+                    — या बिना Twilio के तुरंत कॉल चलाएं —
                   </div>
                   <button
                     type="button"
@@ -756,7 +766,7 @@ export default function PhoneCallAssistantModal({ isOpen, onClose }) {
                     className="w-full py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2 active:scale-95"
                   >
                     <Smartphone className="w-4 h-4 text-slate-950" />
-                    <span>📱 स्क्रीन पर लाइव ऑडियो कॉल चलाएं</span>
+                    <span>📱 स्क्रीन पर अभी लाइव कॉल सुनें (Start Demo)</span>
                   </button>
                   <button
                     type="button"
