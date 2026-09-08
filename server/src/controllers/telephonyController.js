@@ -184,7 +184,7 @@ exports.initiateCall = async (req, res) => {
     // Attempt real Twilio outbound phone call if client & phone number exist
     if (client && twilioNumber && !twilioNumber.includes('your_')) {
       try {
-        // Use inline TwiML so Twilio doesn't fail trying to reach localhost from cloud!
+        // Build TwiML prompt
         const inlineTwiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Gather numDigits="1" timeout="10">
@@ -197,8 +197,11 @@ exports.initiateCall = async (req, res) => {
   </Say>
 </Response>`;
 
+        // Use twimlets.com/echo so both Twilio Trial (disallowing inline twiml param) and Paid accounts work!
+        const echoUrl = `https://twimlets.com/echo?Twiml=${encodeURIComponent(inlineTwiml)}`;
+
         const call = await client.calls.create({
-          twiml: inlineTwiml,
+          url: echoUrl,
           to: `+91${clean}`,
           from: twilioNumber
         });
@@ -215,10 +218,10 @@ exports.initiateCall = async (req, res) => {
       } catch (err) {
         console.warn('Twilio calls.create error:', err.message, 'Code:', err.code);
         let userHint = 'Twilio ने कॉल कनेक्ट नहीं की: ' + err.message;
-        if (err.code === 21608) {
-          userHint = 'यह नंबर (+91 ' + clean + ') आपके Twilio Trial खाते में सत्यापित (Verified) नहीं है। Twilio Trial में आउटबाउंड कॉल केवल Verified Caller IDs पर ही जा सकती है। Twilio Console में जाकर अपने नंबर को OTP द्वारा जोड़ें।';
+        if (err.code === 21608 || err.code === 573002) {
+          userHint = 'यह नंबर (+91 ' + clean + ') आपके Twilio खाते में सत्यापित (Verified) नहीं है। कृपया Twilio Console -> Verified Caller IDs (https://console.twilio.com/us1/develop/phone-numbers/manage/verified) में अपना यह मोबाइल नंबर OTP द्वारा जोड़ें।';
         } else if (err.code === 21210 || err.code === 21606) {
-          userHint = 'दिए गए Twilio कॉलर नंबर (' + twilioNumber + ') से सीधे वॉइस कॉल की अनुमति नहीं है। +14155238886 सिर्फ WhatsApp सैंडबॉक्स के लिए है। वॉइस कॉल के लिए Twilio Console (Phone Numbers -> Active Numbers) से एक सक्रिय वॉइस नंबर दर्ज करें।';
+          userHint = 'दिए गए Twilio कॉलर नंबर (' + twilioNumber + ') से सीधे वॉइस कॉल की अनुमति नहीं है।';
         }
 
         return res.status(200).json({
