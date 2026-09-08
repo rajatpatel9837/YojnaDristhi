@@ -22,6 +22,7 @@ import {
   TrendingUp, 
   FileCheck,
   Camera,
+  Phone,
   X
 } from 'lucide-react';
 import DocumentOCRUploadZone from '../components/DocumentOCRUploadZone';
@@ -140,6 +141,15 @@ export default function LandingPage({ onOpenAiModal }) {
             >
               <ShieldCheck className="w-4 h-4 text-[#0F766E]" />
               <span>Track Application & Disbursal</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent('yojnasetu_open_call_assistant'))}
+              className="px-5 py-3.5 rounded-xl bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-700 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold text-sm shadow-md hover:shadow-lg transition flex items-center gap-2 active:scale-95 border border-emerald-400/40"
+            >
+              <Phone className="w-4 h-4 text-emerald-200" />
+              <span>📞 कॉल पर योजना जानें (Free Helpline)</span>
             </button>
           </div>
 

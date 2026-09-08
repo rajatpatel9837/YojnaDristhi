@@ -20,6 +20,7 @@ const adminVerificationRoutes = require('./routes/adminVerificationRoutes');
 const documentRoutes = require('./routes/documentRoutes');
 const trackingRoutes = require('./routes/trackingRoutes');
 const autofillRoutes = require('./routes/autofillRoutes');
+const telephonyRoutes = require('./routes/telephonyRoutes');
 
 const app = express();
 
@@ -77,6 +78,7 @@ app.use('/api/opportunities', opportunityRoutes);
 app.use('/api/admin/verification', adminVerificationRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/autofill', autofillRoutes);
+app.use('/api/telephony', telephonyRoutes);
 app.use('/api', trackingRoutes);
 
 // Static Client Serving for Production

@@ -181,6 +181,33 @@ export default function EntrepreneurWizard() {
   return (
     <div className="max-w-4xl mx-auto py-6 px-4 space-y-6">
       
+      {/* Phone Call Assistant Alternative Banner */}
+      <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-100/70 border border-emerald-300/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm font-black text-base">
+            📞
+          </div>
+          <div>
+            <div className="font-extrabold text-[#173B57] text-sm flex items-center gap-2">
+              <span>कंप्यूटर पर फॉर्म नहीं भरना चाहते?</span>
+              <span className="text-emerald-700 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider">
+                टोल-फ्री हेल्पलाइन
+              </span>
+            </div>
+            <p className="text-slate-600 text-xs mt-0.5">
+              2 मिनट के स्वचालित फोन कॉल पर पूरा फॉर्म बोलकर भरें। DTMF कीपैड (1-9) या आवाज़ से उत्तर दें।
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new CustomEvent('yojnasetu_open_call_assistant'))}
+          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-sm transition active:scale-95 shrink-0 flex items-center gap-1.5"
+        >
+          <span>📞 कॉल शुरू करें ↗</span>
+        </button>
+      </div>
+
       {/* Wizard Header */}
       <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>

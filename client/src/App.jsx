@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { LanguageProvider } from './context/LanguageContext';
 import { AuthProvider } from './context/AuthContext';
@@ -8,6 +8,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import AskYojnaSetuModal from './components/AskYojnaSetuModal';
 import AskYojnaSetuChatbot from './components/AskYojnaSetuChatbot';
+import PhoneCallAssistantModal from './components/PhoneCallAssistantModal';
 
 import LandingPage from './pages/LandingPage';
 import EntrepreneurWizard from './pages/EntrepreneurWizard';
@@ -22,6 +23,13 @@ import { LoginPage, RegisterPage } from './pages/AuthPages';
 
 export default function App() {
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [isCallAssistantOpen, setIsCallAssistantOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOpenCall = () => setIsCallAssistantOpen(true);
+    window.addEventListener('yojnasetu_open_call_assistant', handleOpenCall);
+    return () => window.removeEventListener('yojnasetu_open_call_assistant', handleOpenCall);
+  }, []);
 
   return (
     <AuthProvider>
@@ -56,6 +64,12 @@ export default function App() {
               <AskYojnaSetuModal
                 isOpen={isAiModalOpen}
                 onClose={() => setIsAiModalOpen(false)}
+              />
+
+              {/* Yojna Call Assistant Telephone Simulator Modal */}
+              <PhoneCallAssistantModal
+                isOpen={isCallAssistantOpen}
+                onClose={() => setIsCallAssistantOpen(false)}
               />
 
             </div>

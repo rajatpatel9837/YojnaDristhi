@@ -15,7 +15,8 @@ import {
   FileCheck,
   Menu,
   X,
-  Search
+  Search,
+  Phone
 } from 'lucide-react';
 
 export default function Navbar({ onOpenAiModal }) {
@@ -144,6 +145,17 @@ export default function Navbar({ onOpenAiModal }) {
           {/* Right Action Tools */}
           <div className="flex items-center space-x-2 sm:space-x-3">
             
+            {/* Phone Call Assistant Helpline CTA */}
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent('yojnasetu_open_call_assistant'))}
+              title="स्वचालित फोन कॉल पर योजना जानें"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold transition shadow-sm"
+            >
+              <Phone className="w-3.5 h-3.5 text-white" />
+              <span className="hidden md:inline">📞 कॉल सहायक</span>
+            </button>
+
             {/* Ask AI Voice Assistant CTA */}
             <button
               onClick={onOpenAiModal}
@@ -210,6 +222,18 @@ export default function Navbar({ onOpenAiModal }) {
       {/* Mobile Responsive Navigation Drawer */}
       {mobileMenuOpen && (
         <div className="lg:hidden bg-white border-t border-[#E2E8F0] px-4 py-4 space-y-2 shadow-lg animate-fadeIn">
+          <button 
+            type="button"
+            onClick={() => {
+              setMobileMenuOpen(false);
+              window.dispatchEvent(new CustomEvent('yojnasetu_open_call_assistant'));
+            }}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-sm"
+          >
+            <Phone className="w-4 h-4 text-white" />
+            <span>📞 कॉल पर योजना जानें (Free Helpline)</span>
+          </button>
+
           <Link 
             to="/wizard" 
             onClick={() => setMobileMenuOpen(false)}
