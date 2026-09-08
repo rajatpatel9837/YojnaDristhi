@@ -70,3 +70,4 @@ export default function VoiceWaveformVisualizer({ isListening = false, isSpeakin
     </div>
   );
 }
+

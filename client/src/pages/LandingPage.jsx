@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { 
@@ -14,21 +14,56 @@ import {
   HeartHandshake, 
   Building2, 
   Users, 
-  Award,
-  BookOpen,
-  Search,
-  CheckSquare,
-  Target,
-  TrendingUp,
-  FileCheck
+  Award, 
+  BookOpen, 
+  Search, 
+  CheckSquare, 
+  Target, 
+  TrendingUp, 
+  FileCheck,
+  Camera,
+  X
 } from 'lucide-react';
+import DocumentOCRUploadZone from '../components/DocumentOCRUploadZone';
 
 export default function LandingPage({ onOpenAiModal }) {
   const { t } = useLanguage();
   const navigate = useNavigate();
 
+  const [isSnapModalOpen, setIsSnapModalOpen] = useState(false);
+  const [ocrFormData, setOcrFormData] = useState({ documentsAvailable: [] });
+
   const handleDemoProfile = () => {
     navigate('/wizard?demo=true');
+  };
+
+  const handleAutoFillAndNavigate = (extracted) => {
+    const existing = localStorage.getItem('ys_current_profile');
+    const prevProfile = existing ? JSON.parse(existing) : {};
+
+    const mergedProfile = {
+      fullName: extracted.fullName || prevProfile.fullName || 'सुनीता देवी (उद्यमी)',
+      age: extracted.age || prevProfile.age || 28,
+      gender: extracted.gender || prevProfile.gender || 'Female',
+      state: extracted.state || prevProfile.state || 'Bihar',
+      district: extracted.district || prevProfile.district || 'Patna',
+      sector: extracted.sector || prevProfile.sector || 'Food processing',
+      category: extracted.category || prevProfile.category || 'SC',
+      isWomanEntrepreneur: extracted.gender ? (extracted.gender.toLowerCase() === 'female') : true,
+      fundingAmount: extracted.fundingAmount || prevProfile.fundingAmount || 500000,
+      annualTurnover: extracted.annualTurnover || prevProfile.annualTurnover || 400000,
+      udyamStatus: extracted.udyamRegistrationNumber ? 'Registered' : (prevProfile.udyamStatus || 'Registered'),
+      documentsAvailable: Array.from(new Set([
+        ...(prevProfile.documentsAvailable || ['Aadhaar/Identity', 'Income Certificate', 'Category Certificate']),
+        ...(extracted.documentsAvailable || [])
+      ]))
+    };
+
+    localStorage.setItem('ys_current_profile', JSON.stringify(mergedProfile));
+    setTimeout(() => {
+      setIsSnapModalOpen(false);
+      navigate('/matches');
+    }, 400);
   };
 
   return (
@@ -105,6 +140,30 @@ export default function LandingPage({ onOpenAiModal }) {
             >
               <ShieldCheck className="w-4 h-4 text-[#0F766E]" />
               <span>Track Application & Disbursal</span>
+            </button>
+          </div>
+
+          {/* Zero-Typing OCR Grassroots Hero Card */}
+          <div className="max-w-2xl mx-auto p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-teal-950 via-[#173B57] to-[#0F766E] text-white shadow-xl border border-teal-500/30 flex flex-col sm:flex-row items-center justify-between gap-4 text-left">
+            <div className="space-y-1 text-center sm:text-left">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 text-[10px] font-black uppercase tracking-wider border border-amber-300/30">
+                <Sparkles className="w-3 h-3 text-amber-300" />
+                <span>नया • ज़ीरो-टाइपिंग योजना खोज (Zero-Typing)</span>
+              </div>
+              <h3 className="text-base sm:text-lg font-black text-white">
+                📸 कागज़ की फोटो खींचो — तुरंत योजनाएं देखो
+              </h3>
+              <p className="text-xs text-slate-200">
+                आधार कार्ड, आय या उद्यम प्रमाण पत्र की फोटो अपलोड करें। AI आपका फॉर्म भरकर तुरंत योग्य योजनाएं दिखाएगा।
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsSnapModalOpen(true)}
+              className="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs shadow-md transition flex items-center gap-2 shrink-0 active:scale-95"
+            >
+              <Camera className="w-4 h-4 text-slate-950" />
+              <span>फोटो अपलोड करें ↗</span>
             </button>
           </div>
 
@@ -247,6 +306,66 @@ export default function LandingPage({ onOpenAiModal }) {
         </div>
 
       </section>
+
+      {/* Zero-Typing OCR Modal */}
+      {isSnapModalOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-fadeIn">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-300 w-full max-w-3xl overflow-hidden flex flex-col max-h-[92vh]">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-teal-900 via-[#173B57] to-[#0F766E] text-white p-5 sm:p-6 flex items-start justify-between gap-3">
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 text-[10px] font-black uppercase tracking-wider border border-amber-300/30">
+                  <Camera className="w-3 h-3 text-amber-300" />
+                  <span>ज़ीरो-टाइपिंग योजना खोज (Zero-Typing)</span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-black text-white">
+                  📸 सिर्फ कागज़ की फोटो डालें — कोई फॉर्म नहीं भरना
+                </h2>
+                <p className="text-xs text-slate-200">
+                  अपना आधार कार्ड, आय प्रमाण पत्र या उद्यम सर्टिफिकेट अपलोड करें। AI अपने आप जानकारी निकालकर तुरंत योग्य योजनाएं दिखाएगा।
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsSnapModalOpen(false)}
+                className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition active:scale-95 shrink-0"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body with OCR Upload Zone */}
+            <div className="p-5 sm:p-6 overflow-y-auto space-y-6">
+              <DocumentOCRUploadZone
+                formData={ocrFormData}
+                setFormData={setOcrFormData}
+                onAutoFillProfile={handleAutoFillAndNavigate}
+              />
+
+              {/* Action Bar inside modal */}
+              <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="text-xs text-slate-500 text-center sm:text-left">
+                  🔒 सुरक्षित सरकारी प्रोटोकॉल। दस्तावेज़ केवल योजना पात्रता मिलान के लिए पढ़े जाते हैं।
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsSnapModalOpen(false);
+                      navigate('/matches');
+                    }}
+                    className="px-5 py-2.5 rounded-xl bg-[#0F766E] hover:bg-[#115E59] text-white font-extrabold text-xs shadow-md transition flex items-center gap-2 active:scale-95"
+                  >
+                    <span>सीधे योजनाएं देखें →</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

@@ -29,6 +29,20 @@ import DigilockerConsentModal from '../components/DigilockerConsentModal';
 import PrefilledApplicationReview from '../components/PrefilledApplicationReview';
 import GuidedApplicationCompanion from '../components/GuidedApplicationCompanion';
 
+import SchemeParchaaModal from '../components/SchemeParchaaModal';
+import MissingDocumentResolverModal from '../components/MissingDocumentResolverModal';
+import BankCounterGuideModal from '../components/BankCounterGuideModal';
+import DOCUMENT_GUIDE_DATA from '../data/documentGuideData.js';
+import { 
+  Printer, 
+  Volume2, 
+  VolumeX, 
+  Languages, 
+  BookOpen, 
+  Share2, 
+  PhoneCall 
+} from 'lucide-react';
+
 export default function MatchResultsPage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
@@ -52,6 +66,16 @@ export default function MatchResultsPage() {
   const [isCompanionOpen, setIsCompanionOpen] = useState(false);
   const [companionScheme, setCompanionScheme] = useState(null);
   const [activeSessionId, setActiveSessionId] = useState(null);
+
+  // Grassroots Superiority Engine ("जन-हित प्रो") state
+  const [isParchaaOpen, setIsParchaaOpen] = useState(false);
+  const [selectedSchemeForParchaa, setSelectedSchemeForParchaa] = useState(null);
+  const [selectedMatchedForParchaa, setSelectedMatchedForParchaa] = useState(null);
+  const [isBankGuideOpen, setIsBankGuideOpen] = useState(false);
+  const [isDocResolverOpen, setIsDocResolverOpen] = useState(false);
+  const [selectedDocIdForResolver, setSelectedDocIdForResolver] = useState(null);
+  const [isJargonBusterOn, setIsJargonBusterOn] = useState(true);
+  const [playingSchemeId, setPlayingSchemeId] = useState(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('ys_current_profile');
@@ -260,6 +284,67 @@ export default function MatchResultsPage() {
     }
   };
 
+  // Cleanup speech synthesis on component unmount
+  useEffect(() => {
+    return () => {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  const getSimplifiedSchemePoints = (scheme, userProfile, item) => {
+    const maxSupport = scheme?.maximumSupport || 500000;
+    const maxLakh = (maxSupport / 100000).toFixed(1);
+    const subsidy = scheme?.subsidyPercentage || (scheme?.name?.includes('PMEGP') ? 35 : (scheme?.name?.includes('Mudra') ? 0 : 25));
+    const interest = scheme?.interestRate || '8.5';
+    const sector = userProfile?.sector || 'लघु उद्योग / विनिर्माण';
+    const category = userProfile?.category || 'सभी वर्ग';
+    const state = userProfile?.state || 'भारत';
+
+    return {
+      benefit: `₹${maxLakh} लाख तक की वित्तीय सहायता। इसमें सरकार द्वारा ${subsidy}% तक मार्जिन मनी सब्सिडी (सीधी छूट) दी जाती है। ब्याज दर मात्र ${interest}% प्रति वर्ष।`,
+      whoGets: `18 वर्ष से अधिक आयु के ${category} वर्ग के उद्यमी जो ${state} में ${sector} का काम करते हैं या नया व्यवसाय शुरू करना चाहते हैं।`,
+      documents: `आधार कार्ड, 6 माह का बैंक खाता विवरण, आय प्रमाण पत्र, जाति प्रमाण पत्र और उद्यम (Udyam) रजिस्ट्रेशन।`,
+      caution: `किसी भी दलाल या बिचौलिये को 1 रुपया भी न दें। RBI के निर्देश (RPCD.79) के अनुसार ₹10 लाख तक के ऋण पर बैंक ज़मीन या गारंटी नहीं मांग सकता!`
+    };
+  };
+
+  const handleToggleNarration = (scheme, item) => {
+    const schemeId = scheme._id || scheme.slug || scheme.name;
+    if (playingSchemeId === schemeId) {
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      setPlayingSchemeId(null);
+      return;
+    }
+
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    setPlayingSchemeId(schemeId);
+
+    const points = getSimplifiedSchemePoints(scheme, profile, item);
+    const fullText = `योजना: ${scheme.name}। पहला: आपको क्या मिलेगा? ${points.benefit}। दूसरा: किसे मिलेगा? ${points.whoGets}। तीसरा: क्या कागज़ चाहिए? ${points.documents}। चौथा: सावधान रहें: ${points.caution}`;
+
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(fullText);
+      utterance.lang = 'hi-IN';
+      utterance.rate = 0.95;
+      utterance.onend = () => setPlayingSchemeId(null);
+      utterance.onerror = () => setPlayingSchemeId(null);
+      window.speechSynthesis.speak(utterance);
+    } else {
+      alert('आपके ब्राउज़र में आवाज़ (Speech) की सुविधा उपलब्ध नहीं है।');
+      setPlayingSchemeId(null);
+    }
+  };
+
+  const handleOpenParchaa = (scheme = null, item = null) => {
+    const targetScheme = scheme || results[0]?.scheme;
+    const targetItem = item || results[0];
+    setSelectedSchemeForParchaa(targetScheme);
+    setSelectedMatchedForParchaa(targetItem);
+    setIsParchaaOpen(true);
+  };
+
   const filteredResults = results.filter(r => {
     if (filterCategory === 'ELIGIBLE') return r.eligibilityStatus === 'POTENTIALLY_ELIGIBLE';
     if (filterCategory === 'VERIFY') return r.eligibilityStatus === 'VERIFY';
@@ -333,6 +418,61 @@ export default function MatchResultsPage() {
         </div>
       </div>
 
+      {/* "जन-हित प्रो" — Grassroots Superiority Action Banner */}
+      <div className="bg-gradient-to-r from-teal-900 via-[#173B57] to-[#0F766E] rounded-2xl p-4 sm:p-5 text-white shadow-md border border-teal-500/30 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="space-y-1 text-center md:text-left">
+          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 text-[10px] font-black uppercase tracking-wider border border-emerald-400/30">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>जन-हित प्रो • Grassroots Citizen Superiority Engine</span>
+          </div>
+          <h2 className="text-lg sm:text-xl font-black text-white flex items-center justify-center md:justify-start gap-2">
+            <span>योजना पर्चा & बैंक काउंटर रक्षा कवच</span>
+          </h2>
+          <p className="text-xs text-slate-200 max-w-xl">
+            1-क्लिक में आधिकारिक प्रिंट पर्चा निकालें, बैंक मैनेजर के बहानों का कानूनी जवाब दें, और कठिन नियमों को सरल 4 बिंदुओं में समझें।
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-center md:justify-end gap-2.5">
+          {/* 1-Click Parchaa Button */}
+          <button
+            type="button"
+            onClick={() => handleOpenParchaa()}
+            className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition flex items-center gap-2 shadow-md active:scale-95"
+            title="शीर्ष योजना का आधिकारिक पर्चा प्रिंट करें"
+          >
+            <Printer className="w-4 h-4 text-slate-950" />
+            <span>🖨️ योजना पर्चा निकालें</span>
+          </button>
+
+          {/* Bank Counter Defense Shield Button */}
+          <button
+            type="button"
+            onClick={() => setIsBankGuideOpen(true)}
+            className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs border border-white/20 transition flex items-center gap-2 shadow-xs active:scale-95"
+            title="बैंक मैनेजर के बहानों का जवाब और RBI नियम"
+          >
+            <ShieldCheck className="w-4 h-4 text-emerald-300" />
+            <span>🛡️ बैंक काउंटर गाइड</span>
+          </button>
+
+          {/* Jargon-Buster Mode Toggle Switch */}
+          <button
+            type="button"
+            onClick={() => setIsJargonBusterOn(!isJargonBusterOn)}
+            className={`px-3.5 py-2.5 rounded-xl font-extrabold text-xs transition flex items-center gap-2 border shadow-xs active:scale-95 ${
+              isJargonBusterOn
+                ? 'bg-amber-400 text-slate-950 border-amber-300 ring-2 ring-amber-400/40'
+                : 'bg-white/10 text-slate-200 border-white/20 hover:bg-white/20'
+            }`}
+            title="कठिन नियमों को आसान भाषा में बदलें"
+          >
+            <Languages className="w-4 h-4" />
+            <span>{isJargonBusterOn ? '✓ सरल भाषा मोड ON' : 'सरल भाषा मोड बंद'}</span>
+          </button>
+        </div>
+      </div>
+
       {/* Filter Tabs */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-[#E2E8F0] pb-3 text-xs gap-3">
         <div className="flex flex-wrap items-center gap-2">
@@ -393,8 +533,8 @@ export default function MatchResultsPage() {
                     <p className="text-xs text-slate-500 font-medium">{scheme.provider}</p>
                   </div>
 
-                  {/* Match Score & Readiness Badges */}
-                  <div className="flex items-center gap-4 bg-[#F8FAFC] p-3 rounded-xl border border-[#E2E8F0] shrink-0">
+                  {/* Match Score, Readiness Badges & Grassroots Quick Actions */}
+                  <div className="flex flex-wrap items-center gap-3 bg-[#F8FAFC] p-3 rounded-xl border border-[#E2E8F0] shrink-0">
                     <div className="text-center">
                       <div className="text-[10px] text-slate-500 uppercase font-bold flex items-center justify-center gap-1">
                         <span>Match Fit</span>
@@ -409,6 +549,44 @@ export default function MatchResultsPage() {
                     <div className="text-center">
                       <div className="text-[10px] text-slate-500 uppercase font-bold">Readiness</div>
                       <div className="text-xl font-extrabold text-[#173B57]">{item.readinessScore || 85}%</div>
+                    </div>
+
+                    <div className="w-px h-8 bg-slate-200 hidden sm:block" />
+
+                    {/* Grassroots Quick Action Buttons */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleNarration(scheme, item)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-xs active:scale-95 ${
+                          playingSchemeId === (scheme._id || scheme.slug || scheme.name)
+                            ? 'bg-rose-600 hover:bg-rose-700 text-white animate-pulse'
+                            : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300'
+                        }`}
+                        title="योजना का संक्षिप्त विवरण हिंदी में सुनें"
+                      >
+                        {playingSchemeId === (scheme._id || scheme.slug || scheme.name) ? (
+                          <>
+                            <VolumeX className="w-3.5 h-3.5 text-white" />
+                            <span>रोकें</span>
+                          </>
+                        ) : (
+                          <>
+                            <Volume2 className="w-3.5 h-3.5 text-emerald-700" />
+                            <span>सुनें 🔊</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleOpenParchaa(scheme, item)}
+                        className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white hover:bg-slate-100 text-[#173B57] border border-[#CBD5E1] transition flex items-center gap-1.5 shadow-xs active:scale-95"
+                        title="इस योजना का आधिकारिक 1-पेज पर्चा प्रिंट करें"
+                      >
+                        <Printer className="w-3.5 h-3.5 text-slate-700" />
+                        <span>पर्चा 🖨️</span>
+                      </button>
                     </div>
                   </div>
 
@@ -433,6 +611,86 @@ export default function MatchResultsPage() {
                     <div className="font-semibold text-[#173B57]">{scheme.moratoriumPeriodMonths || 6} Months</div>
                   </div>
                 </div>
+
+                {/* Jargon-Buster 4-Point Grassroots Section */}
+                {isJargonBusterOn && (
+                  <div className="bg-gradient-to-br from-emerald-50/70 via-[#F0FDFA] to-teal-50/50 rounded-2xl p-4 sm:p-5 border border-emerald-200/80 space-y-3.5 shadow-xs">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2.5 py-0.5 rounded-full bg-emerald-600 text-white font-extrabold text-[10px] tracking-wide uppercase flex items-center gap-1 shadow-xs">
+                          <Sparkles className="w-3 h-3 text-emerald-200" /> सरल भाषा में समझें (Jargon-Buster)
+                        </span>
+                        <span className="text-[11px] text-slate-500 hidden sm:inline">सरकारी कागज़ी पेचीदगियों से मुक्ति — 4 सीधी बातें</span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleToggleNarration(scheme, item)}
+                        className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition flex items-center gap-1 shadow-xs active:scale-95 ${
+                          playingSchemeId === (scheme._id || scheme.slug || scheme.name)
+                            ? 'bg-rose-600 hover:bg-rose-700 text-white'
+                            : 'bg-emerald-700 hover:bg-emerald-800 text-white'
+                        }`}
+                      >
+                        {playingSchemeId === (scheme._id || scheme.slug || scheme.name) ? (
+                          <>
+                            <VolumeX className="w-3 h-3" />
+                            <span>⏹️ आवाज़ बंद करें</span>
+                          </>
+                        ) : (
+                          <>
+                            <Volume2 className="w-3 h-3" />
+                            <span>🔊 बोलकर समझाएं</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {/* 4-Box Structured Grassroots Grid */}
+                    {(() => {
+                      const points = getSimplifiedSchemePoints(scheme, profile, item);
+                      return (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                          <div className="bg-white/90 p-3.5 rounded-xl border border-emerald-200/70 space-y-1 shadow-xs">
+                            <div className="font-extrabold text-emerald-800 flex items-center gap-1.5 text-xs">
+                              <span>💰</span> आपको क्या मिलेगा?
+                            </div>
+                            <p className="text-slate-700 text-[11px] leading-relaxed font-medium">
+                              {points.benefit}
+                            </p>
+                          </div>
+
+                          <div className="bg-white/90 p-3.5 rounded-xl border border-sky-200/70 space-y-1 shadow-xs">
+                            <div className="font-extrabold text-sky-800 flex items-center gap-1.5 text-xs">
+                              <span>👤</span> किसे मिलेगा?
+                            </div>
+                            <p className="text-slate-700 text-[11px] leading-relaxed font-medium">
+                              {points.whoGets}
+                            </p>
+                          </div>
+
+                          <div className="bg-white/90 p-3.5 rounded-xl border border-amber-200/70 space-y-1 shadow-xs">
+                            <div className="font-extrabold text-amber-800 flex items-center gap-1.5 text-xs">
+                              <span>📄</span> क्या कागज़ चाहिए?
+                            </div>
+                            <p className="text-slate-700 text-[11px] leading-relaxed font-medium">
+                              {points.documents}
+                            </p>
+                          </div>
+
+                          <div className="bg-white/90 p-3.5 rounded-xl border border-rose-200/70 space-y-1 shadow-xs">
+                            <div className="font-extrabold text-rose-800 flex items-center gap-1.5 text-xs">
+                              <span>⚠️</span> सावधान रहें
+                            </div>
+                            <p className="text-slate-700 text-[11px] leading-relaxed font-medium">
+                              {points.caution}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
 
                 {/* Eligibility & Gap Analysis Section */}
                 {isNotEligible ? (
@@ -479,16 +737,53 @@ export default function MatchResultsPage() {
 
                     {/* Missing Criteria & Gap Analysis */}
                     <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 space-y-2">
-                      <div className="font-bold text-amber-800 flex items-center gap-1.5 text-xs">
-                        <AlertTriangle className="w-4 h-4 text-amber-600" /> Action Items & Verification Needs
+                      <div className="font-bold text-amber-800 flex items-center justify-between text-xs">
+                        <span className="flex items-center gap-1.5">
+                          <AlertTriangle className="w-4 h-4 text-amber-600" /> Action Items & Verification Needs
+                        </span>
+                        <span className="text-[10px] text-amber-700 bg-amber-100 px-2 py-0.5 rounded font-bold">
+                          कागज़ सहायता उपलब्ध
+                        </span>
                       </div>
                       <div className="space-y-1.5">
-                        {item.gapAnalysis?.length > 0 ? item.gapAnalysis.map((gap, i) => (
-                          <div key={i} className="text-[11px] text-amber-900 bg-white/80 p-2 rounded border border-amber-200">
-                            <span className="font-bold text-amber-800">{gap.item}:</span> {gap.action}
+                        {item.gapAnalysis?.length > 0 ? item.gapAnalysis.map((gap, i) => {
+                          const matchedKey = Object.keys(DOCUMENT_GUIDE_DATA).find(k => 
+                            (gap.item || '').toLowerCase().includes(k.toLowerCase()) || 
+                            k.toLowerCase().includes((gap.item || '').toLowerCase()) ||
+                            (gap.action || '').toLowerCase().includes(k.toLowerCase())
+                          ) || 'Income Certificate';
+
+                          return (
+                            <div key={i} className="text-[11px] text-amber-900 bg-white/90 p-2.5 rounded-xl border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-xs">
+                              <div>
+                                <span className="font-bold text-amber-800">{gap.item}:</span> {gap.action}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedDocIdForResolver(matchedKey);
+                                  setIsDocResolverOpen(true);
+                                }}
+                                className="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-[10px] shrink-0 transition flex items-center gap-1 self-start sm:self-auto shadow-xs active:scale-95"
+                              >
+                                <span>कागज़ कैसे बनवाएं? ↗</span>
+                              </button>
+                            </div>
+                          );
+                        }) : (
+                          <div className="flex items-center justify-between text-[11px] text-emerald-800 bg-emerald-50/70 p-2 rounded-lg border border-emerald-200">
+                            <span>✓ All required documents & certificates ready for application.</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedDocIdForResolver('Udyam Certificate');
+                                setIsDocResolverOpen(true);
+                              }}
+                              className="text-[10px] text-emerald-700 font-bold underline hover:text-emerald-900"
+                            >
+                              कागज़ गाइड देखें
+                            </button>
                           </div>
-                        )) : (
-                          <p className="text-[11px] text-slate-600">All required documents & certificates ready for application.</p>
                         )}
                       </div>
                     </div>
@@ -504,6 +799,16 @@ export default function MatchResultsPage() {
                       className="px-3.5 py-2 rounded-lg bg-[#0F766E] hover:bg-[#115E59] text-white font-bold transition flex items-center gap-1.5 shadow-sm"
                     >
                       <Sparkles className="w-3.5 h-3.5" /> Auto-Fill Application
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        handleOpenParchaa(scheme, item);
+                      }}
+                      className="px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition flex items-center gap-1.5 shadow-sm"
+                    >
+                      <Printer className="w-3.5 h-3.5 text-emerald-200" />
+                      <span>योजना पर्चा निकालें 🖨️</span>
                     </button>
 
                     <button
@@ -874,7 +1179,7 @@ export default function MatchResultsPage() {
       )}
 
       {/* Scheme-Aware Channel Partner Map Section */}
-      <section className="pt-8">
+      <section id="channel-partner-map-section" className="pt-8">
         <ChannelPartnerMap stateName={profile?.state} matchedSchemeSlug={results[0]?.scheme?.slug} />
       </section>
 
@@ -924,6 +1229,43 @@ export default function MatchResultsPage() {
           // Dispatch custom event for chatbot to open and ask question
           window.dispatchEvent(new CustomEvent('yojnasetu_ask_ai', { detail: { question: queryText } }));
         }}
+      />
+
+      {/* 1-Click "योजना पर्चा" Modal (High-Trust 1-Page Physical Handout & WhatsApp Card) */}
+      <SchemeParchaaModal
+        isOpen={isParchaaOpen}
+        onClose={() => {
+          setIsParchaaOpen(false);
+          setSelectedSchemeForParchaa(null);
+          setSelectedMatchedForParchaa(null);
+        }}
+        profile={profile}
+        scheme={selectedSchemeForParchaa || results[0]?.scheme}
+        matchedItem={selectedMatchedForParchaa || results[0]}
+      />
+
+      {/* Missing Document Resolver Modal (Direct Portal Links, Govt Fee, Tout Warnings) */}
+      <MissingDocumentResolverModal
+        isOpen={isDocResolverOpen}
+        onClose={() => {
+          setIsDocResolverOpen(false);
+          setSelectedDocIdForResolver(null);
+        }}
+        documentId={selectedDocIdForResolver}
+        userState={profile?.state || 'Bihar'}
+        onViewCSCMap={() => {
+          setIsDocResolverOpen(false);
+          const mapEl = document.getElementById('channel-partner-map-section');
+          if (mapEl) {
+            mapEl.scrollIntoView({ behavior: 'smooth' });
+          }
+        }}
+      />
+
+      {/* Bank Counter Defense Guide Modal (Scripts, RBI Circular Citations & Grievance Helplines) */}
+      <BankCounterGuideModal
+        isOpen={isBankGuideOpen}
+        onClose={() => setIsBankGuideOpen(false)}
       />
 
     </div>
