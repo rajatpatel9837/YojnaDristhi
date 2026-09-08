@@ -14,9 +14,13 @@ import {
   ArrowLeft, 
   Sparkles, 
   Save, 
-  AlertCircle 
+  AlertCircle,
+  Mic,
+  MicOff
 } from 'lucide-react';
 import DocumentOCRUploadZone from '../components/DocumentOCRUploadZone';
+import useVoiceWizard from '../voice/useVoiceWizard';
+import VoiceWizardOverlay from '../components/VoiceWizardOverlay';
 
 export default function EntrepreneurWizard() {
   const { t } = useLanguage();
@@ -124,6 +128,33 @@ export default function EntrepreneurWizard() {
     navigate('/matches');
   };
 
+  const {
+    isVoiceModeOn,
+    toggleVoiceMode,
+    sessionState,
+    currentFieldKey,
+    currentFieldLabel_hi,
+    currentQuestion_hi,
+    currentHint_hi,
+    liveCaption,
+    pauseVoiceMode,
+    repeatCurrentQuestion,
+    goToPreviousField,
+    fieldProgress
+  } = useVoiceWizard({
+    formData,
+    setFormData: handleInputChange,
+    currentStep,
+    setCurrentStep,
+    onAnalyze: handleAnalyze
+  });
+
+  const getVoiceActiveBorder = (fieldKey) => {
+    return isVoiceModeOn && currentFieldKey === fieldKey
+      ? 'ring-2 ring-emerald-500 border-emerald-500 shadow-md bg-emerald-50/30'
+      : '';
+  };
+
   const steps = [
     { num: 1, label: t('step_1'), icon: User },
     { num: 2, label: t('step_2'), icon: Briefcase },
@@ -148,14 +179,45 @@ export default function EntrepreneurWizard() {
           <p className="text-xs text-slate-500">Discover and verify matching government schemes</p>
         </div>
 
-        <button
-          onClick={loadDemoData}
-          className="px-3.5 py-2 rounded-xl bg-[#F0FDFA] hover:bg-[#CCFBF1] text-[#0F766E] border border-[#14B8A6]/40 text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
-        >
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>Load Demo Profile</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleVoiceMode}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm border ${
+              isVoiceModeOn
+                ? 'bg-rose-600 hover:bg-rose-700 text-white border-rose-500 animate-pulse'
+                : 'bg-[#0F766E] hover:bg-[#115E59] text-white border-[#0F766E]'
+            }`}
+            title="हिंदी में बोलकर पूरा फॉर्म भरें (Voice-Only Hindi Flow)"
+          >
+            {isVoiceModeOn ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+            <span>{isVoiceModeOn ? '🎤 आवाज़ मोड चालू है' : '🎤 बोलकर भरें'}</span>
+          </button>
+
+          <button
+            onClick={loadDemoData}
+            className="px-3.5 py-2 rounded-xl bg-[#F0FDFA] hover:bg-[#CCFBF1] text-[#0F766E] border border-[#14B8A6]/40 text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Load Demo Profile</span>
+          </button>
+        </div>
       </div>
+
+      {/* Voice-Only Mode Visual Overlay */}
+      {isVoiceModeOn && (
+        <VoiceWizardOverlay
+          sessionState={sessionState}
+          currentQuestion_hi={currentQuestion_hi}
+          currentHint_hi={currentHint_hi}
+          currentFieldLabel_hi={currentFieldLabel_hi}
+          liveCaption={liveCaption}
+          fieldProgress={fieldProgress}
+          onPause={pauseVoiceMode}
+          onRepeat={repeatCurrentQuestion}
+          onBack={goToPreviousField}
+        />
+      )}
 
       {/* Progress Indicators */}
       <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center text-xs">
@@ -188,36 +250,36 @@ export default function EntrepreneurWizard() {
         {/* STEP 1: Personal Information */}
         {currentStep === 1 && (
           <div className="space-y-4">
-            <h3 className="text-base font-bold text-white mb-4 border-b border-slate-800 pb-2">Step 1 — Personal Information</h3>
+            <h3 className="text-base font-bold text-[#173B57] mb-4 border-b border-[#E2E8F0] pb-2">Step 1 — Personal Information</h3>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-slate-400 mb-1">Full Name</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Full Name</label>
                 <input
                   type="text"
                   value={formData.fullName}
                   onChange={(e) => handleInputChange('fullName', e.target.value)}
                   placeholder="e.g. Sunita Devi"
-                  className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1]"
+                  className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('fullName')}`}
                 />
               </div>
 
               <div>
-                <label className="block text-slate-400 mb-1">Age (Years)</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Age (Years)</label>
                 <input
                   type="number"
                   value={formData.age}
                   onChange={(e) => handleInputChange('age', Number(e.target.value))}
-                  className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1]"
+                  className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('age')}`}
                 />
               </div>
 
               <div>
-                <label className="block text-slate-400 mb-1">Gender</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Gender</label>
                 <select
                   value={formData.gender}
                   onChange={(e) => handleInputChange('gender', e.target.value)}
-                  className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1]"
+                  className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('gender')}`}
                 >
                   <option value="Female">Female</option>
                   <option value="Male">Male</option>
@@ -227,11 +289,11 @@ export default function EntrepreneurWizard() {
               </div>
 
               <div>
-                <label className="block text-slate-400 mb-1">State</label>
+                <label className="block text-slate-600 mb-1 font-semibold">State</label>
                 <select
                   value={formData.state}
                   onChange={(e) => handleInputChange('state', e.target.value)}
-                  className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1]"
+                  className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('state')}`}
                 >
                   <option value="Bihar">Bihar</option>
                   <option value="Punjab">Punjab</option>
@@ -244,21 +306,21 @@ export default function EntrepreneurWizard() {
               </div>
 
               <div>
-                <label className="block text-slate-400 mb-1">District / City</label>
+                <label className="block text-slate-600 mb-1 font-semibold">District / City</label>
                 <input
                   type="text"
                   value={formData.district}
                   onChange={(e) => handleInputChange('district', e.target.value)}
-                  className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1]"
+                  className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('district')}`}
                 />
               </div>
 
               <div>
-                <label className="block text-slate-400 mb-1">Area Type</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Area Type</label>
                 <select
                   value={formData.areaType}
                   onChange={(e) => handleInputChange('areaType', e.target.value)}
-                  className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1]"
+                  className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('areaType')}`}
                 >
                   <option value="Rural">Rural</option>
                   <option value="Urban">Urban</option>
@@ -271,26 +333,26 @@ export default function EntrepreneurWizard() {
         {/* STEP 2: Business Details */}
         {currentStep === 2 && (
           <div className="space-y-4">
-            <h3 className="text-base font-bold text-white mb-4 border-b border-slate-800 pb-2">Step 2 — Business Details</h3>
+            <h3 className="text-base font-bold text-[#173B57] mb-4 border-b border-[#E2E8F0] pb-2">Step 2 — Business Details</h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-slate-400 mb-1">Business Name</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Business Name</label>
                 <input
                   type="text"
                   value={formData.businessName}
                   onChange={(e) => handleInputChange('businessName', e.target.value)}
                   placeholder="e.g. Sunita Food Products"
-                  className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1]"
+                  className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('businessName')}`}
                 />
               </div>
 
               <div>
-                <label className="block text-slate-400 mb-1">Business Sector</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Business Sector</label>
                 <select
                   value={formData.sector}
                   onChange={(e) => handleInputChange('sector', e.target.value)}
-                  className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1]"
+                  className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('sector')}`}
                 >
                   <option value="Food processing">Food processing</option>
                   <option value="Manufacturing">Manufacturing</option>
@@ -304,11 +366,11 @@ export default function EntrepreneurWizard() {
               </div>
 
               <div>
-                <label className="block text-slate-400 mb-1">Business Stage</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Business Stage</label>
                 <select
                   value={formData.stage}
                   onChange={(e) => handleInputChange('stage', e.target.value)}
-                  className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1]"
+                  className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('stage')}`}
                 >
                   <option value="Idea">Idea</option>
                   <option value="New business">New business</option>
@@ -318,21 +380,21 @@ export default function EntrepreneurWizard() {
               </div>
 
               <div>
-                <label className="block text-slate-400 mb-1">Annual Turnover (₹)</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Annual Turnover (₹)</label>
                 <input
                   type="number"
                   value={formData.annualTurnover}
                   onChange={(e) => handleInputChange('annualTurnover', Number(e.target.value))}
-                  className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1]"
+                  className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('annualTurnover')}`}
                 />
               </div>
 
               <div>
-                <label className="block text-slate-400 mb-1">Udyam Registration Status</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Udyam Registration Status</label>
                 <select
                   value={formData.udyamStatus}
                   onChange={(e) => handleInputChange('udyamStatus', e.target.value)}
-                  className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1]"
+                  className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('udyamStatus')}`}
                 >
                   <option value="Registered">Registered</option>
                   <option value="Not Registered">Not Registered</option>
@@ -341,12 +403,12 @@ export default function EntrepreneurWizard() {
               </div>
 
               <div>
-                <label className="block text-slate-400 mb-1">Employees Count</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Employees Count</label>
                 <input
                   type="number"
                   value={formData.employeesCount}
                   onChange={(e) => handleInputChange('employeesCount', Number(e.target.value))}
-                  className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1]"
+                  className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('employeesCount')}`}
                 />
               </div>
             </div>
@@ -356,30 +418,30 @@ export default function EntrepreneurWizard() {
         {/* STEP 3: Financial Details */}
         {currentStep === 3 && (
           <div className="space-y-4">
-            <h3 className="text-base font-bold text-white mb-4 border-b border-slate-800 pb-2">Step 3 — Financial Information</h3>
+            <h3 className="text-base font-bold text-[#173B57] mb-4 border-b border-[#E2E8F0] pb-2">Step 3 — Financial Information</h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-slate-400 mb-1">Annual Family Income (₹)</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Annual Family Income (₹)</label>
                 <input
                   type="number"
                   value={formData.familyIncome}
                   onChange={(e) => handleInputChange('familyIncome', Number(e.target.value))}
-                  className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1]"
+                  className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('familyIncome')}`}
                 />
               </div>
 
               <div>
-                <label className="block text-slate-400 mb-1">Own Contribution / Savings (₹)</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Own Contribution / Savings (₹)</label>
                 <input
                   type="number"
                   value={formData.ownContribution}
                   onChange={(e) => handleInputChange('ownContribution', Number(e.target.value))}
-                  className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1]"
+                  className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('ownContribution')}`}
                 />
               </div>
 
-              <div className="flex items-center gap-2 pt-4">
+              <div className={`flex items-center gap-2 p-2.5 rounded-xl border border-transparent ${getVoiceActiveBorder('hasIncomeCertificate')}`}>
                 <input
                   type="checkbox"
                   id="incCert"
@@ -387,10 +449,10 @@ export default function EntrepreneurWizard() {
                   onChange={(e) => handleInputChange('hasIncomeCertificate', e.target.checked)}
                   className="accent-emerald-500 w-4 h-4 rounded cursor-pointer"
                 />
-                <label htmlFor="incCert" className="text-slate-300 cursor-pointer">Income Certificate Available</label>
+                <label htmlFor="incCert" className="text-slate-700 font-semibold cursor-pointer">Income Certificate Available</label>
               </div>
 
-              <div className="flex items-center gap-2 pt-4">
+              <div className={`flex items-center gap-2 p-2.5 rounded-xl border border-transparent ${getVoiceActiveBorder('existingLoans')}`}>
                 <input
                   type="checkbox"
                   id="existLoans"
@@ -398,7 +460,7 @@ export default function EntrepreneurWizard() {
                   onChange={(e) => handleInputChange('existingLoans', e.target.checked)}
                   className="accent-emerald-500 w-4 h-4 rounded cursor-pointer"
                 />
-                <label htmlFor="existLoans" className="text-slate-300 cursor-pointer">Existing Business Loans Active</label>
+                <label htmlFor="existLoans" className="text-slate-700 font-semibold cursor-pointer">Existing Business Loans Active</label>
               </div>
             </div>
           </div>
@@ -407,15 +469,15 @@ export default function EntrepreneurWizard() {
         {/* STEP 4: Social & Eligibility */}
         {currentStep === 4 && (
           <div className="space-y-4">
-            <h3 className="text-base font-bold text-white mb-4 border-b border-slate-800 pb-2">Step 4 — Social & Category Details</h3>
+            <h3 className="text-base font-bold text-[#173B57] mb-4 border-b border-[#E2E8F0] pb-2">Step 4 — Social & Category Details</h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-slate-400 mb-1">Social Category</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Social Category</label>
                 <select
                   value={formData.category}
                   onChange={(e) => handleInputChange('category', e.target.value)}
-                  className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1]"
+                  className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('category')}`}
                 >
                   <option value="SC">Scheduled Caste (SC)</option>
                   <option value="ST">Scheduled Tribe (ST)</option>
@@ -426,7 +488,7 @@ export default function EntrepreneurWizard() {
               </div>
 
               <div className="space-y-2 pt-2">
-                <div className="flex items-center gap-2">
+                <div className={`flex items-center gap-2 p-2 rounded-xl border border-transparent ${getVoiceActiveBorder('isWomanEntrepreneur')}`}>
                   <input
                     type="checkbox"
                     id="womanEnt"
@@ -434,10 +496,10 @@ export default function EntrepreneurWizard() {
                     onChange={(e) => handleInputChange('isWomanEntrepreneur', e.target.checked)}
                     className="accent-emerald-500 w-4 h-4 rounded cursor-pointer"
                   />
-                  <label htmlFor="womanEnt" className="text-slate-300 cursor-pointer">Woman Entrepreneur Enterprise</label>
+                  <label htmlFor="womanEnt" className="text-slate-700 font-semibold cursor-pointer">Woman Entrepreneur Enterprise</label>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className={`flex items-center gap-2 p-2 rounded-xl border border-transparent ${getVoiceActiveBorder('isFirstGeneration')}`}>
                   <input
                     type="checkbox"
                     id="firstGen"
@@ -445,10 +507,10 @@ export default function EntrepreneurWizard() {
                     onChange={(e) => handleInputChange('isFirstGeneration', e.target.checked)}
                     className="accent-emerald-500 w-4 h-4 rounded cursor-pointer"
                   />
-                  <label htmlFor="firstGen" className="text-slate-300 cursor-pointer">First Generation Entrepreneur</label>
+                  <label htmlFor="firstGen" className="text-slate-700 font-semibold cursor-pointer">First Generation Entrepreneur</label>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className={`flex items-center gap-2 p-2 rounded-xl border border-transparent ${getVoiceActiveBorder('isPwD')}`}>
                   <input
                     type="checkbox"
                     id="pwd"
@@ -456,7 +518,7 @@ export default function EntrepreneurWizard() {
                     onChange={(e) => handleInputChange('isPwD', e.target.checked)}
                     className="accent-emerald-500 w-4 h-4 rounded cursor-pointer"
                   />
-                  <label htmlFor="pwd" className="text-slate-300 cursor-pointer">Person with Benchmark Disability (PwD)</label>
+                  <label htmlFor="pwd" className="text-slate-700 font-semibold cursor-pointer">Person with Benchmark Disability (PwD)</label>
                 </div>
               </div>
             </div>
@@ -466,27 +528,27 @@ export default function EntrepreneurWizard() {
         {/* STEP 5: Funding Requirements */}
         {currentStep === 5 && (
           <div className="space-y-4">
-            <h3 className="text-base font-bold text-white mb-4 border-b border-slate-800 pb-2">Step 5 — Funding Requirements</h3>
+            <h3 className="text-base font-bold text-[#173B57] mb-4 border-b border-[#E2E8F0] pb-2">Step 5 — Funding Requirements</h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-slate-400 mb-1">Total Required Funding (₹)</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Total Required Funding (₹)</label>
                 <input
                   type="number"
                   value={formData.fundingAmount}
                   onChange={(e) => handleInputChange('fundingAmount', Number(e.target.value))}
-                  className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] font-bold"
+                  className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] font-bold ${getVoiceActiveBorder('fundingAmount')}`}
                 />
               </div>
 
               <div>
-                <label className="block text-slate-400 mb-1">Funding Purpose</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Funding Purpose</label>
                 <input
                   type="text"
                   value={formData.fundingPurpose}
                   onChange={(e) => handleInputChange('fundingPurpose', e.target.value)}
                   placeholder="e.g. Machinery procurement"
-                  className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1]"
+                  className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('fundingPurpose')}`}
                 />
               </div>
             </div>
@@ -496,7 +558,7 @@ export default function EntrepreneurWizard() {
         {/* STEP 6: Document Readiness */}
         {currentStep === 6 && (
           <div className="space-y-4">
-            <h3 className="text-base font-bold text-white mb-2 border-b border-slate-800 pb-2">Step 6 — Document Readiness</h3>
+            <h3 className="text-base font-bold text-[#173B57] mb-2 border-b border-[#E2E8F0] pb-2">Step 6 — Document Readiness</h3>
             <p className="text-slate-400 text-xs">Select documents you currently possess. Missing documents will be listed in your readiness gap analysis.</p>
 
             <div className="p-3.5 rounded-xl bg-gradient-to-r from-emerald-950/40 via-slate-900 to-sky-950/40 border border-emerald-500/30 flex items-center justify-between gap-3">

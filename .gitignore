@@ -29,3 +29,4 @@ _temp_zip_staging/
 .DS_Store
 Thumbs.db
 .vercel
+server/public/uploads/

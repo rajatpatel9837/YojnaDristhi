@@ -1,0 +1,182 @@
+/**
+ * VoiceWizardOverlay.jsx
+ * Visual feedback layer for "बोलकर भरें" (Hindi Voice-Only Scheme Eligibility Wizard).
+ * Renders only while isVoiceModeOn is true. Shows pulsing mic, subtitles, live captions,
+ * field progress, and accessible fallback buttons.
+ */
+
+import React from 'react';
+import {
+  Mic,
+  Volume2,
+  Loader2,
+  CheckCircle2,
+  Pause,
+  RotateCcw,
+  ArrowLeft,
+  Sparkles,
+  HelpCircle
+} from 'lucide-react';
+
+export default function VoiceWizardOverlay({
+  sessionState, // 'idle' | 'speaking' | 'listening' | 'processing' | 'confirming' | 'error_retry'
+  currentQuestion_hi,
+  currentHint_hi,
+  currentFieldLabel_hi,
+  liveCaption,
+  fieldProgress,
+  onPause,
+  onRepeat,
+  onBack
+}) {
+  const isSpeaking = sessionState === 'speaking';
+  const isListening = sessionState === 'listening';
+  const isProcessing = sessionState === 'processing';
+  const isConfirming = sessionState === 'confirming';
+
+  return (
+    <div className="relative mb-6 overflow-hidden rounded-2xl border border-emerald-500/40 bg-gradient-to-b from-slate-900/95 via-slate-900 to-slate-950 p-5 sm:p-6 text-white shadow-2xl backdrop-blur-md transition-all">
+      {/* Glow highlight */}
+      <div className="absolute -top-16 -right-16 w-36 h-36 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-16 -left-16 w-36 h-36 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
+
+      {/* Top Bar: Live Status & Progress */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800 text-xs">
+        <div className="flex items-center gap-2">
+          {/* Animated State Pill */}
+          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700">
+            {isSpeaking && (
+              <>
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="text-emerald-300 font-semibold">बोल रहे हैं...</span>
+              </>
+            )}
+            {isListening && (
+              <>
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping" />
+                <Mic className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
+                <span className="text-rose-300 font-bold">सुन रहे हैं... बोलें</span>
+              </>
+            )}
+            {isProcessing && (
+              <>
+                <Loader2 className="w-3.5 h-3.5 text-sky-400 animate-spin" />
+                <span className="text-sky-300 font-medium">समझ रहे हैं...</span>
+              </>
+            )}
+            {isConfirming && (
+              <>
+                <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 animate-bounce" />
+                <span className="text-amber-300 font-bold">पुष्टि करें (हाँ या नहीं)</span>
+              </>
+            )}
+            {sessionState === 'idle' && (
+              <>
+                <span className="w-2 h-2 rounded-full bg-slate-400" />
+                <span className="text-slate-400">तैयार</span>
+              </>
+            )}
+          </div>
+
+          <span className="text-[11px] text-slate-400 font-medium hidden sm:inline">
+            बोलकर भरें — Yojna दृष्टि
+          </span>
+        </div>
+
+        {/* Progress Counter */}
+        <div className="text-[11px] font-medium text-slate-300 bg-slate-800/60 px-3 py-1 rounded-lg border border-slate-700/60">
+          फ़ील्ड <span className="text-emerald-400 font-bold">{fieldProgress?.currentFieldIndex}</span> / {fieldProgress?.totalFieldsInStep} · चरण <span className="text-sky-400 font-bold">{fieldProgress?.currentStep}</span> / {fieldProgress?.totalSteps}
+          {fieldProgress?.stepTitle_hi && (
+            <span className="text-slate-400 ml-1.5 hidden md:inline">({fieldProgress.stepTitle_hi})</span>
+          )}
+        </div>
+      </div>
+
+      {/* Main Content Area: Large Subtitle & Live Speech */}
+      <div className="py-4 sm:py-5 space-y-3">
+        {currentFieldLabel_hi && (
+          <div className="text-[11px] uppercase tracking-wider font-bold text-emerald-400 flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>{currentFieldLabel_hi}</span>
+          </div>
+        )}
+
+        {/* Question in Large Subtitle Font */}
+        <h2 className="text-lg sm:text-xl font-extrabold text-white leading-relaxed tracking-tight">
+          {currentQuestion_hi || 'कृपया अपनी जानकारी बोलें...'}
+        </h2>
+
+        {/* Live Interim Caption / Heard Speech */}
+        <div className="min-h-[42px] p-3 rounded-xl bg-slate-950/70 border border-slate-800 flex items-center gap-2 text-sm">
+          {isListening && (
+            <div className="relative flex items-center justify-center w-6 h-6 shrink-0">
+              <span className="absolute w-5 h-5 rounded-full bg-rose-500/30 animate-ping" />
+              <Mic className="w-4 h-4 text-rose-400" />
+            </div>
+          )}
+
+          {liveCaption ? (
+            <p className="text-emerald-300 font-semibold italic text-sm sm:text-base">
+              "{liveCaption}"
+            </p>
+          ) : (
+            <p className="text-slate-500 text-xs sm:text-sm italic">
+              {isSpeaking ? 'सवाल सुना जा रहा है...' : 'आपकी आवाज़ सुनी जा रही है, साफ़ बोलें...'}
+            </p>
+          )}
+        </div>
+
+        {/* Confirmation or Hint Notice */}
+        {isConfirming && (
+          <div className="p-2.5 rounded-xl bg-amber-950/40 border border-amber-500/40 text-amber-200 text-xs flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>अगर यह सही है तो <strong>"हाँ"</strong> बोलें, गलत है तो <strong>"नहीं"</strong> या <strong>"दोबारा"</strong> बोलें।</span>
+          </div>
+        )}
+
+        {currentHint_hi && !isConfirming && (
+          <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
+            <HelpCircle className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <span>सुझाव: {currentHint_hi}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Footer Control Bar: Three Accessible Fallback Buttons */}
+      <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onBack}
+            className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition flex items-center gap-1.5 shadow-sm active:scale-95"
+            title="पिछला सवाल (या 'पीछे' बोलें)"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>पीछे</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onRepeat}
+            className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition flex items-center gap-1.5 shadow-sm active:scale-95"
+            title="सवाल दोबारा सुनें (या 'दोहराओ' बोलें)"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>दोहराएं</span>
+          </button>
+        </div>
+
+        <button
+          type="button"
+          onClick={onPause}
+          className="px-3.5 py-1.5 rounded-xl bg-rose-950/60 hover:bg-rose-900/80 text-rose-200 border border-rose-700/60 text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95"
+          title="आवाज़ मोड रोकें (या 'रोकें' बोलें)"
+        >
+          <Pause className="w-3.5 h-3.5 text-rose-400" />
+          <span>रोकें (Pause)</span>
+        </button>
+      </div>
+    </div>
+  );
+}
