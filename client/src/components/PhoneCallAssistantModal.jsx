@@ -96,7 +96,7 @@ export default function PhoneCallAssistantModal({ isOpen, onClose }) {
 
     // 1. Try Sarvam TTS via backend
     try {
-      const res = await axios.post('/api/voice/tts', { text, language: 'hi-IN' });
+      const res = await axios.post('/api/ai/tts', { text, language: 'hi-IN' });
       if (res.data?.success && res.data?.data?.audioBase64) {
         const audio = new Audio(`data:audio/wav;base64,${res.data.data.audioBase64}`);
         audioPlayerRef.current = audio;
@@ -191,7 +191,7 @@ export default function PhoneCallAssistantModal({ isOpen, onClose }) {
 
   // User presses telephone key on dialpad
   const handleKeyPress = async (key) => {
-    playDtmfTone(key, 160);
+    playDtmfTone(key, 150);
 
     if (callState !== 'CONNECTED') return;
 
@@ -437,8 +437,8 @@ export default function PhoneCallAssistantModal({ isOpen, onClose }) {
               <div className="text-xs text-emerald-400 font-extrabold uppercase tracking-widest animate-pulse">
                 इनकमिंग कॉल... (Incoming Call)
               </div>
-              <h2 className="text-2xl font-black text-white">योजनासेतु सरकारी हेल्पलाइन</h2>
-              <p className="text-xs text-slate-400 font-mono">1800-YOJNA (Toll-Free Helpline)</p>
+              <h2 className="text-2xl font-black text-white">योजनासेतु AI हेल्पलाइन</h2>
+              <p className="text-xs text-emerald-300 font-mono font-bold">(1800-YOJNA)</p>
               <p className="text-[11px] text-slate-500">Government of India AI Initiative</p>
             </div>
 

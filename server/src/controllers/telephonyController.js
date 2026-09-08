@@ -1,4 +1,5 @@
 // server/src/controllers/telephonyController.js
+const { evaluateEligibility } = require('../engines/eligibilityEngine');
 
 /**
  * Automated Phone Call Assistant (IVR Telephony Controller)
@@ -125,30 +126,39 @@ exports.handleIvrWebhook = async (req, res) => {
       }
     }
 
-    // Determine matched schemes
-    const matchedSchemes = [
+    // Evaluate scheme eligibility using server/src/engines/eligibilityEngine.js
+    const candidateSchemes = [
       {
         name: 'Prime Minister Employment Generation Programme (PMEGP)',
+        minAge: 18,
+        maxAge: 65,
         benefit_hi: session.profile.areaType === 'Rural' ? '₹5 लाख लोन पर 35% ग्रामीण सब्सिडी (छूट)' : '₹5 लाख लोन पर 25% शहरी सब्सिडी',
         subsidyPct: session.profile.areaType === 'Rural' ? 35 : 25,
         maxLoan: 5000000
       },
       {
         name: 'Pradhan Mantri MUDRA Yojana (Kishore)',
+        minAge: 18,
+        maxAge: 65,
         benefit_hi: '₹5 लाख तक बिना किसी ज़मीन या गारंटी के 8.5% ब्याज पर ऋण',
         subsidyPct: 0,
         maxLoan: 1000000
-      }
-    ];
-
-    if (session.profile.isWomanEntrepreneur) {
-      matchedSchemes.push({
+      },
+      {
         name: 'Stand-Up India Scheme (महिला उद्यमी विशेष)',
+        minAge: 18,
+        maxAge: 65,
+        genderEligibility: 'Female Only',
         benefit_hi: 'महिला उद्यमियों को 15% मार्जिन मनी सरकारी सहायता',
         subsidyPct: 15,
         maxLoan: 10000000
-      });
-    }
+      }
+    ];
+
+    const matchedSchemes = candidateSchemes.filter(scheme => {
+      const evaluation = evaluateEligibility(session.profile, scheme);
+      return evaluation.status !== 'NOT_ELIGIBLE';
+    });
 
     // Determine Next Prompt
     const nextStep = currentStepNum + 1;

@@ -42,7 +42,7 @@ function getAudioContext() {
  * @param {string} key - '0'-'9', '*', '#'
  * @param {number} durationMs - Duration in milliseconds (default: 160ms)
  */
-export function playDtmfTone(key, durationMs = 160) {
+export function playDtmfTone(key, durationMs = 150) {
   const ctx = getAudioContext();
   if (!ctx) return;
 
