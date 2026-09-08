@@ -184,12 +184,24 @@ export default function FinancialCalculatorModal({ isOpen, onClose, scheme }) {
               </div>
             </div>
 
-            <button
-              onClick={onClose}
-              className="w-full py-2.5 rounded-xl bg-[#0F766E] hover:bg-[#115E59] text-white font-bold transition shadow-sm text-xs"
-            >
-              Done & Return to Matches
-            </button>
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('yojnasetu_open_call_assistant'));
+                }}
+                className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold transition shadow-sm text-xs flex items-center justify-center gap-2 active:scale-95"
+              >
+                <span>📞 फ़ोन पर पर्चा मंगाएं (Call Report)</span>
+              </button>
+
+              <button
+                onClick={onClose}
+                className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-[#173B57] font-bold transition text-xs"
+              >
+                Done & Return to Matches
+              </button>
+            </div>
           </div>
 
         </div>

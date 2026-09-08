@@ -235,6 +235,15 @@ export default function EntrepreneurWizard() {
           </button>
 
           <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent('yojnasetu_open_call_assistant'))}
+            className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm border border-emerald-500"
+            title="कॉल द्वारा सहायता पाएं"
+          >
+            <span>📞 कॉल द्वारा सहायता पाएं</span>
+          </button>
+
+          <button
             onClick={loadDemoData}
             className="px-3.5 py-2 rounded-xl bg-[#F0FDFA] hover:bg-[#CCFBF1] text-[#0F766E] border border-[#14B8A6]/40 text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
           >

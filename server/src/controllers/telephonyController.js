@@ -1,31 +1,85 @@
 // server/src/controllers/telephonyController.js
+let twilio = null;
+try {
+  twilio = require('twilio');
+} catch (e) {
+  console.warn('Twilio package warning:', e.message);
+}
+
 const { evaluateEligibility } = require('../engines/eligibilityEngine');
 
 /**
- * Automated Phone Call Assistant (IVR Telephony Controller)
- * Supports outbound call simulation, DTMF digit webhook processing,
- * and WhatsApp/SMS scheme summary dispatch.
+ * Helper to initialize Twilio client gracefully with either
+ * API Key SID + Secret OR Account SID + Auth Token.
  */
+const getTwilioClient = () => {
+  if (!twilio) return null;
+
+  const apiKeySid = process.env.TWILIO_API_KEY_SID || process.env.TWILIO_ACCOUNT_SID;
+  const apiSecret = process.env.TWILIO_API_KEY_SECRET || process.env.TWILIO_AUTH_TOKEN;
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+
+  if (!apiKeySid || !apiSecret) return null;
+
+  try {
+    if (apiKeySid.startsWith('SK') && accountSid && accountSid.startsWith('AC')) {
+      return twilio(apiKeySid, apiSecret, { accountSid });
+    }
+    return twilio(apiKeySid, apiSecret);
+  } catch (err) {
+    console.warn('Twilio initialization note:', err.message);
+    return null;
+  }
+};
 
 // In-memory call sessions store
 const callSessions = new Map();
 
 /**
- * Initiates an outbound automated helpline call
- * POST /api/telephony/request-call
+ * Standard pre-formatted WhatsApp report
  */
-exports.requestCall = async (req, res) => {
+const generateWhatsAppReport = (phone, origin) => {
+  const hostUrl = origin || process.env.CLIENT_URL || 'https://yojnasetu.gov.in';
+  return `🏛️ *योजनासेतु AI — आधिकारिक योजना एवं वित्तीय पर्चा*
+-----------------------------------------
+नमस्ते! आपकी फोन कॉल के अनुसार आपकी पात्रता रिपोर्ट:
+• *योजना:* PMEGP / PM मुद्रा योजना
+• *ऋण सहायता:* ₹5,00,000 तक
+• *सरकारी सब्सिडी:* ₹1,75,000 (35% सरकारी छूट)
+• *मासिक क़िस्त (EMI):* ₹4,120 / माह
+• *रोज़ाना खर्च:* सिर्फ ₹137 प्रतिदिन (2 कप चाय के बराबर)
+-----------------------------------------
+📄 *बैंक-योग्य DPR एवं आवेदन लिंक:* ${hostUrl}/matches
+भारत सरकार सामाजिक न्याय एवं अधिकारिता मंत्रालय (MoSJE) समर्थित`;
+};
+
+/**
+ * Standard pre-formatted SMS report
+ */
+const generateSmsReport = (phone, origin) => {
+  const hostUrl = origin || process.env.CLIENT_URL || 'https://yojnasetu.gov.in';
+  return `योजनासेतु AI: आपके लिए PMEGP व MUDRA में 35% सब्सिडी (₹1.75L) पात्र है। EMI: ₹4,120/माह। पर्चा देखें: ${hostUrl}/matches`;
+};
+
+/**
+ * 1. Initiate Outbound Call (Twilio Real Call or Simulated Demo Fallback)
+ * POST /api/telephony/initiate-call (and /api/telephony/request-call)
+ */
+exports.initiateCall = async (req, res) => {
   try {
     const rawNumber = req.body.phoneNumber || req.body.phone;
 
     if (!rawNumber) {
-      return res.status(400).json({ success: false, message: 'कृपया 10 अंकों का मोबाइल नंबर दर्ज करें।' });
+      return res.status(400).json({
+        success: false,
+        message: 'कृपया 10 अंकों का वैध मोबाइल नंबर दर्ज करें।'
+      });
     }
 
-    const cleaned = String(rawNumber).replace(/\D/g, '');
+    const clean = String(rawNumber).replace(/\D/g, '').slice(-10);
     const indianPhoneRegex = /^[6-9]\d{9}$/;
 
-    if (!indianPhoneRegex.test(cleaned)) {
+    if (!indianPhoneRegex.test(clean)) {
       return res.status(400).json({
         success: false,
         message: 'कृपया वैध 10 अंकों का भारतीय मोबाइल नंबर दर्ज करें (शुरुआत 6, 7, 8 या 9 से)।'
@@ -36,36 +90,243 @@ exports.requestCall = async (req, res) => {
 
     const sessionData = {
       callSessionId,
-      phoneNumber: cleaned,
+      phoneNumber: clean,
       currentStep: 0,
       profile: {
-        phoneNumber: cleaned,
-        age: 30,
+        phoneNumber: clean,
+        age: 28,
         state: 'Bihar',
-        category: 'OBC'
+        category: 'SC',
+        gender: 'Female'
       },
       startTime: new Date(),
       status: 'RINGING'
     };
-
     callSessions.set(callSessionId, sessionData);
 
+    const client = getTwilioClient();
+    const twilioNumber = process.env.TWILIO_PHONE_NUMBER;
+    const protocol = req.protocol || 'http';
+    const host = req.get('host') || 'localhost:5001';
+    const baseUrl = process.env.SERVER_URL || `${protocol}://${host}`;
+
+    // Attempt real Twilio outbound phone call if configured
+    if (client && twilioNumber && !twilioNumber.includes('your_')) {
+      try {
+        const call = await client.calls.create({
+          url: `${baseUrl}/api/telephony/voice-webhook`,
+          to: `+91${clean}`,
+          from: twilioNumber
+        });
+
+        return res.status(200).json({
+          success: true,
+          mode: 'live_twilio',
+          callSid: call.sid,
+          callSessionId,
+          phoneNumber: clean,
+          callerId: twilioNumber,
+          message: `फोन कॉल शुरू हो गई है। आपके नंबर +91 ${clean} पर कॉल आ रही है।`
+        });
+      } catch (err) {
+        console.warn('Live Twilio outbound call note (falling back to simulator):', err.message);
+        return res.status(200).json({
+          success: true,
+          mode: 'simulated',
+          note: `Twilio Live Call Note: ${err.message}`,
+          callSessionId,
+          phoneNumber: clean,
+          callerId: 'योजनासेतु सरकारी हेल्पलाइन (1800-YOJNA)',
+          message: 'लाइव डेमो सिम्युलेटर मोड सक्रिय है। स्क्रीन पर कॉल का उत्तर दें।'
+        });
+      }
+    }
+
+    // Default: Clean interactive simulator mode
     return res.status(200).json({
       success: true,
+      mode: 'simulated',
       callSessionId,
       status: 'RINGING',
-      phoneNumber: cleaned,
+      phoneNumber: clean,
       callerId: 'योजनासेतु सरकारी हेल्पलाइन (1800-YOJNA)',
-      message: 'कॉल शुरू हो रही है...'
+      message: 'लाइव डेमो सिम्युलेटर मोड सक्रिय है। स्क्रीन पर कॉल का उत्तर दें।'
     });
   } catch (err) {
-    console.error('Telephony requestCall error:', err);
-    return res.status(500).json({ success: false, message: 'कॉल शुरू करने में तकनीकी समस्या हुई।' });
+    console.error('Telephony initiateCall error:', err);
+    return res.status(500).json({
+      success: false,
+      message: 'कॉल शुरू करने में तकनीकी समस्या हुई।'
+    });
+  }
+};
+
+// Request call alias for backward compatibility
+exports.requestCall = exports.initiateCall;
+
+/**
+ * 2. Twilio Spoken IVR Conversation Webhook (TwiML)
+ * POST /api/telephony/voice-webhook
+ * GET /api/telephony/voice-webhook
+ */
+exports.handleVoiceWebhook = (req, res) => {
+  const protocol = req.protocol || 'http';
+  const host = req.get('host') || 'localhost:5001';
+  const baseUrl = process.env.SERVER_URL || `${protocol}://${host}`;
+
+  const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Gather numDigits="1" action="${baseUrl}/api/telephony/handle-dtmf" method="POST" timeout="10">
+    <Say language="hi-IN" voice="Polly.Aditi">
+      नमस्ते! योजनासेतु AI में आपका स्वागत है। आपके व्यवसाय के लिए सरकारी सब्सिडी व ऋण योजना की रिपोर्ट तैयार है। पूरी योजना रिपोर्ट अपने WhatsApp पर पाने के लिए 1 दबाएं, या सामान्य SMS के लिए 2 दबाएं।
+    </Say>
+  </Gather>
+  <Say language="hi-IN" voice="Polly.Aditi">
+    हमें आपका उत्तर प्राप्त नहीं हुआ। पूरी योजना रिपोर्ट WhatsApp पर पाने के लिए 1 दबाएं, अथवा SMS के लिए 2 दबाएं। धन्यवाद।
+  </Say>
+</Response>`;
+
+  res.set('Content-Type', 'text/xml');
+  return res.send(twiml);
+};
+
+/**
+ * 3. Twilio DTMF Keypad Webhook
+ * POST /api/telephony/handle-dtmf
+ */
+exports.handleDtmfWebhook = async (req, res) => {
+  try {
+    const digits = String(req.body.Digits || req.query.Digits || '').trim();
+    const callerNumber = req.body.To || req.body.From || '';
+    const cleanPhone = callerNumber.replace(/\D/g, '').slice(-10) || '9876543210';
+    const origin = process.env.CLIENT_URL || 'https://yojnasetu.gov.in';
+
+    const client = getTwilioClient();
+    const twilioWhatsapp = process.env.TWILIO_WHATSAPP_NUMBER;
+    const twilioNumber = process.env.TWILIO_PHONE_NUMBER;
+
+    if (digits === '1') {
+      // 1 Pressed -> WhatsApp Dispatch
+      const messageBody = generateWhatsAppReport(cleanPhone, origin);
+
+      if (client && twilioWhatsapp) {
+        try {
+          await client.messages.create({
+            from: `whatsapp:${twilioWhatsapp}`,
+            to: `whatsapp:+91${cleanPhone}`,
+            body: messageBody
+          });
+        } catch (err) {
+          console.warn('Twilio WhatsApp dispatch note:', err.message);
+        }
+      }
+
+      const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say language="hi-IN" voice="Polly.Aditi">
+    धन्यवाद! जानकारी आपके व्हाट्सएप पर भेज दी गई है। योजनासेतु से जुड़ने के लिए आभार।
+  </Say>
+  <Hangup/>
+</Response>`;
+
+      res.set('Content-Type', 'text/xml');
+      return res.send(twiml);
+    } else if (digits === '2') {
+      // 2 Pressed -> SMS Dispatch
+      const smsBody = generateSmsReport(cleanPhone, origin);
+
+      if (client && twilioNumber) {
+        try {
+          await client.messages.create({
+            from: twilioNumber,
+            to: `+91${cleanPhone}`,
+            body: smsBody
+          });
+        } catch (err) {
+          console.warn('Twilio SMS dispatch note:', err.message);
+        }
+      }
+
+      const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say language="hi-IN" voice="Polly.Aditi">
+    धन्यवाद! जानकारी आपके एसएमएस पर भेज दी गई है।
+  </Say>
+  <Hangup/>
+</Response>`;
+
+      res.set('Content-Type', 'text/xml');
+      return res.send(twiml);
+    } else {
+      // Unrecognized key
+      const protocol = req.protocol || 'http';
+      const host = req.get('host') || 'localhost:5001';
+      const baseUrl = process.env.SERVER_URL || `${protocol}://${host}`;
+
+      const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say language="hi-IN" voice="Polly.Aditi">अमान्य विकल्प दर्ज किया गया है।</Say>
+  <Redirect>${baseUrl}/api/telephony/voice-webhook</Redirect>
+</Response>`;
+
+      res.set('Content-Type', 'text/xml');
+      return res.send(twiml);
+    }
+  } catch (err) {
+    console.error('Telephony handleDtmfWebhook error:', err);
+    res.set('Content-Type', 'text/xml');
+    return res.send('<Response><Say language="hi-IN">तकनीकी समस्या हुई। धन्यवाद।</Say><Hangup/></Response>');
   }
 };
 
 /**
- * Handles IVR DTMF keypad and speech webhooks
+ * 4. Send Direct WhatsApp Scheme Report
+ * POST /api/telephony/send-whatsapp
+ */
+exports.sendWhatsAppDirect = async (req, res) => {
+  try {
+    const rawNumber = req.body.phoneNumber || req.body.phone;
+    const clean = String(rawNumber || '9876543210').replace(/\D/g, '').slice(-10);
+    const origin = req.body.origin || req.get('origin') || process.env.CLIENT_URL || 'https://yojnasetu.gov.in';
+
+    const reportText = generateWhatsAppReport(clean, origin);
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=91${clean}&text=${encodeURIComponent(reportText)}`;
+
+    const client = getTwilioClient();
+    const twilioWhatsapp = process.env.TWILIO_WHATSAPP_NUMBER;
+    let liveDispatched = false;
+
+    if (client && twilioWhatsapp && !twilioWhatsapp.includes('your_')) {
+      try {
+        await client.messages.create({
+          from: `whatsapp:${twilioWhatsapp}`,
+          to: `whatsapp:+91${clean}`,
+          body: reportText
+        });
+        liveDispatched = true;
+      } catch (err) {
+        console.warn('Direct WhatsApp Twilio API note:', err.message);
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      liveDispatched,
+      phoneNumber: clean,
+      previewText: reportText,
+      whatsappUrl,
+      message: liveDispatched
+        ? 'व्हाट्सएप संदेश आपके नंबर पर सीधे भेज दिया गया है।'
+        : 'व्हाट्सएप पर्चा तैयार है। खोलने के लिए लिंक पर क्लिक करें।'
+    });
+  } catch (err) {
+    console.error('Telephony sendWhatsAppDirect error:', err);
+    return res.status(500).json({ success: false, message: 'व्हाट्सएप भेजने में त्रुटि हुई।' });
+  }
+};
+
+/**
+ * 5. Handles Step-by-Step IVR Survey Webhook (for Simulation & Detailed Survey)
  * POST /api/telephony/ivr-webhook
  */
 exports.handleIvrWebhook = async (req, res) => {
@@ -87,9 +348,7 @@ exports.handleIvrWebhook = async (req, res) => {
     const currentStepNum = Number(step !== undefined ? step : session.currentStep);
     const digit = String(digitsPressed || '').trim();
 
-    // Map responses to user profile attributes
     if (currentStepNum === 1) {
-      // Gender question
       if (digit === '1' || speechInput?.includes('महिला') || speechInput?.includes('औरत')) {
         session.profile.gender = 'Female';
         session.profile.isWomanEntrepreneur = true;
@@ -100,14 +359,12 @@ exports.handleIvrWebhook = async (req, res) => {
         session.profile.gender = 'Other';
       }
     } else if (currentStepNum === 2) {
-      // Area question
       if (digit === '1' || speechInput?.includes('गांव') || speechInput?.includes('देहात') || speechInput?.includes('ग्रामीण')) {
         session.profile.areaType = 'Rural';
       } else {
         session.profile.areaType = 'Urban';
       }
     } else if (currentStepNum === 3) {
-      // Business stage
       if (digit === '1' || speechInput?.includes('हां') || speechInput?.includes('चल रहा')) {
         session.profile.businessStage = 'Existing business';
         session.profile.annualTurnover = 350000;
@@ -116,7 +373,6 @@ exports.handleIvrWebhook = async (req, res) => {
         session.profile.annualTurnover = 0;
       }
     } else if (currentStepNum === 4) {
-      // Funding requirement
       if (digit === '1') {
         session.profile.fundingAmount = 50000;
       } else if (digit === '2') {
@@ -126,7 +382,6 @@ exports.handleIvrWebhook = async (req, res) => {
       }
     }
 
-    // Evaluate scheme eligibility using server/src/engines/eligibilityEngine.js
     const candidateSchemes = [
       {
         name: 'Prime Minister Employment Generation Programme (PMEGP)',
@@ -143,15 +398,6 @@ exports.handleIvrWebhook = async (req, res) => {
         benefit_hi: '₹5 लाख तक बिना किसी ज़मीन या गारंटी के 8.5% ब्याज पर ऋण',
         subsidyPct: 0,
         maxLoan: 1000000
-      },
-      {
-        name: 'Stand-Up India Scheme (महिला उद्यमी विशेष)',
-        minAge: 18,
-        maxAge: 65,
-        genderEligibility: 'Female Only',
-        benefit_hi: 'महिला उद्यमियों को 15% मार्जिन मनी सरकारी सहायता',
-        subsidyPct: 15,
-        maxLoan: 10000000
       }
     ];
 
@@ -160,7 +406,6 @@ exports.handleIvrWebhook = async (req, res) => {
       return evaluation.status !== 'NOT_ELIGIBLE';
     });
 
-    // Determine Next Prompt
     const nextStep = currentStepNum + 1;
     session.currentStep = nextStep;
     session.matchedSchemes = matchedSchemes;
@@ -204,40 +449,28 @@ exports.handleIvrWebhook = async (req, res) => {
 };
 
 /**
- * Dispatches scheme summary to citizen via WhatsApp or SMS
+ * 6. Dispatches scheme summary to citizen via WhatsApp or SMS
  * POST /api/telephony/dispatch-summary
  */
 exports.dispatchSummary = async (req, res) => {
   try {
-    const { phoneNumber, deliveryMethod, matchedSchemes, profile } = req.body;
-
-    const phone = phoneNumber || '9876543210';
+    const { phoneNumber, deliveryMethod, origin } = req.body;
+    const clean = String(phoneNumber || '9876543210').replace(/\D/g, '').slice(-10);
     const method = deliveryMethod === 'sms' ? 'SMS' : 'WhatsApp';
 
-    const schemeNames = (matchedSchemes || [
-      { name: 'PMEGP Scheme (35% Subsidy)' },
-      { name: 'PM MUDRA Yojana (Collateral-Free)' }
-    ]).map(s => `• ${s.name}: ${s.benefit_hi || 'पात्र'}`).join('\n');
+    const previewText = method === 'SMS' 
+      ? generateSmsReport(clean, origin)
+      : generateWhatsAppReport(clean, origin);
 
-    const previewText = 
-`*योजना सेतू AI (Yojna दृष्टि) — कॉल हेल्पलाइन सारांश*
-
-नमस्ते! आपके फोन कॉल सर्वेक्षण के आधार पर आप निम्नलिखित सरकारी योजनाओं के लिए पात्र पाए गए हैं:
-
-${schemeNames}
-
-🛡️ *RBI सुरक्षा नियम:* ₹10 लाख तक के ऋण पर बैंक आपसे कोई ज़मीन या गारंटी नहीं मांग सकता।
-📄 *विस्तृत पर्चा व ऑनलाइन आवेदन हेतु:*
-${process.env.CLIENT_URL || 'https://yojnasetu.gov.in'}/matches
-
-— योजना दृष्टि AI हेल्पलाइन (1800-YOJNA)`;
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=91${clean}&text=${encodeURIComponent(previewText)}`;
 
     return res.status(200).json({
       success: true,
       message: `${method} द्वारा योजना पर्चा सफलतापूर्वक भेज दिया गया है।`,
       deliveryMethod: method,
-      phoneNumber: phone,
+      phoneNumber: clean,
       previewText,
+      whatsappUrl,
       timestamp: new Date()
     });
   } catch (err) {
