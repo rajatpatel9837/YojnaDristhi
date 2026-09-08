@@ -21,6 +21,8 @@ import {
 import DocumentOCRUploadZone from '../components/DocumentOCRUploadZone';
 import useVoiceWizard from '../voice/useVoiceWizard';
 import VoiceWizardOverlay from '../components/VoiceWizardOverlay';
+import InlineMicrophoneButton from '../components/InlineMicrophoneButton';
+import { WIZARD_VOICE_SCHEMA } from '../voice/wizardVoiceSchema';
 
 export default function EntrepreneurWizard() {
   const { t } = useLanguage();
@@ -140,7 +142,10 @@ export default function EntrepreneurWizard() {
     pauseVoiceMode,
     repeatCurrentQuestion,
     goToPreviousField,
-    fieldProgress
+    fieldProgress,
+    pendingAdvance,
+    cancelAutoAdvance,
+    confirmAutoAdvance
   } = useVoiceWizard({
     formData,
     setFormData: handleInputChange,
@@ -148,6 +153,14 @@ export default function EntrepreneurWizard() {
     setCurrentStep,
     onAnalyze: handleAnalyze
   });
+
+  const getVoiceFieldDef = (key) => {
+    for (const step of WIZARD_VOICE_SCHEMA) {
+      const f = step.fields?.find(field => field.key === key);
+      if (f) return f;
+    }
+    return { key, type: 'text' };
+  };
 
   const getVoiceActiveBorder = (fieldKey) => {
     return isVoiceModeOn && currentFieldKey === fieldKey
@@ -213,6 +226,9 @@ export default function EntrepreneurWizard() {
           currentFieldLabel_hi={currentFieldLabel_hi}
           liveCaption={liveCaption}
           fieldProgress={fieldProgress}
+          pendingAdvance={pendingAdvance}
+          onCancelAdvance={cancelAutoAdvance}
+          onConfirmAdvance={confirmAutoAdvance}
           onPause={pauseVoiceMode}
           onRepeat={repeatCurrentQuestion}
           onBack={goToPreviousField}
@@ -254,8 +270,16 @@ export default function EntrepreneurWizard() {
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Full Name</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="fullName" className="block text-slate-600 font-semibold">Full Name</label>
+                  <InlineMicrophoneButton
+                    fieldDef={getVoiceFieldDef('fullName')}
+                    onValueCaptured={(val) => handleInputChange('fullName', val)}
+                  />
+                </div>
                 <input
+                  id="fullName"
+                  name="fullName"
                   type="text"
                   value={formData.fullName}
                   onChange={(e) => handleInputChange('fullName', e.target.value)}
@@ -265,8 +289,16 @@ export default function EntrepreneurWizard() {
               </div>
 
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Age (Years)</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="age" className="block text-slate-600 font-semibold">Age (Years)</label>
+                  <InlineMicrophoneButton
+                    fieldDef={getVoiceFieldDef('age')}
+                    onValueCaptured={(val) => handleInputChange('age', val)}
+                  />
+                </div>
                 <input
+                  id="age"
+                  name="age"
                   type="number"
                   value={formData.age}
                   onChange={(e) => handleInputChange('age', Number(e.target.value))}
@@ -275,8 +307,16 @@ export default function EntrepreneurWizard() {
               </div>
 
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Gender</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="gender" className="block text-slate-600 font-semibold">Gender</label>
+                  <InlineMicrophoneButton
+                    fieldDef={getVoiceFieldDef('gender')}
+                    onValueCaptured={(val) => handleInputChange('gender', val)}
+                  />
+                </div>
                 <select
+                  id="gender"
+                  name="gender"
                   value={formData.gender}
                   onChange={(e) => handleInputChange('gender', e.target.value)}
                   className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('gender')}`}
@@ -289,8 +329,16 @@ export default function EntrepreneurWizard() {
               </div>
 
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">State</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="state" className="block text-slate-600 font-semibold">State</label>
+                  <InlineMicrophoneButton
+                    fieldDef={getVoiceFieldDef('state')}
+                    onValueCaptured={(val) => handleInputChange('state', val)}
+                  />
+                </div>
                 <select
+                  id="state"
+                  name="state"
                   value={formData.state}
                   onChange={(e) => handleInputChange('state', e.target.value)}
                   className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('state')}`}
@@ -306,8 +354,16 @@ export default function EntrepreneurWizard() {
               </div>
 
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">District / City</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="district" className="block text-slate-600 font-semibold">District / City</label>
+                  <InlineMicrophoneButton
+                    fieldDef={getVoiceFieldDef('district')}
+                    onValueCaptured={(val) => handleInputChange('district', val)}
+                  />
+                </div>
                 <input
+                  id="district"
+                  name="district"
                   type="text"
                   value={formData.district}
                   onChange={(e) => handleInputChange('district', e.target.value)}
@@ -316,8 +372,16 @@ export default function EntrepreneurWizard() {
               </div>
 
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Area Type</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="areaType" className="block text-slate-600 font-semibold">Area Type</label>
+                  <InlineMicrophoneButton
+                    fieldDef={getVoiceFieldDef('areaType')}
+                    onValueCaptured={(val) => handleInputChange('areaType', val)}
+                  />
+                </div>
                 <select
+                  id="areaType"
+                  name="areaType"
                   value={formData.areaType}
                   onChange={(e) => handleInputChange('areaType', e.target.value)}
                   className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('areaType')}`}
@@ -337,8 +401,16 @@ export default function EntrepreneurWizard() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Business Name</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="businessName" className="block text-slate-600 font-semibold">Business Name</label>
+                  <InlineMicrophoneButton
+                    fieldDef={getVoiceFieldDef('businessName')}
+                    onValueCaptured={(val) => handleInputChange('businessName', val)}
+                  />
+                </div>
                 <input
+                  id="businessName"
+                  name="businessName"
                   type="text"
                   value={formData.businessName}
                   onChange={(e) => handleInputChange('businessName', e.target.value)}
@@ -348,8 +420,16 @@ export default function EntrepreneurWizard() {
               </div>
 
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Business Sector</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="sector" className="block text-slate-600 font-semibold">Business Sector</label>
+                  <InlineMicrophoneButton
+                    fieldDef={getVoiceFieldDef('sector')}
+                    onValueCaptured={(val) => handleInputChange('sector', val)}
+                  />
+                </div>
                 <select
+                  id="sector"
+                  name="sector"
                   value={formData.sector}
                   onChange={(e) => handleInputChange('sector', e.target.value)}
                   className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('sector')}`}
@@ -366,8 +446,16 @@ export default function EntrepreneurWizard() {
               </div>
 
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Business Stage</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="stage" className="block text-slate-600 font-semibold">Business Stage</label>
+                  <InlineMicrophoneButton
+                    fieldDef={getVoiceFieldDef('stage')}
+                    onValueCaptured={(val) => handleInputChange('stage', val)}
+                  />
+                </div>
                 <select
+                  id="stage"
+                  name="stage"
                   value={formData.stage}
                   onChange={(e) => handleInputChange('stage', e.target.value)}
                   className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('stage')}`}
@@ -380,8 +468,16 @@ export default function EntrepreneurWizard() {
               </div>
 
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Annual Turnover (₹)</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="annualTurnover" className="block text-slate-600 font-semibold">Annual Turnover (₹)</label>
+                  <InlineMicrophoneButton
+                    fieldDef={getVoiceFieldDef('annualTurnover')}
+                    onValueCaptured={(val) => handleInputChange('annualTurnover', val)}
+                  />
+                </div>
                 <input
+                  id="annualTurnover"
+                  name="annualTurnover"
                   type="number"
                   value={formData.annualTurnover}
                   onChange={(e) => handleInputChange('annualTurnover', Number(e.target.value))}
@@ -390,8 +486,16 @@ export default function EntrepreneurWizard() {
               </div>
 
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Udyam Registration Status</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="udyamStatus" className="block text-slate-600 font-semibold">Udyam Registration Status</label>
+                  <InlineMicrophoneButton
+                    fieldDef={getVoiceFieldDef('udyamStatus')}
+                    onValueCaptured={(val) => handleInputChange('udyamStatus', val)}
+                  />
+                </div>
                 <select
+                  id="udyamStatus"
+                  name="udyamStatus"
                   value={formData.udyamStatus}
                   onChange={(e) => handleInputChange('udyamStatus', e.target.value)}
                   className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('udyamStatus')}`}
@@ -403,8 +507,16 @@ export default function EntrepreneurWizard() {
               </div>
 
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Employees Count</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="employeesCount" className="block text-slate-600 font-semibold">Employees Count</label>
+                  <InlineMicrophoneButton
+                    fieldDef={getVoiceFieldDef('employeesCount')}
+                    onValueCaptured={(val) => handleInputChange('employeesCount', val)}
+                  />
+                </div>
                 <input
+                  id="employeesCount"
+                  name="employeesCount"
                   type="number"
                   value={formData.employeesCount}
                   onChange={(e) => handleInputChange('employeesCount', Number(e.target.value))}
@@ -422,8 +534,16 @@ export default function EntrepreneurWizard() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Annual Family Income (₹)</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="familyIncome" className="block text-slate-600 font-semibold">Annual Family Income (₹)</label>
+                  <InlineMicrophoneButton
+                    fieldDef={getVoiceFieldDef('familyIncome')}
+                    onValueCaptured={(val) => handleInputChange('familyIncome', val)}
+                  />
+                </div>
                 <input
+                  id="familyIncome"
+                  name="familyIncome"
                   type="number"
                   value={formData.familyIncome}
                   onChange={(e) => handleInputChange('familyIncome', Number(e.target.value))}
@@ -432,8 +552,16 @@ export default function EntrepreneurWizard() {
               </div>
 
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Own Contribution / Savings (₹)</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="ownContribution" className="block text-slate-600 font-semibold">Own Contribution / Savings (₹)</label>
+                  <InlineMicrophoneButton
+                    fieldDef={getVoiceFieldDef('ownContribution')}
+                    onValueCaptured={(val) => handleInputChange('ownContribution', val)}
+                  />
+                </div>
                 <input
+                  id="ownContribution"
+                  name="ownContribution"
                   type="number"
                   value={formData.ownContribution}
                   onChange={(e) => handleInputChange('ownContribution', Number(e.target.value))}
@@ -441,26 +569,40 @@ export default function EntrepreneurWizard() {
                 />
               </div>
 
-              <div className={`flex items-center gap-2 p-2.5 rounded-xl border border-transparent ${getVoiceActiveBorder('hasIncomeCertificate')}`}>
-                <input
-                  type="checkbox"
-                  id="incCert"
-                  checked={formData.hasIncomeCertificate}
-                  onChange={(e) => handleInputChange('hasIncomeCertificate', e.target.checked)}
-                  className="accent-emerald-500 w-4 h-4 rounded cursor-pointer"
+              <div className={`flex items-center justify-between p-2.5 rounded-xl border border-transparent ${getVoiceActiveBorder('hasIncomeCertificate')}`}>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="hasIncomeCertificate"
+                    name="hasIncomeCertificate"
+                    checked={formData.hasIncomeCertificate}
+                    onChange={(e) => handleInputChange('hasIncomeCertificate', e.target.checked)}
+                    className="accent-emerald-500 w-4 h-4 rounded cursor-pointer"
+                  />
+                  <label htmlFor="hasIncomeCertificate" className="text-slate-700 font-semibold cursor-pointer">Income Certificate Available</label>
+                </div>
+                <InlineMicrophoneButton
+                  fieldDef={getVoiceFieldDef('hasIncomeCertificate')}
+                  onValueCaptured={(val) => handleInputChange('hasIncomeCertificate', val)}
                 />
-                <label htmlFor="incCert" className="text-slate-700 font-semibold cursor-pointer">Income Certificate Available</label>
               </div>
 
-              <div className={`flex items-center gap-2 p-2.5 rounded-xl border border-transparent ${getVoiceActiveBorder('existingLoans')}`}>
-                <input
-                  type="checkbox"
-                  id="existLoans"
-                  checked={formData.existingLoans}
-                  onChange={(e) => handleInputChange('existingLoans', e.target.checked)}
-                  className="accent-emerald-500 w-4 h-4 rounded cursor-pointer"
+              <div className={`flex items-center justify-between p-2.5 rounded-xl border border-transparent ${getVoiceActiveBorder('existingLoans')}`}>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="existingLoans"
+                    name="existingLoans"
+                    checked={formData.existingLoans}
+                    onChange={(e) => handleInputChange('existingLoans', e.target.checked)}
+                    className="accent-emerald-500 w-4 h-4 rounded cursor-pointer"
+                  />
+                  <label htmlFor="existingLoans" className="text-slate-700 font-semibold cursor-pointer">Existing Business Loans Active</label>
+                </div>
+                <InlineMicrophoneButton
+                  fieldDef={getVoiceFieldDef('existingLoans')}
+                  onValueCaptured={(val) => handleInputChange('existingLoans', val)}
                 />
-                <label htmlFor="existLoans" className="text-slate-700 font-semibold cursor-pointer">Existing Business Loans Active</label>
               </div>
             </div>
           </div>
@@ -473,8 +615,16 @@ export default function EntrepreneurWizard() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Social Category</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="category" className="block text-slate-600 font-semibold">Social Category</label>
+                  <InlineMicrophoneButton
+                    fieldDef={getVoiceFieldDef('category')}
+                    onValueCaptured={(val) => handleInputChange('category', val)}
+                  />
+                </div>
                 <select
+                  id="category"
+                  name="category"
                   value={formData.category}
                   onChange={(e) => handleInputChange('category', e.target.value)}
                   className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('category')}`}
@@ -488,37 +638,58 @@ export default function EntrepreneurWizard() {
               </div>
 
               <div className="space-y-2 pt-2">
-                <div className={`flex items-center gap-2 p-2 rounded-xl border border-transparent ${getVoiceActiveBorder('isWomanEntrepreneur')}`}>
-                  <input
-                    type="checkbox"
-                    id="womanEnt"
-                    checked={formData.isWomanEntrepreneur}
-                    onChange={(e) => handleInputChange('isWomanEntrepreneur', e.target.checked)}
-                    className="accent-emerald-500 w-4 h-4 rounded cursor-pointer"
+                <div className={`flex items-center justify-between p-2 rounded-xl border border-transparent ${getVoiceActiveBorder('isWomanEntrepreneur')}`}>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="isWomanEntrepreneur"
+                      name="isWomanEntrepreneur"
+                      checked={formData.isWomanEntrepreneur}
+                      onChange={(e) => handleInputChange('isWomanEntrepreneur', e.target.checked)}
+                      className="accent-emerald-500 w-4 h-4 rounded cursor-pointer"
+                    />
+                    <label htmlFor="isWomanEntrepreneur" className="text-slate-700 font-semibold cursor-pointer">Woman Entrepreneur Enterprise</label>
+                  </div>
+                  <InlineMicrophoneButton
+                    fieldDef={getVoiceFieldDef('isWomanEntrepreneur')}
+                    onValueCaptured={(val) => handleInputChange('isWomanEntrepreneur', val)}
                   />
-                  <label htmlFor="womanEnt" className="text-slate-700 font-semibold cursor-pointer">Woman Entrepreneur Enterprise</label>
                 </div>
 
-                <div className={`flex items-center gap-2 p-2 rounded-xl border border-transparent ${getVoiceActiveBorder('isFirstGeneration')}`}>
-                  <input
-                    type="checkbox"
-                    id="firstGen"
-                    checked={formData.isFirstGeneration}
-                    onChange={(e) => handleInputChange('isFirstGeneration', e.target.checked)}
-                    className="accent-emerald-500 w-4 h-4 rounded cursor-pointer"
+                <div className={`flex items-center justify-between p-2 rounded-xl border border-transparent ${getVoiceActiveBorder('isFirstGeneration')}`}>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="isFirstGeneration"
+                      name="isFirstGeneration"
+                      checked={formData.isFirstGeneration}
+                      onChange={(e) => handleInputChange('isFirstGeneration', e.target.checked)}
+                      className="accent-emerald-500 w-4 h-4 rounded cursor-pointer"
+                    />
+                    <label htmlFor="isFirstGeneration" className="text-slate-700 font-semibold cursor-pointer">First Generation Entrepreneur</label>
+                  </div>
+                  <InlineMicrophoneButton
+                    fieldDef={getVoiceFieldDef('isFirstGeneration')}
+                    onValueCaptured={(val) => handleInputChange('isFirstGeneration', val)}
                   />
-                  <label htmlFor="firstGen" className="text-slate-700 font-semibold cursor-pointer">First Generation Entrepreneur</label>
                 </div>
 
-                <div className={`flex items-center gap-2 p-2 rounded-xl border border-transparent ${getVoiceActiveBorder('isPwD')}`}>
-                  <input
-                    type="checkbox"
-                    id="pwd"
-                    checked={formData.isPwD}
-                    onChange={(e) => handleInputChange('isPwD', e.target.checked)}
-                    className="accent-emerald-500 w-4 h-4 rounded cursor-pointer"
+                <div className={`flex items-center justify-between p-2 rounded-xl border border-transparent ${getVoiceActiveBorder('isPwD')}`}>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="isPwD"
+                      name="isPwD"
+                      checked={formData.isPwD}
+                      onChange={(e) => handleInputChange('isPwD', e.target.checked)}
+                      className="accent-emerald-500 w-4 h-4 rounded cursor-pointer"
+                    />
+                    <label htmlFor="isPwD" className="text-slate-700 font-semibold cursor-pointer">Person with Benchmark Disability (PwD)</label>
+                  </div>
+                  <InlineMicrophoneButton
+                    fieldDef={getVoiceFieldDef('isPwD')}
+                    onValueCaptured={(val) => handleInputChange('isPwD', val)}
                   />
-                  <label htmlFor="pwd" className="text-slate-700 font-semibold cursor-pointer">Person with Benchmark Disability (PwD)</label>
                 </div>
               </div>
             </div>
@@ -532,8 +703,16 @@ export default function EntrepreneurWizard() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Total Required Funding (₹)</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="fundingAmount" className="block text-slate-600 font-semibold">Total Required Funding (₹)</label>
+                  <InlineMicrophoneButton
+                    fieldDef={getVoiceFieldDef('fundingAmount')}
+                    onValueCaptured={(val) => handleInputChange('fundingAmount', val)}
+                  />
+                </div>
                 <input
+                  id="fundingAmount"
+                  name="fundingAmount"
                   type="number"
                   value={formData.fundingAmount}
                   onChange={(e) => handleInputChange('fundingAmount', Number(e.target.value))}
@@ -542,8 +721,16 @@ export default function EntrepreneurWizard() {
               </div>
 
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Funding Purpose</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="fundingPurpose" className="block text-slate-600 font-semibold">Funding Purpose</label>
+                  <InlineMicrophoneButton
+                    fieldDef={getVoiceFieldDef('fundingPurpose')}
+                    onValueCaptured={(val) => handleInputChange('fundingPurpose', val)}
+                  />
+                </div>
                 <input
+                  id="fundingPurpose"
+                  name="fundingPurpose"
                   type="text"
                   value={formData.fundingPurpose}
                   onChange={(e) => handleInputChange('fundingPurpose', e.target.value)}

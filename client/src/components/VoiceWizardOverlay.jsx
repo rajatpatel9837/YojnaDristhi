@@ -1,8 +1,8 @@
 /**
  * VoiceWizardOverlay.jsx
- * Visual feedback layer for "बोलकर भरें" (Hindi Voice-Only Scheme Eligibility Wizard).
- * Renders only while isVoiceModeOn is true. Shows pulsing mic, subtitles, live captions,
- * field progress, and accessible fallback buttons.
+ * Visual feedback layer for "बोलकर भरें 2.0" (Seamless Voice Experience for Yojna दृष्टि).
+ * Renders live soundwave visualizer, large Hindi subtitles, 2.5s auto-advance countdown
+ * with instant undo/next controls, and accessible buttons.
  */
 
 import React from 'react';
@@ -14,17 +14,24 @@ import {
   Pause,
   RotateCcw,
   ArrowLeft,
+  ArrowRight,
   Sparkles,
-  HelpCircle
+  HelpCircle,
+  Undo2,
+  Check
 } from 'lucide-react';
+import VoiceWaveformVisualizer from './VoiceWaveformVisualizer.jsx';
 
 export default function VoiceWizardOverlay({
-  sessionState, // 'idle' | 'speaking' | 'listening' | 'processing' | 'confirming' | 'error_retry'
+  sessionState, // 'idle' | 'speaking' | 'listening' | 'processing' | 'auto_advancing' | 'confirming' | 'error_retry'
   currentQuestion_hi,
   currentHint_hi,
   currentFieldLabel_hi,
   liveCaption,
   fieldProgress,
+  pendingAdvance, // { key, label_hi, value, countdown }
+  onCancelAdvance,
+  onConfirmAdvance,
   onPause,
   onRepeat,
   onBack
@@ -32,7 +39,8 @@ export default function VoiceWizardOverlay({
   const isSpeaking = sessionState === 'speaking';
   const isListening = sessionState === 'listening';
   const isProcessing = sessionState === 'processing';
-  const isConfirming = sessionState === 'confirming';
+  const isAutoAdvancing = sessionState === 'auto_advancing' || Boolean(pendingAdvance);
+  const isConfirming = sessionState === 'confirming' && !isAutoAdvancing;
 
   return (
     <div className="relative mb-6 overflow-hidden rounded-2xl border border-emerald-500/40 bg-gradient-to-b from-slate-900/95 via-slate-900 to-slate-950 p-5 sm:p-6 text-white shadow-2xl backdrop-blur-md transition-all">
@@ -65,13 +73,19 @@ export default function VoiceWizardOverlay({
                 <span className="text-sky-300 font-medium">समझ रहे हैं...</span>
               </>
             )}
+            {isAutoAdvancing && (
+              <>
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 animate-bounce" />
+                <span className="text-emerald-300 font-bold">सत्यापित · आगे बढ़ रहे हैं</span>
+              </>
+            )}
             {isConfirming && (
               <>
                 <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 animate-bounce" />
                 <span className="text-amber-300 font-bold">पुष्टि करें (हाँ या नहीं)</span>
               </>
             )}
-            {sessionState === 'idle' && (
+            {sessionState === 'idle' && !isAutoAdvancing && (
               <>
                 <span className="w-2 h-2 rounded-full bg-slate-400" />
                 <span className="text-slate-400">तैयार</span>
@@ -80,7 +94,7 @@ export default function VoiceWizardOverlay({
           </div>
 
           <span className="text-[11px] text-slate-400 font-medium hidden sm:inline">
-            बोलकर भरें — Yojna दृष्टि
+            बोलकर भरें 2.0 — Yojna दृष्टि
           </span>
         </div>
 
@@ -93,8 +107,8 @@ export default function VoiceWizardOverlay({
         </div>
       </div>
 
-      {/* Main Content Area: Large Subtitle & Live Speech */}
-      <div className="py-4 sm:py-5 space-y-3">
+      {/* Main Content Area */}
+      <div className="py-4 sm:py-5 space-y-3.5">
         {currentFieldLabel_hi && (
           <div className="text-[11px] uppercase tracking-wider font-bold text-emerald-400 flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5" />
@@ -107,35 +121,91 @@ export default function VoiceWizardOverlay({
           {currentQuestion_hi || 'कृपया अपनी जानकारी बोलें...'}
         </h2>
 
-        {/* Live Interim Caption / Heard Speech */}
-        <div className="min-h-[42px] p-3 rounded-xl bg-slate-950/70 border border-slate-800 flex items-center gap-2 text-sm">
-          {isListening && (
-            <div className="relative flex items-center justify-center w-6 h-6 shrink-0">
-              <span className="absolute w-5 h-5 rounded-full bg-rose-500/30 animate-ping" />
-              <Mic className="w-4 h-4 text-rose-400" />
-            </div>
-          )}
+        {/* Live Audio Visualizer + Subtitles */}
+        <div className="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
+          <div className="flex items-center gap-2.5 w-full sm:w-auto">
+            {isListening ? (
+              <div className="relative flex items-center justify-center w-7 h-7 shrink-0">
+                <span className="absolute w-6 h-6 rounded-full bg-rose-500/30 animate-ping" />
+                <Mic className="w-4 h-4 text-rose-400" />
+              </div>
+            ) : isSpeaking ? (
+              <div className="w-7 h-7 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0">
+                <Volume2 className="w-4 h-4 text-indigo-400" />
+              </div>
+            ) : (
+              <div className="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center shrink-0">
+                <Sparkles className="w-3.5 h-3.5 text-slate-400" />
+              </div>
+            )}
 
-          {liveCaption ? (
-            <p className="text-emerald-300 font-semibold italic text-sm sm:text-base">
-              "{liveCaption}"
-            </p>
-          ) : (
-            <p className="text-slate-500 text-xs sm:text-sm italic">
-              {isSpeaking ? 'सवाल सुना जा रहा है...' : 'आपकी आवाज़ सुनी जा रही है, साफ़ बोलें...'}
-            </p>
-          )}
+            <div className="flex-1">
+              {liveCaption ? (
+                <p className="text-emerald-300 font-semibold italic text-sm sm:text-base">
+                  "{liveCaption}"
+                </p>
+              ) : (
+                <p className="text-slate-400 text-xs sm:text-sm italic">
+                  {isSpeaking ? 'सवाल सुना जा रहा है...' : isListening ? 'आपकी आवाज़ सुनी जा रही है, साफ़ बोलें...' : 'अगले सवाल की प्रतीक्षा...'}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Harmonic Waveform */}
+          <VoiceWaveformVisualizer isListening={isListening} isSpeaking={isSpeaking} className="shrink-0" />
         </div>
 
-        {/* Confirmation or Hint Notice */}
-        {isConfirming && (
-          <div className="p-2.5 rounded-xl bg-amber-950/40 border border-amber-500/40 text-amber-200 text-xs flex items-center gap-2">
+        {/* 2.5-Second Auto-Advance Countdown Banner */}
+        {pendingAdvance && (
+          <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-950/80 via-slate-900 to-emerald-950/80 border border-emerald-500/50 shadow-lg flex flex-wrap items-center justify-between gap-3 animate-fadeIn">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center shrink-0 text-emerald-400 font-bold">
+                <Check className="w-4 h-4 text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-xs text-emerald-300 font-medium">
+                  {pendingAdvance.label_hi || 'दर्ज किया गया'}: <span className="text-white font-bold text-sm underline decoration-emerald-400">{String(pendingAdvance.value)}</span>
+                </p>
+                <p className="text-[11px] text-slate-400">
+                  <strong className="text-emerald-400">{pendingAdvance.countdown}s</strong> में आगे बढ़ेंगे · गलत हो तो <strong>"रुको"</strong> या <strong>"बदलो"</strong> बोलें
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onCancelAdvance}
+                className="px-3 py-1.5 rounded-lg bg-rose-950/70 hover:bg-rose-900 text-rose-300 border border-rose-600/50 text-xs font-bold transition flex items-center gap-1.5 active:scale-95 shadow-sm"
+                title="बदलो (Undo)"
+              >
+                <Undo2 className="w-3.5 h-3.5" />
+                <span>बदलो (Undo)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={onConfirmAdvance}
+                className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1.5 active:scale-95 shadow-sm"
+                title="तुरंत आगे बढ़ें"
+              >
+                <span>आगे बढ़ें</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Confirmation Notice (Fallback) */}
+        {isConfirming && !pendingAdvance && (
+          <div className="p-3 rounded-xl bg-amber-950/40 border border-amber-500/40 text-amber-200 text-xs flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
             <span>अगर यह सही है तो <strong>"हाँ"</strong> बोलें, गलत है तो <strong>"नहीं"</strong> या <strong>"दोबारा"</strong> बोलें।</span>
           </div>
         )}
 
-        {currentHint_hi && !isConfirming && (
+        {currentHint_hi && !isConfirming && !pendingAdvance && (
           <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
             <HelpCircle className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             <span>सुझाव: {currentHint_hi}</span>

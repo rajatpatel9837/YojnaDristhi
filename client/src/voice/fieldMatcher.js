@@ -13,6 +13,7 @@ import {
   SKIP_WORDS_HI,
   HELP_WORDS_HI
 } from './wizardVoiceSchema.js';
+import { parseHindiNumber } from './hindiNumberParser.js';
 
 /**
  * Computes Levenshtein edit distance between two strings.
@@ -254,3 +255,157 @@ export function isHelpPhrase(transcript) {
     return text === cw || text.includes(cw);
   });
 }
+
+// ─── Multi-Slot Compound Extraction Engine ──────────────────────────
+
+/**
+ * High-precision exact/substring matcher for compound sentences.
+ * Avoids false positive fuzzy collisions with Hindi particles.
+ */
+export function matchSelectStrict(text, options) {
+  if (!text || !Array.isArray(options)) return null;
+  const clean = text.toLowerCase();
+
+  for (const opt of options) {
+    const candidates = [opt.label_hi, ...(opt.synonyms_hi || []), opt.value].filter(Boolean);
+    for (const cand of candidates) {
+      const c = cand.toLowerCase().trim();
+      if (!c) continue;
+      // If candidate is at least 3 chars, check inclusion or word boundary
+      if (c.length >= 3 && clean.includes(c)) {
+        return opt.value;
+      } else if (c.length < 3) {
+        // Strict word boundary for very short candidates (like "up", "sc", "st")
+        const words = clean.split(/\s+/);
+        if (words.includes(c)) return opt.value;
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Extracts multiple structured fields from a single compound spoken utterance.
+ * E.g. "मेरा नाम सुनीता देवी है, उम्र 28 साल, मैं पटना बिहार से हूँ और ग्रामीण क्षेत्र में रहती हूँ"
+ *
+ * @param {string} transcript - User's full spoken text
+ * @param {Array} stepFields - Field definitions of the current step
+ * @returns {Record<string, any>} - Map of fieldKey -> resolvedValue
+ */
+export function extractMultiFields(transcript, stepFields = []) {
+  if (!transcript || typeof transcript !== 'string') return {};
+  const cleanTranscript = transcript.trim();
+  const results = {};
+
+  for (const field of stepFields) {
+    const key = field.key;
+    const type = field.type;
+
+    // ── 1. Text Fields ──
+    if (key === 'fullName') {
+      const nameMatch = cleanTranscript.match(/(?:मेरा\s*नाम|नाम\s*है|नाम)\s*[:=]?\s*([A-Za-z\u0900-\u097F]+(?:\s+[A-Za-z\u0900-\u097F]+){0,2})/i);
+      if (nameMatch && nameMatch[1]) {
+        let n = nameMatch[1].replace(/\s+(?:है|हूँ|हू|की|का|था|थी)$/g, '').replace(/^(?:है|हूँ|हू)\s+/g, '').trim();
+        if (n.length >= 2) {
+          results[key] = n.charAt(0).toUpperCase() + n.slice(1);
+        }
+      }
+    } else if (key === 'businessName') {
+      const bMatch = cleanTranscript.match(/(?:व्यवसाय\s*का\s*नाम|दुकान\s*का\s*नाम|दुकान\s*है|काम\s*है)\s*[:=]?\s*([A-Za-z\u0900-\u097F0-9\s]+?)(?:है|हूँ|$|,|।)/i);
+      if (bMatch && bMatch[1]) {
+        let b = bMatch[1].replace(/\s+(?:है|हूँ|का|की)$/g, '').trim();
+        if (b.length >= 2) results[key] = b;
+      }
+    } else if (key === 'district') {
+      const distMatch = cleanTranscript.match(/(?:ज़िला|जिला|शहर)\s*[:=]?\s*([A-Za-z\u0900-\u097F]+)/i);
+      if (distMatch && distMatch[1]) {
+        results[key] = distMatch[1].trim();
+      } else {
+        const cityMatch = cleanTranscript.match(/(?:मैं|हम)\s+([A-Za-z\u0900-\u097F]+)\s+(?:बिहार|पंजाब|उत्तर प्रदेश|झारखंड|महाराष्ट्र|राजस्थान|मध्य प्रदेश)/i);
+        if (cityMatch && cityMatch[1]) {
+          results[key] = cityMatch[1].trim();
+        }
+      }
+    } else if (key === 'fundingPurpose') {
+      const pMatch = cleanTranscript.match(/(?:के\s*लिए|मकसद|उद्देश्य)\s*[:=]?\s*([A-Za-z\u0900-\u097F\s]+)/i)
+        || cleanTranscript.match(/([A-Za-z\u0900-\u097F\s]+?)\s*के\s*लिए/i);
+      if (pMatch && pMatch[1]) {
+        let p = pMatch[1].replace(/\b(?:चाहिए|लाख|रुपये|रु|हज़ार)\b/g, '').trim();
+        if (p.length >= 3) results[key] = p;
+      }
+    }
+
+    // ── 2. Select Fields ──
+    if (type === 'select' && Array.isArray(field.options)) {
+      const matched = matchSelectStrict(cleanTranscript, field.options);
+      if (matched) {
+        results[key] = matched;
+      }
+    }
+
+    // ── 3. Number Fields ──
+    if (type === 'number') {
+      let numVal = null;
+
+      if (key === 'age') {
+        const ageMatch = cleanTranscript.match(/(?:उम्र|आयु)\s*(?:है)?\s*([०-९\d]+|[एक-सौ\w]+)\s*(?:साल|वर्ष)?/i)
+          || cleanTranscript.match(/([०-९\d]+|[एक-सौ\w]+)\s*(?:साल|वर्ष)\s*(?:की\s*उम्र|का\s*उम्र|उम्र)?/i);
+        if (ageMatch) {
+          numVal = parseHindiNumber(ageMatch[1], field.min, field.max);
+        }
+      } else if (key === 'annualTurnover') {
+        const turnMatch = cleanTranscript.match(/(?:टर्नओवर|कारोबार|सालाना\s*टर्नओवर|बिक्री)\s*(?:है)?\s*([०-९\d\s\wलाखहज़ारकरोड़]+)/i)
+          || cleanTranscript.match(/([०-९\d\s\wलाखहज़ारकरोड़]+)\s*(?:टर्नओवर|कारोबार|सालाना\s*टर्नओवर|बिक्री)/i);
+        if (turnMatch) {
+          numVal = parseHindiNumber(turnMatch[1], field.min, field.max);
+        }
+      } else if (key === 'employeesCount') {
+        const empMatch = cleanTranscript.match(/([०-९\d\w\s]+)\s*(?:लोग|कर्मचारी|कामगार|वर्कर)/i)
+          || cleanTranscript.match(/(?:कर्मचारी|कामगार)\s*([०-९\d\w\s]+)/i);
+        if (empMatch) {
+          numVal = parseHindiNumber(empMatch[1], field.min, field.max);
+        }
+      } else if (key === 'familyIncome') {
+        const incMatch = cleanTranscript.match(/(?:पारिवारिक\s*आय|परिवार\s*की\s*आय|सालाना\s*आय|आय)\s*(?:है)?\s*([०-९\d\s\wलाखहज़ारकरोड़]+)/i)
+          || cleanTranscript.match(/([०-९\d\s\wलाखहज़ारकरोड़]+)\s*(?:पारिवारिक\s*आय|आय)/i);
+        if (incMatch) {
+          numVal = parseHindiNumber(incMatch[1], field.min, field.max);
+        }
+      } else if (key === 'ownContribution') {
+        const ownMatch = cleanTranscript.match(/(?:स्वयं\s*का\s*निवेश|खुद\s*का\s*निवेश|खुद\s*का|स्वयं|अपनी\s*पूंजी)\s*(?:है)?\s*([०-९\d\s\wलाखहज़ारकरोड़]+)/i)
+          || cleanTranscript.match(/([०-९\d\s\wलाखहज़ारकरोड़]+)\s*(?:खुद\s*का|स्वयं\s*का|अपनी\s*पूंजी)/i);
+        if (ownMatch) {
+          numVal = parseHindiNumber(ownMatch[1], field.min, field.max);
+        }
+      } else if (key === 'fundingAmount') {
+        const fundMatch = cleanTranscript.match(/([०-९\d\s\wलाखहज़ारकरोड़]+)\s*(?:रुपये|रु)?\s*(?:की\s*सहायता|चाहिए|लोन\s*चाहिए|फंडिंग|ऋण)/i)
+          || cleanTranscript.match(/(?:सहायता\s*राशि|लोन|ऋण|फंडिंग)\s*(?:है)?\s*([०-९\d\s\wलाखहज़ारकरोड़]+)/i);
+        if (fundMatch) {
+          numVal = parseHindiNumber(fundMatch[1], field.min, field.max);
+        }
+      }
+
+      if (numVal !== null && numVal !== undefined && !isNaN(numVal)) {
+        results[key] = numVal;
+      }
+    }
+
+    // ── 4. Boolean Fields ──
+    if (type === 'boolean') {
+      if (key === 'hasIncomeCertificate' && /(?:आय\s*प्रमाण\s*पत्र|इनकम\s*सर्टिफिकेट)/i.test(cleanTranscript)) {
+        results[key] = !/नहीं|नही|ना|उपलब्ध नहीं/i.test(cleanTranscript);
+      } else if (key === 'existingLoans' && /(?:लोन|कर्ज|ऋण)/i.test(cleanTranscript)) {
+        results[key] = !/नहीं|नही|ना|कोई\s*नहीं/i.test(cleanTranscript);
+      } else if (key === 'isWomanEntrepreneur' && /(?:महिला\s*उद्यमी|महिला|औरत)/i.test(cleanTranscript)) {
+        results[key] = !/नहीं|नही|ना/i.test(cleanTranscript);
+      } else if (key === 'isFirstGeneration' && /(?:पहली\s*पीढ़ी|फर्स्ट\s*जनरेशन)/i.test(cleanTranscript)) {
+        results[key] = !/नहीं|नही|ना/i.test(cleanTranscript);
+      } else if (key === 'isPwD' && /(?:दिव्यांग|विकलांग|pwd)/i.test(cleanTranscript)) {
+        results[key] = !/नहीं|नही|ना/i.test(cleanTranscript);
+      }
+    }
+  }
+
+  return results;
+}
+

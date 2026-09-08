@@ -26,8 +26,14 @@ import {
   isRepeatPhrase,
   isBackPhrase,
   isSkipPhrase,
-  isHelpPhrase
+  isHelpPhrase,
+  extractMultiFields
 } from './fieldMatcher.js';
+import {
+  playListenChime,
+  playSuccessChime,
+  playRetryChime
+} from './voiceAudioCues.js';
 
 export function useVoiceWizard({
   formData,
@@ -42,6 +48,7 @@ export function useVoiceWizard({
   const [liveCaption, setLiveCaption] = useState('');
   const [lastError, setLastError] = useState(null);
   const [pendingValue, setPendingValue] = useState(null);
+  const [pendingAdvance, setPendingAdvance] = useState(null); // { key, label_hi, value, countdown }
   const [isUnsupported, setIsUnsupported] = useState(false);
   const [step6SelectedDocs, setStep6SelectedDocs] = useState([]);
 
@@ -54,8 +61,11 @@ export function useVoiceWizard({
   const audioRef = useRef(null);
   const recognitionRef = useRef(null);
   const silenceTimerRef = useRef(null);
+  const advanceTimerRef = useRef(null);
+  const advanceIntervalRef = useRef(null);
   const formDataRef = useRef(formData);
   const pendingValueRef = useRef(null);
+  const pendingAdvanceRef = useRef(null);
 
   // Sync refs
   useEffect(() => {
@@ -81,6 +91,10 @@ export function useVoiceWizard({
   useEffect(() => {
     pendingValueRef.current = pendingValue;
   }, [pendingValue]);
+
+  useEffect(() => {
+    pendingAdvanceRef.current = pendingAdvance;
+  }, [pendingAdvance]);
 
   // Current step schema & current field
   const currentStepObj = WIZARD_VOICE_SCHEMA.find(s => s.step === currentStep) || WIZARD_VOICE_SCHEMA[0];
@@ -241,90 +255,120 @@ export function useVoiceWizard({
     recognition.start();
   }, [speakHindi, stopListening, onAnalyze]);
 
-  // ─── Confirmation Phase ────────────────────────────────────────────
-  const runConfirmationPhase = useCallback(async (candidateVal, field) => {
-    setSessionState('speaking');
+  // ─── Auto-Advance Timers & Undo Engine ─────────────────────────────
+  const clearAdvanceTimers = useCallback(() => {
+    if (advanceTimerRef.current) {
+      clearTimeout(advanceTimerRef.current);
+      advanceTimerRef.current = null;
+    }
+    if (advanceIntervalRef.current) {
+      clearInterval(advanceIntervalRef.current);
+      advanceIntervalRef.current = null;
+    }
+  }, []);
+
+  const cancelAutoAdvance = useCallback(async () => {
+    clearAdvanceTimers();
+    stopListening();
+    const currentPending = pendingAdvanceRef.current;
+    if (currentPending && setFormData) {
+      setFormData(currentPending.key, '');
+    }
+    playRetryChime();
+    setPendingAdvance(null);
+    setPendingValue(null);
+    await speakHindi('ठीक है, दोबारा बताएं।');
+    askCurrentField();
+  }, [clearAdvanceTimers, stopListening, setFormData, speakHindi]);
+
+  const confirmAutoAdvance = useCallback(() => {
+    clearAdvanceTimers();
+    stopListening();
+    setPendingAdvance(null);
+    setPendingValue(null);
+    advanceToNextField();
+  }, [clearAdvanceTimers, stopListening, advanceToNextField]);
+
+  const startAutoAdvance = useCallback((candidateVal, field) => {
+    clearAdvanceTimers();
+    stopListening();
+
+    // 1. Immediately write to formData & play earcon
+    if (setFormData) {
+      setFormData(field.key, candidateVal);
+    }
+    playSuccessChime();
+    attemptsRef.current[field.key] = 0;
     setPendingValue(candidateVal);
 
-    // Speak confirmation phrase
-    let confirmPhrase = '';
-    if (field.confirm_template_hi) {
-      const opt = (field.options || []).find(o => o.value === candidateVal);
-      confirmPhrase = field.confirm_template_hi(candidateVal, opt);
-    } else {
-      confirmPhrase = `तो आपका उत्तर है ${candidateVal}, ठीक है? हाँ या नहीं बोलें।`;
-    }
+    // 2. Set auto_advancing state with 2.5s countdown
+    setSessionState('auto_advancing');
+    let timeLeft = 2.5;
+    setPendingAdvance({
+      key: field.key,
+      label_hi: field.label_hi,
+      value: candidateVal,
+      countdown: timeLeft
+    });
 
-    await speakHindi(confirmPhrase);
+    advanceIntervalRef.current = setInterval(() => {
+      timeLeft = Math.max(0, +(timeLeft - 0.1).toFixed(1));
+      setPendingAdvance(prev => (prev ? { ...prev, countdown: timeLeft } : null));
+    }, 100);
 
-    if (!isVoiceModeOnRef.current) return;
+    advanceTimerRef.current = setTimeout(() => {
+      clearAdvanceTimers();
+      stopListening();
+      setPendingAdvance(null);
+      setPendingValue(null);
+      advanceToNextField();
+    }, 2500);
 
-    setSessionState('confirming');
-    setLiveCaption('');
-
+    // 3. Keep speech listener active for verbal "रुको" / "बदलो" / "आगे"
     const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRec) return;
+    if (SpeechRec) {
+      try {
+        const recognition = new SpeechRec();
+        recognition.lang = 'hi-IN';
+        recognition.interimResults = false;
+        recognition.continuous = false;
+        recognitionRef.current = recognition;
 
-    const recognition = new SpeechRec();
-    recognition.lang = 'hi-IN';
-    recognition.interimResults = true;
-    recognition.continuous = false;
-    recognitionRef.current = recognition;
-
-    recognition.onresult = async (e) => {
-      for (let i = e.resultIndex; i < e.results.length; ++i) {
-        if (e.results[i].isFinal) {
-          const transcript = e.results[i][0].transcript;
-          setLiveCaption(transcript);
-          stopListening();
-
-          // Check global back/stop
-          if (isStopPhrase(transcript)) {
-            await speakHindi('आवाज़ मोड रोक दिया गया है।');
-            setIsVoiceModeOn(false);
-            return;
-          }
-          if (isRepeatPhrase(transcript)) {
-            runConfirmationPhase(candidateVal, field);
-            return;
-          }
-
-          const bool = matchBoolean(transcript);
-          if (bool === true) {
-            // Commit value to formData
-            if (setFormData) {
-              setFormData(field.key, candidateVal);
-            }
-            attemptsRef.current[field.key] = 0;
-            setPendingValue(null);
-
-            // Advance to next field or next step
-            advanceToNextField();
-          } else if (bool === false) {
-            // Discard candidate and re-ask question
+        recognition.onresult = async (e) => {
+          const transcript = e.results[0][0].transcript.toLowerCase();
+          if (/\b(?:रुको|रोक|बदलो|गलत|वापस|undo|nahi|नहीं|गलत है)\b/i.test(transcript) || isStopPhrase(transcript)) {
+            clearAdvanceTimers();
+            stopListening();
+            if (setFormData) setFormData(field.key, '');
+            playRetryChime();
+            setPendingAdvance(null);
             setPendingValue(null);
             await speakHindi('ठीक है, दोबारा बताएं।');
             askCurrentField();
-          } else {
-            await speakHindi('कृपया हाँ या नहीं बोलें।');
-            runConfirmationPhase(candidateVal, field);
+          } else if (/\b(?:आगे|हाँ|नेक्स्ट|सही|ठीक है|yes|बढ़ो|बढ़ो)\b/i.test(transcript)) {
+            clearAdvanceTimers();
+            stopListening();
+            setPendingAdvance(null);
+            setPendingValue(null);
+            advanceToNextField();
           }
-          return;
-        } else {
-          setLiveCaption(e.results[i][0].transcript);
-        }
-      }
-    };
+        };
 
-    recognition.onerror = () => {
-      stopListening();
-      if (isVoiceModeOnRef.current) {
-        runConfirmationPhase(candidateVal, field);
-      }
-    };
+        recognition.onerror = () => {
+          // Soft ignore errors during auto-advance grace period
+        };
 
-    recognition.start();
-  }, [speakHindi, stopListening]);
+        recognition.start();
+      } catch (err) {
+        // Fallback: timer will auto-advance smoothly
+      }
+    }
+  }, [clearAdvanceTimers, stopListening, setFormData, advanceToNextField, speakHindi]);
+
+  // Backward compatibility alias for Step 6 multiselect finish
+  const runConfirmationPhase = useCallback((candidateVal, field) => {
+    startAutoAdvance(candidateVal, field);
+  }, [startAutoAdvance]);
 
   // ─── Advance to Next Field / Step ──────────────────────────────────
   const advanceToNextField = useCallback(async () => {
@@ -445,6 +489,7 @@ export function useVoiceWizard({
 
     recognition.onerror = async (err) => {
       stopListening();
+      playRetryChime();
       if (!isVoiceModeOnRef.current) return;
 
       attemptsRef.current[key] = (attemptsRef.current[key] || 0) + 1;
@@ -457,6 +502,7 @@ export function useVoiceWizard({
       }
     };
 
+    playListenChime();
     recognition.start();
   }, [speakHindi, stopListening, advanceToNextField, runStep7Review]);
 
@@ -583,27 +629,56 @@ export function useVoiceWizard({
       }
     }
 
-    // 2. Type-Specific Parsing
-    let parsedValue = null;
+    // 2. Multi-Slot Compound Utterance Check across current step's fields
+    const multiExtracted = extractMultiFields(transcript, currentFields);
+    const multiKeys = Object.keys(multiExtracted);
 
-    if (field.type === 'text') {
-      const clean = transcript.trim();
-      if (clean.length > 0) {
-        parsedValue = clean.charAt(0).toUpperCase() + clean.slice(1);
+    if (multiKeys.length >= 2) {
+      // Batch fill all captured fields
+      for (const [mKey, mVal] of Object.entries(multiExtracted)) {
+        if (setFormData) setFormData(mKey, mVal);
+        attemptsRef.current[mKey] = 0;
       }
-    } else if (field.type === 'number') {
-      parsedValue = parseHindiNumber(transcript);
-      if (parsedValue !== null) {
-        if (field.min !== undefined && parsedValue < field.min) parsedValue = null;
-        if (field.max !== undefined && parsedValue > field.max) parsedValue = null;
+      playSuccessChime();
+
+      // Find the next unfilled field in current step
+      const nextUnfilledIdx = currentFields.findIndex(f => {
+        return multiExtracted[f.key] === undefined && !formDataRef.current[f.key];
+      });
+
+      if (nextUnfilledIdx !== -1) {
+        setCurrentFieldIndex(nextUnfilledIdx);
+        await speakHindi('बहुत बढ़िया, कई जानकारियां दर्ज कर ली गईं।');
+      } else {
+        await speakHindi('शानदार, इस भाग की सभी जानकारियां पूरी हो गईं।');
+        advanceToNextField();
       }
-    } else if (field.type === 'select') {
-      parsedValue = matchSelectOption(transcript, field.options);
-    } else if (field.type === 'boolean') {
-      parsedValue = matchBoolean(transcript);
+      return;
     }
 
-    // 3. Fallback to Server NLU if local parse returned null and attempts >= 1
+    // 3. Single-Field Type Parsing
+    let parsedValue = multiExtracted[key] !== undefined ? multiExtracted[key] : null;
+
+    if (parsedValue === null) {
+      if (field.type === 'text') {
+        const clean = transcript.trim();
+        if (clean.length > 0) {
+          parsedValue = clean.charAt(0).toUpperCase() + clean.slice(1);
+        }
+      } else if (field.type === 'number') {
+        parsedValue = parseHindiNumber(transcript);
+        if (parsedValue !== null) {
+          if (field.min !== undefined && parsedValue < field.min) parsedValue = null;
+          if (field.max !== undefined && parsedValue > field.max) parsedValue = null;
+        }
+      } else if (field.type === 'select') {
+        parsedValue = matchSelectOption(transcript, field.options);
+      } else if (field.type === 'boolean') {
+        parsedValue = matchBoolean(transcript);
+      }
+    }
+
+    // 4. Fallback to Server NLU if local parse returned null and attempts >= 1
     if (parsedValue === null && (attemptsRef.current[key] || 0) >= 1) {
       try {
         const nluRes = await axios.post('/api/ai/parse-voice-field', {
@@ -624,11 +699,12 @@ export function useVoiceWizard({
       }
     }
 
-    // 4. Handle Result or Retry
+    // 5. Handle Result (Smart Auto-Advance) or Retry
     if (parsedValue !== null && parsedValue !== undefined) {
       attemptsRef.current[key] = 0;
-      runConfirmationPhase(parsedValue, field);
+      startAutoAdvance(parsedValue, field);
     } else {
+      playRetryChime();
       attemptsRef.current[key] = (attemptsRef.current[key] || 0) + 1;
       const count = attemptsRef.current[key];
 
@@ -649,14 +725,27 @@ export function useVoiceWizard({
         askCurrentField();
       }
     }
-  }, [speakHindi, askCurrentField, goToPreviousField, advanceToNextField, runConfirmationPhase]);
+  }, [speakHindi, askCurrentField, goToPreviousField, advanceToNextField, startAutoAdvance, currentFields]);
 
-  // ─── Watch currentField or currentStep Changes ──────────────────────
+  // ─── Watch currentField or currentStep Changes & Smooth Auto-Scroll ───
   useEffect(() => {
     if (isVoiceModeOn) {
       askCurrentField();
+
+      // Smooth auto-scroll and focus active input
+      if (currentField?.key) {
+        setTimeout(() => {
+          const el = document.getElementById(currentField.key) || document.querySelector(`[name="${currentField.key}"]`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (el.focus) {
+              try { el.focus({ preventScroll: true }); } catch (e) {}
+            }
+          }
+        }, 250);
+      }
     }
-  }, [currentStep, currentFieldIndex, isVoiceModeOn]);
+  }, [currentStep, currentFieldIndex, isVoiceModeOn, currentField?.key]);
 
   // ─── Toggle Voice Mode ─────────────────────────────────────────────
   const toggleVoiceMode = useCallback(() => {
@@ -669,6 +758,7 @@ export function useVoiceWizard({
 
     if (isVoiceModeOn) {
       // Turn off / pause
+      clearAdvanceTimers();
       stopListening();
       if (audioRef.current) {
         audioRef.current.pause();
@@ -680,14 +770,16 @@ export function useVoiceWizard({
       setIsVoiceModeOn(false);
       setSessionState('idle');
       setLiveCaption('');
+      setPendingAdvance(null);
     } else {
       // Turn on
       setIsVoiceModeOn(true);
       setLastError(null);
     }
-  }, [isVoiceModeOn, stopListening]);
+  }, [isVoiceModeOn, stopListening, clearAdvanceTimers]);
 
   const pauseVoiceMode = useCallback(() => {
+    clearAdvanceTimers();
     stopListening();
     if (audioRef.current) {
       audioRef.current.pause();
@@ -698,19 +790,23 @@ export function useVoiceWizard({
     }
     setIsVoiceModeOn(false);
     setSessionState('idle');
-  }, [stopListening]);
+    setPendingAdvance(null);
+  }, [stopListening, clearAdvanceTimers]);
 
   const resumeVoiceMode = useCallback(() => {
     setIsVoiceModeOn(true);
   }, []);
 
   const repeatCurrentQuestion = useCallback(() => {
+    clearAdvanceTimers();
+    setPendingAdvance(null);
     askCurrentField();
-  }, [askCurrentField]);
+  }, [askCurrentField, clearAdvanceTimers]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      clearAdvanceTimers();
       stopListening();
       if (audioRef.current) {
         audioRef.current.pause();
@@ -720,7 +816,7 @@ export function useVoiceWizard({
         window.speechSynthesis.cancel();
       }
     };
-  }, [stopListening]);
+  }, [stopListening, clearAdvanceTimers]);
 
   // Progress metadata
   const totalFieldsInStep = currentFields.length;
@@ -748,7 +844,12 @@ export function useVoiceWizard({
     goToPreviousField,
     fieldProgress,
     isUnsupported,
-    step6SelectedDocs
+    step6SelectedDocs,
+    pendingAdvance,
+    cancelAutoAdvance,
+    confirmAutoAdvance,
+    isListening: sessionState === 'listening',
+    isSpeaking: sessionState === 'speaking'
   };
 }
 

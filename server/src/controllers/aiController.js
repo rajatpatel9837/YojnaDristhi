@@ -462,10 +462,27 @@ const generateSpeech = async (req, res) => {
 
 const parseVoiceField = async (req, res) => {
   try {
-    const { transcript, field } = req.body;
+    const { transcript, field, fields, mode } = req.body;
 
-    if (!transcript || !field || !field.type) {
-      return res.status(400).json({ success: false, reason: 'missing_transcript_or_field' });
+    if (!transcript) {
+      return res.status(400).json({ success: false, reason: 'missing_transcript' });
+    }
+
+    // Support multi-slot extraction across multiple fields
+    if (mode === 'multi_slot' || (Array.isArray(fields) && fields.length > 0)) {
+      const targetFields = Array.isArray(fields) ? fields : (field ? [field] : []);
+      const multiExtracted = parseLocalMultiVoiceFields(transcript, targetFields);
+      return res.json({
+        success: Object.keys(multiExtracted).length > 0,
+        mode: 'multi_slot',
+        data: {
+          fields: multiExtracted
+        }
+      });
+    }
+
+    if (!field || !field.type) {
+      return res.status(400).json({ success: false, reason: 'missing_field' });
     }
 
     const { key, type, min, max, options = [] } = field;
@@ -712,6 +729,117 @@ function parseLocalVoiceField(transcript, field) {
   }
 
   return null;
+}
+
+function parseLocalMultiVoiceFields(transcript, fields = []) {
+  if (!transcript || !Array.isArray(fields)) return {};
+  const results = {};
+  const clean = transcript.trim();
+
+  for (const f of fields) {
+    const key = f.key;
+    const type = f.type;
+
+    if (key === 'fullName') {
+      const match = clean.match(/(?:मेरा\s*नाम|नाम\s*है|नाम)\s*[:=]?\s*([A-Za-z\u0900-\u097F]+(?:\s+[A-Za-z\u0900-\u097F]+){0,2})/i);
+      if (match && match[1]) {
+        let n = match[1].replace(/\s+(?:है|हूँ|हू|की|का|था|थी)$/g, '').trim();
+        if (n.length >= 2) results[key] = n.charAt(0).toUpperCase() + n.slice(1);
+      }
+    } else if (key === 'businessName') {
+      const bMatch = clean.match(/(?:व्यवसाय\s*का\s*नाम|दुकान\s*का\s*नाम|दुकान\s*है|काम\s*है)\s*[:=]?\s*([A-Za-z\u0900-\u097F0-9\s]+?)(?:है|हूँ|$|,|।)/i);
+      if (bMatch && bMatch[1]) {
+        let b = bMatch[1].replace(/\s+(?:है|हूँ|का|की)$/g, '').trim();
+        if (b.length >= 2) results[key] = b;
+      }
+    } else if (key === 'district') {
+      const distMatch = clean.match(/(?:ज़िला|जिला|शहर)\s*[:=]?\s*([A-Za-z\u0900-\u097F]+)/i);
+      if (distMatch && distMatch[1]) {
+        results[key] = distMatch[1].trim();
+      } else {
+        const cityMatch = clean.match(/(?:मैं|हम)\s+([A-Za-z\u0900-\u097F]+)\s+(?:बिहार|पंजाब|उत्तर प्रदेश|झारखंड|महाराष्ट्र|राजस्थान|मध्य प्रदेश)/i);
+        if (cityMatch && cityMatch[1]) results[key] = cityMatch[1].trim();
+      }
+    } else if (key === 'fundingPurpose') {
+      const pMatch = clean.match(/(?:के\s*लिए|मकसद|उद्देश्य)\s*[:=]?\s*([A-Za-z\u0900-\u097F\s]+)/i)
+        || clean.match(/([A-Za-z\u0900-\u097F\s]+?)\s*के\s*लिए/i);
+      if (pMatch && pMatch[1]) {
+        let p = pMatch[1].replace(/\b(?:चाहिए|लाख|रुपये|रु|हज़ार)\b/g, '').trim();
+        if (p.length >= 3) results[key] = p;
+      }
+    } else if (type === 'select' && Array.isArray(f.options)) {
+      const cleanLower = clean.toLowerCase();
+      for (const opt of f.options) {
+        const candidates = [opt.label_hi, opt.value].filter(Boolean);
+        for (const cand of candidates) {
+          const c = cand.toLowerCase().trim();
+          if (c.length >= 3 && cleanLower.includes(c)) {
+            results[key] = opt.value;
+            break;
+          }
+        }
+        if (results[key]) break;
+      }
+    } else if (type === 'number') {
+      if (key === 'age') {
+        const m = clean.match(/(?:उम्र|आयु)\s*(?:है)?\s*([०-९\d]+|[एक-सौ\w]+)\s*(?:साल|वर्ष)?/i)
+          || clean.match(/([०-९\d]+|[एक-सौ\w]+)\s*(?:साल|वर्ष)\s*(?:की\s*उम्र|का\s*उम्र|उम्र)?/i);
+        if (m) {
+          const val = parseLocalVoiceField(m[1], f);
+          if (val !== null) results[key] = val;
+        }
+      } else if (key === 'annualTurnover') {
+        const m = clean.match(/(?:टर्नओवर|कारोबार|सालाना\s*टर्नओवर|बिक्री)\s*(?:है)?\s*([०-९\d\s\wलाखहज़ारकरोड़]+)/i)
+          || clean.match(/([०-९\d\s\wलाखहज़ारकरोड़]+)\s*(?:टर्नओवर|कारोबार|सालाना\s*टर्नओवर|बिक्री)/i);
+        if (m) {
+          const val = parseLocalVoiceField(m[1], f);
+          if (val !== null) results[key] = val;
+        }
+      } else if (key === 'employeesCount') {
+        const m = clean.match(/([०-९\d\w\s]+)\s*(?:लोग|कर्मचारी|कामगार|वर्कर)/i)
+          || clean.match(/(?:कर्मचारी|कामगार)\s*([०-९\d\w\s]+)/i);
+        if (m) {
+          const val = parseLocalVoiceField(m[1], f);
+          if (val !== null) results[key] = val;
+        }
+      } else if (key === 'familyIncome') {
+        const m = clean.match(/(?:पारिवारिक\s*आय|परिवार\s*की\s*आय|सालाना\s*आय|आय)\s*(?:है)?\s*([०-९\d\s\wलाखहज़ारकरोड़]+)/i)
+          || clean.match(/([०-९\d\s\wलाखहज़ारकरोड़]+)\s*(?:पारिवारिक\s*आय|आय)/i);
+        if (m) {
+          const val = parseLocalVoiceField(m[1], f);
+          if (val !== null) results[key] = val;
+        }
+      } else if (key === 'ownContribution') {
+        const m = clean.match(/(?:स्वयं\s*का\s*निवेश|खुद\s*का\s*निवेश|खुद\s*का|स्वयं|अपनी\s*पूंजी)\s*(?:है)?\s*([०-९\d\s\wलाखहज़ारकरोड़]+)/i)
+          || clean.match(/([०-९\d\s\wलाखहज़ारकरोड़]+)\s*(?:खुद\s*का|स्वयं\s*का|अपनी\s*पूंजी)/i);
+        if (m) {
+          const val = parseLocalVoiceField(m[1], f);
+          if (val !== null) results[key] = val;
+        }
+      } else if (key === 'fundingAmount') {
+        const m = clean.match(/([०-९\d\s\wलाखहज़ारकरोड़]+)\s*(?:रुपये|रु)?\s*(?:की\s*सहायता|चाहिए|लोन\s*चाहिए|फंडिंग|ऋण)/i)
+          || clean.match(/(?:सहायता\s*राशि|लोन|ऋण|फंडिंग)\s*(?:है)?\s*([०-९\d\s\wलाखहज़ारकरोड़]+)/i);
+        if (m) {
+          const val = parseLocalVoiceField(m[1], f);
+          if (val !== null) results[key] = val;
+        }
+      }
+    } else if (type === 'boolean') {
+      if (key === 'hasIncomeCertificate' && /(?:आय\s*प्रमाण\s*पत्र|इनकम\s*सर्टिफिकेट)/i.test(clean)) {
+        results[key] = !/नहीं|नही|ना|उपलब्ध नहीं/i.test(clean);
+      } else if (key === 'existingLoans' && /(?:लोन|कर्ज|ऋण)/i.test(clean)) {
+        results[key] = !/नहीं|नही|ना|कोई\s*नहीं/i.test(clean);
+      } else if (key === 'isWomanEntrepreneur' && /(?:महिला\s*उद्यमी|महिला|औरत)/i.test(clean)) {
+        results[key] = !/नहीं|नही|ना/i.test(clean);
+      } else if (key === 'isFirstGeneration' && /(?:पहली\s*पीढ़ी|फर्स्ट\s*जनरेशन)/i.test(clean)) {
+        results[key] = !/नहीं|नही|ना/i.test(clean);
+      } else if (key === 'isPwD' && /(?:दिव्यांग|विकलांग|pwd)/i.test(clean)) {
+        results[key] = !/नहीं|नही|ना/i.test(clean);
+      }
+    }
+  }
+
+  return results;
 }
 
 module.exports = {
