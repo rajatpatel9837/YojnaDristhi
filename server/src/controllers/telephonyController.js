@@ -1,4 +1,7 @@
 // server/src/controllers/telephonyController.js
+const fs = require('fs');
+const path = require('path');
+
 let twilio = null;
 try {
   twilio = require('twilio');
@@ -9,26 +12,72 @@ try {
 const { evaluateEligibility } = require('../engines/eligibilityEngine');
 
 /**
+ * Safely persist updated credentials into .env file
+ */
+const updateEnvConfig = (key, value) => {
+  try {
+    process.env[key] = value;
+    const envPath = path.resolve(__dirname, '../../.env');
+    if (fs.existsSync(envPath)) {
+      let content = fs.readFileSync(envPath, 'utf8');
+      const regex = new RegExp(`^${key}=.*$`, 'm');
+      if (regex.test(content)) {
+        content = content.replace(regex, `${key}=${value}`);
+      } else {
+        content += `\n${key}=${value}`;
+      }
+      fs.writeFileSync(envPath, content, 'utf8');
+    }
+  } catch (e) {
+    console.warn('Could not persist to .env:', e.message);
+  }
+};
+
+/**
  * Helper to initialize Twilio client gracefully with either
  * API Key SID + Secret OR Account SID + Auth Token.
  */
-const getTwilioClient = () => {
-  if (!twilio) return null;
+const getTwilioClient = (overrideAccountSid, overrideApiKey, overrideSecret) => {
+  if (!twilio) return { client: null, reason: 'Twilio module not loaded' };
 
-  const apiKeySid = process.env.TWILIO_API_KEY_SID || process.env.TWILIO_ACCOUNT_SID;
-  const apiSecret = process.env.TWILIO_API_KEY_SECRET || process.env.TWILIO_AUTH_TOKEN;
-  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  let accountSid = overrideAccountSid || process.env.TWILIO_ACCOUNT_SID;
+  const apiKeySid = overrideApiKey || process.env.TWILIO_API_KEY_SID;
+  const apiSecret = overrideSecret || process.env.TWILIO_API_KEY_SECRET || process.env.TWILIO_AUTH_TOKEN;
 
-  if (!apiKeySid || !apiSecret) return null;
+  // If accountSid starts with SK, it's an API Key, not an Account SID
+  if (typeof accountSid === 'string' && accountSid.startsWith('SK')) {
+    accountSid = null;
+  }
+
+  // Check if Account SID starts with AC
+  const hasValidAccountSid = typeof accountSid === 'string' && accountSid.startsWith('AC');
+  const isApiKey = typeof apiKeySid === 'string' && apiKeySid.startsWith('SK');
+
+  if (isApiKey && !hasValidAccountSid) {
+    return {
+      client: null,
+      reason: 'MISSING_ACCOUNT_SID',
+      message: 'Twilio Account SID (starting with AC...) is required when authenticating with an API Key (SK...).'
+    };
+  }
+
+  if (!accountSid && !apiKeySid) {
+    return { client: null, reason: 'NO_CREDENTIALS', message: 'No Twilio credentials configured.' };
+  }
 
   try {
-    if (apiKeySid.startsWith('SK') && accountSid && accountSid.startsWith('AC')) {
-      return twilio(apiKeySid, apiSecret, { accountSid });
+    if (isApiKey && hasValidAccountSid) {
+      const client = twilio(apiKeySid, apiSecret, { accountSid });
+      return { client, accountSid };
     }
-    return twilio(apiKeySid, apiSecret);
+    if (hasValidAccountSid) {
+      const client = twilio(accountSid, apiSecret);
+      return { client, accountSid };
+    }
+    return { client: null, reason: 'INVALID_ACCOUNT_SID', message: 'accountSid must start with AC.' };
   } catch (err) {
-    console.warn('Twilio initialization note:', err.message);
-    return null;
+    console.warn('Twilio client initialization error:', err.message);
+    return { client: null, reason: 'INIT_ERROR', message: err.message };
   }
 };
 
@@ -68,6 +117,8 @@ const generateSmsReport = (phone, origin) => {
 exports.initiateCall = async (req, res) => {
   try {
     const rawNumber = req.body.phoneNumber || req.body.phone;
+    const customAccountSid = req.body.accountSid;
+    const customPhoneNumber = req.body.twilioPhoneNumber;
 
     if (!rawNumber) {
       return res.status(400).json({
@@ -104,17 +155,50 @@ exports.initiateCall = async (req, res) => {
     };
     callSessions.set(callSessionId, sessionData);
 
-    const client = getTwilioClient();
-    const twilioNumber = process.env.TWILIO_PHONE_NUMBER;
-    const protocol = req.protocol || 'http';
-    const host = req.get('host') || 'localhost:5001';
-    const baseUrl = process.env.SERVER_URL || `${protocol}://${host}`;
+    if (customAccountSid && customAccountSid.startsWith('AC')) {
+      updateEnvConfig('TWILIO_ACCOUNT_SID', customAccountSid);
+    }
+    if (customPhoneNumber && customPhoneNumber.trim().length > 5) {
+      updateEnvConfig('TWILIO_PHONE_NUMBER', customPhoneNumber.trim());
+    }
 
-    // Attempt real Twilio outbound phone call if configured
+    const { client, reason, message: clientErrorMsg } = getTwilioClient(customAccountSid);
+    const twilioNumber = customPhoneNumber || process.env.TWILIO_PHONE_NUMBER;
+
+    // Check if Account SID is missing
+    if (!client && reason === 'MISSING_ACCOUNT_SID') {
+      return res.status(200).json({
+        success: true,
+        mode: 'needs_account_sid',
+        callSessionId,
+        phoneNumber: clean,
+        errorType: 'MISSING_ACCOUNT_SID',
+        message: 'Twilio Account SID (जो AC से शुरू होता है) आवश्यक है। आपकी दी गई कुंजी (SK...) एक API Key है।',
+        diagnostic: {
+          apiKeySid: process.env.TWILIO_API_KEY_SID ? `${process.env.TWILIO_API_KEY_SID.slice(0, 8)}...` : null,
+          hint: 'Twilio Console (console.twilio.com) के मुख्य पृष्ठ पर "Account Info" से अपना Account SID (AC...) कॉपी करके यहां दर्ज करें।'
+        }
+      });
+    }
+
+    // Attempt real Twilio outbound phone call if client & phone number exist
     if (client && twilioNumber && !twilioNumber.includes('your_')) {
       try {
+        // Use inline TwiML so Twilio doesn't fail trying to reach localhost from cloud!
+        const inlineTwiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Gather numDigits="1" timeout="10">
+    <Say language="hi-IN" voice="Polly.Aditi">
+      नमस्ते! योजनासेतु AI में आपका स्वागत है। आपके व्यवसाय के लिए सरकारी सब्सिडी व ऋण योजना की रिपोर्ट तैयार है। पूरी योजना रिपोर्ट अपने WhatsApp पर पाने के लिए 1 दबाएं, या सामान्य SMS के लिए 2 दबाएं।
+    </Say>
+  </Gather>
+  <Say language="hi-IN" voice="Polly.Aditi">
+    धन्यवाद! योजनासेतु से जुड़ने के लिए आभार।
+  </Say>
+</Response>`;
+
         const call = await client.calls.create({
-          url: `${baseUrl}/api/telephony/voice-webhook`,
+          twiml: inlineTwiml,
           to: `+91${clean}`,
           from: twilioNumber
         });
@@ -126,18 +210,26 @@ exports.initiateCall = async (req, res) => {
           callSessionId,
           phoneNumber: clean,
           callerId: twilioNumber,
-          message: `फोन कॉल शुरू हो गई है। आपके नंबर +91 ${clean} पर कॉल आ रही है।`
+          message: `सफलता! आपके फ़ोन +91 ${clean} पर कॉल आ रही है (Call SID: ${call.sid})।`
         });
       } catch (err) {
-        console.warn('Live Twilio outbound call note (falling back to simulator):', err.message);
+        console.warn('Twilio calls.create error:', err.message, 'Code:', err.code);
+        let userHint = 'Twilio ने कॉल कनेक्ट नहीं की: ' + err.message;
+        if (err.code === 21608) {
+          userHint = 'यह नंबर (+91 ' + clean + ') आपके Twilio Trial खाते में सत्यापित (Verified) नहीं है। Twilio Trial में आउटबाउंड कॉल केवल Verified Caller IDs पर ही जा सकती है। Twilio Console में जाकर अपने नंबर को OTP द्वारा जोड़ें।';
+        } else if (err.code === 21210 || err.code === 21606) {
+          userHint = 'दिए गए Twilio कॉलर नंबर (' + twilioNumber + ') से सीधे वॉइस कॉल की अनुमति नहीं है। +14155238886 सिर्फ WhatsApp सैंडबॉक्स के लिए है। वॉइस कॉल के लिए Twilio Console (Phone Numbers -> Active Numbers) से एक सक्रिय वॉइस नंबर दर्ज करें।';
+        }
+
         return res.status(200).json({
           success: true,
-          mode: 'simulated',
-          note: `Twilio Live Call Note: ${err.message}`,
+          mode: 'twilio_error',
+          twilioCode: err.code,
+          twilioError: err.message,
           callSessionId,
           phoneNumber: clean,
-          callerId: 'योजनासेतु सरकारी हेल्पलाइन (1800-YOJNA)',
-          message: 'लाइव डेमो सिम्युलेटर मोड सक्रिय है। स्क्रीन पर कॉल का उत्तर दें।'
+          message: `Twilio कॉल त्रुटि (${err.code || 'API Error'}): ${err.message}`,
+          hint: userHint
         });
       }
     }
@@ -200,8 +292,7 @@ exports.handleDtmfWebhook = async (req, res) => {
     const callerNumber = req.body.To || req.body.From || '';
     const cleanPhone = callerNumber.replace(/\D/g, '').slice(-10) || '9876543210';
     const origin = process.env.CLIENT_URL || 'https://yojnasetu.gov.in';
-
-    const client = getTwilioClient();
+    const { client } = getTwilioClient();
     const twilioWhatsapp = process.env.TWILIO_WHATSAPP_NUMBER;
     const twilioNumber = process.env.TWILIO_PHONE_NUMBER;
 
@@ -292,7 +383,7 @@ exports.sendWhatsAppDirect = async (req, res) => {
     const reportText = generateWhatsAppReport(clean, origin);
     const whatsappUrl = `https://api.whatsapp.com/send?phone=91${clean}&text=${encodeURIComponent(reportText)}`;
 
-    const client = getTwilioClient();
+    const { client } = getTwilioClient();
     const twilioWhatsapp = process.env.TWILIO_WHATSAPP_NUMBER;
     let liveDispatched = false;
 
