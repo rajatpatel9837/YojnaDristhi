@@ -182,20 +182,8 @@ export default function PhoneCallAssistantModal({ isOpen, onClose }) {
       setCallState('CALLING_REAL');
       setRealCallInfo({ mode: 'connecting', message: 'Twilio Telephony सर्वर से कनेक्ट हो रहा है...' });
       try {
-        const payload = {
-          phoneNumber: cleanNum,
-          accountSid: twilioAccountSid.trim() || undefined,
-          twilioPhoneNumber: twilioVoiceNumber.trim() || undefined
-        };
-        const res = await axios.post('/api/telephony/initiate-call', payload);
+        const res = await axios.post('/api/telephony/initiate-call', { phoneNumber: cleanNum });
         setRealCallInfo(res.data);
-
-        if (twilioAccountSid.trim().startsWith('AC')) {
-          localStorage.setItem('ys_twilio_account_sid', twilioAccountSid.trim());
-        }
-        if (twilioVoiceNumber.trim()) {
-          localStorage.setItem('ys_twilio_voice_number', twilioVoiceNumber.trim());
-        }
       } catch (err) {
         setRealCallInfo({
           mode: 'twilio_error',
@@ -483,57 +471,18 @@ export default function PhoneCallAssistantModal({ isOpen, onClose }) {
               </button>
             </div>
 
-            {/* Real Call Twilio Requirements Banner in IDLE screen */}
+            {/* Twilio Connected Status Banner in IDLE screen */}
             {callMode === 'real' && (
-              <div className="bg-amber-950/30 border border-amber-500/30 rounded-2xl p-3 text-left space-y-2">
-                <div className="flex items-start gap-2">
-                  <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                  <div className="text-[11px] text-amber-200 leading-snug">
-                    <span className="font-bold">असली फ़ोन कॉल नोट:</span> Twilio द्वारा भारत में मोबाइल पर कॉल करने हेतु <strong>Account SID (AC...)</strong> तथा एक <strong>Twilio Voice Number</strong> आवश्यक है।
-                  </div>
+              <div className="bg-emerald-950/30 border border-emerald-500/30 rounded-2xl p-3 text-left space-y-1">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-[11px] font-bold text-emerald-300">
+                    Twilio टेलीफ़ोनी सर्वर एक्टिव (+1-737-221-2163)
+                  </span>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => setShowTwilioConfig(!showTwilioConfig)}
-                  className="text-[10px] text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1 transition"
-                >
-                  <Key className="w-3 h-3" />
-                  <span>{showTwilioConfig ? 'Twilio सेटिंग्स छुपाएं' : '⚙️ Twilio क्रेडेंशियल दर्ज करें (वैकल्पिक)'}</span>
-                  {showTwilioConfig ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                </button>
-
-                {showTwilioConfig && (
-                  <div className="space-y-2 pt-1 border-t border-amber-500/20 text-xs">
-                    <div>
-                      <label className="text-[10px] text-slate-400 font-bold block mb-1">
-                        Twilio Account SID (starts with AC...):
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                        value={twilioAccountSid}
-                        onChange={(e) => setTwilioAccountSid(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-emerald-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] text-slate-400 font-bold block mb-1">
-                        Twilio Voice Number:
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="+1xxxxxxxxxx"
-                        value={twilioVoiceNumber}
-                        onChange={(e) => setTwilioVoiceNumber(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-emerald-500"
-                      />
-                    </div>
-                    <p className="text-[9px] text-slate-500">
-                      ये मान आपके ब्राउज़र व सर्वर में सुरक्षित सेव हो जाएंगे।
-                    </p>
-                  </div>
-                )}
+                <p className="text-[10px] text-slate-400 leading-relaxed">
+                  नीचे अपना 10 अंकों का मोबाइल नंबर डालें। आपके फ़ोन पर <strong>Twilio से स्वचालित हिंदी कॉल</strong> आएगी।
+                </p>
               </div>
             )}
 

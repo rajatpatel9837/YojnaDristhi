@@ -162,15 +162,23 @@ exports.initiateCall = async (req, res) => {
     };
     callSessions.set(callSessionId, sessionData);
 
+    const isSandboxNumber = (num) => typeof num === 'string' && num.replace(/\D/g, '').includes('4155238886');
+
     if (customAccountSid && customAccountSid.startsWith('AC')) {
       updateEnvConfig('TWILIO_ACCOUNT_SID', customAccountSid);
     }
-    if (customPhoneNumber && customPhoneNumber.trim().length > 5) {
+    if (customPhoneNumber && customPhoneNumber.trim().length > 5 && !isSandboxNumber(customPhoneNumber)) {
       updateEnvConfig('TWILIO_PHONE_NUMBER', customPhoneNumber.trim());
     }
 
     const { client, reason, message: clientErrorMsg } = getTwilioClient(customAccountSid);
-    const twilioNumber = customPhoneNumber || process.env.TWILIO_PHONE_NUMBER;
+    let twilioNumber = (customPhoneNumber && !isSandboxNumber(customPhoneNumber))
+      ? customPhoneNumber.trim()
+      : (process.env.TWILIO_PHONE_NUMBER || '+17372212163');
+
+    if (isSandboxNumber(twilioNumber)) {
+      twilioNumber = '+17372212163';
+    }
 
     // Check if Account SID is missing
     if (!client && reason === 'MISSING_ACCOUNT_SID') {
