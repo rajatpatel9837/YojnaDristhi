@@ -41,23 +41,43 @@ const getTwilioClient = (overrideAccountSid, overrideApiKey, overrideSecret) => 
   if (!twilio) return { client: null, reason: 'Twilio module not loaded' };
 
   let accountSid = overrideAccountSid || process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
   const apiKeySid = overrideApiKey || process.env.TWILIO_API_KEY_SID;
-  const apiSecret = overrideSecret || process.env.TWILIO_API_KEY_SECRET || process.env.TWILIO_AUTH_TOKEN;
+  const apiSecret = overrideSecret || process.env.TWILIO_API_KEY_SECRET;
 
   // If accountSid starts with SK, it's an API Key, not an Account SID
   if (typeof accountSid === 'string' && accountSid.startsWith('SK')) {
     accountSid = null;
   }
 
-  // Check if Account SID starts with AC
   const hasValidAccountSid = typeof accountSid === 'string' && accountSid.startsWith('AC');
+
+  // 1. Direct Master Auth Token Authentication (Preferred)
+  if (hasValidAccountSid && authToken) {
+    try {
+      const client = twilio(accountSid, authToken);
+      return { client, accountSid };
+    } catch (err) {
+      console.warn('Twilio master authToken client error:', err.message);
+    }
+  }
+
+  // 2. API Key SID + Secret with Account SID
   const isApiKey = typeof apiKeySid === 'string' && apiKeySid.startsWith('SK');
+  if (isApiKey && hasValidAccountSid && apiSecret) {
+    try {
+      const client = twilio(apiKeySid, apiSecret, { accountSid });
+      return { client, accountSid };
+    } catch (err) {
+      console.warn('Twilio apiKey client error:', err.message);
+    }
+  }
 
   if (isApiKey && !hasValidAccountSid) {
     return {
       client: null,
       reason: 'MISSING_ACCOUNT_SID',
-      message: 'Twilio Account SID (starting with AC...) is required when authenticating with an API Key (SK...).'
+      message: 'Twilio Account SID (starting with AC...) is required.'
     };
   }
 
@@ -65,20 +85,7 @@ const getTwilioClient = (overrideAccountSid, overrideApiKey, overrideSecret) => 
     return { client: null, reason: 'NO_CREDENTIALS', message: 'No Twilio credentials configured.' };
   }
 
-  try {
-    if (isApiKey && hasValidAccountSid) {
-      const client = twilio(apiKeySid, apiSecret, { accountSid });
-      return { client, accountSid };
-    }
-    if (hasValidAccountSid) {
-      const client = twilio(accountSid, apiSecret);
-      return { client, accountSid };
-    }
-    return { client: null, reason: 'INVALID_ACCOUNT_SID', message: 'accountSid must start with AC.' };
-  } catch (err) {
-    console.warn('Twilio client initialization error:', err.message);
-    return { client: null, reason: 'INIT_ERROR', message: err.message };
-  }
+  return { client: null, reason: 'INVALID_CREDENTIALS', message: 'Invalid Twilio credentials.' };
 };
 
 // In-memory call sessions store
