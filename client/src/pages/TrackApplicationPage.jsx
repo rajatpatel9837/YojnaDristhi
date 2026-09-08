@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useLanguage } from '../context/LanguageContext';
 import { 
   FileCheck, 
   Sparkles, 
@@ -17,6 +18,7 @@ import {
 import ApplicationProgressTracker from '../components/ApplicationProgressTracker';
 
 export default function TrackApplicationPage() {
+  const { t } = useLanguage();
   const [applications, setApplications] = useState([]);
   const [selectedAppId, setSelectedAppId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -119,10 +121,10 @@ export default function TrackApplicationPage() {
             National Portal for Application & Fund Disbursal Tracking
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-[#173B57]">
-            Track Scheme Application & PFMS Disbursal
+            {t('track_title', 'Track Scheme Application & PFMS Disbursal')}
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 mt-1">
-            Transparent real-time tracking from Verification and Ministry Sanction to Direct Benefit Transfer (DBT) settlement.
+            {t('track_subtitle', 'Transparent real-time tracking from Verification and Ministry Sanction to Direct Benefit Transfer (DBT) settlement.')}
           </p>
         </div>
 
@@ -148,7 +150,7 @@ export default function TrackApplicationPage() {
             <Search className="w-4 h-4 text-[#64748B] absolute left-3 top-2.5" />
             <input
               type="text"
-              placeholder="Search Application ID or Scheme..."
+              placeholder={t('track_placeholder', 'Search Application ID or Scheme...')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-3 py-2 rounded-xl bg-white border border-[#CBD5E1] text-[#173B57] text-xs placeholder-slate-400 focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1]"

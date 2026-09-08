@@ -49,7 +49,7 @@ export default function Navbar({ onOpenAiModal }) {
                 <span className="text-[#0F766E]">दृष्टि</span>
               </div>
               <div className="text-[11px] text-[#0F766E] font-bold tracking-wide mt-0.5 flex items-center gap-1.5">
-                <span>Discover. Apply. Track.</span>
+                <span>{t('nav_tagline')}</span>
                 <span className="text-slate-300 hidden sm:inline">•</span>
                 <span className="text-[#64748B] text-[10px] hidden sm:inline">GovTech Portal</span>
               </div>
@@ -79,7 +79,7 @@ export default function Navbar({ onOpenAiModal }) {
               }`}
             >
               <FileCheck className="w-4 h-4 text-[#0F766E]" />
-              <span>DocVerifier</span>
+              <span>{t('nav_doc_verify')}</span>
             </Link>
 
             <Link 
@@ -91,7 +91,7 @@ export default function Navbar({ onOpenAiModal }) {
               }`}
             >
               <ShieldCheck className="w-4 h-4 text-[#0F766E]" />
-              <span>Track Application</span>
+              <span>{t('nav_track_application')}</span>
             </Link>
 
             <Link 
@@ -149,11 +149,11 @@ export default function Navbar({ onOpenAiModal }) {
             <button
               type="button"
               onClick={() => window.dispatchEvent(new CustomEvent('yojnasetu_open_call_assistant'))}
-              title="स्वचालित फोन कॉल पर योजना जानें"
+              title="फोन कॉल पर योजना जानें"
               className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold transition shadow-sm"
             >
               <Phone className="w-3.5 h-3.5 text-white" />
-              <span className="hidden md:inline">📞 कॉल सहायक</span>
+              <span className="hidden md:inline">{t('nav_call_assistant')}</span>
             </button>
 
             {/* Ask AI Voice Assistant CTA */}
@@ -222,6 +222,34 @@ export default function Navbar({ onOpenAiModal }) {
       {/* Mobile Responsive Navigation Drawer */}
       {mobileMenuOpen && (
         <div className="lg:hidden bg-white border-t border-[#E2E8F0] px-4 py-4 space-y-2 shadow-lg animate-fadeIn">
+          {/* Mobile Language Switcher */}
+          <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-200 mb-2">
+            <span className="text-xs font-bold text-slate-600 flex items-center gap-1.5">
+              <Globe className="w-3.5 h-3.5 text-[#0F766E]" />
+              <span>{t('nav_language')}:</span>
+            </span>
+            <div className="flex items-center gap-1">
+              {[
+                { code: 'hi', label: 'हिंदी' },
+                { code: 'en', label: 'English' },
+                { code: 'pa', label: 'ਪੰਜਾਬੀ' }
+              ].map(l => (
+                <button
+                  key={l.code}
+                  type="button"
+                  onClick={() => changeLanguage(l.code)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
+                    currentLang === l.code
+                      ? 'bg-[#0F766E] text-white shadow-xs'
+                      : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                  }`}
+                >
+                  {l.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <button 
             type="button"
             onClick={() => {
@@ -231,7 +259,7 @@ export default function Navbar({ onOpenAiModal }) {
             className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-sm"
           >
             <Phone className="w-4 h-4 text-white" />
-            <span>📞 कॉल पर योजना जानें (Free Helpline)</span>
+            <span>{t('nav_call_assistant')}</span>
           </button>
 
           <Link 
@@ -249,7 +277,7 @@ export default function Navbar({ onOpenAiModal }) {
             className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold text-[#0F766E] bg-[#CCFBF1]/40"
           >
             <FileCheck className="w-4 h-4 text-[#0F766E]" />
-            <span>DocVerifier AI</span>
+            <span>{t('nav_doc_verify')}</span>
           </Link>
 
           <Link 
@@ -258,7 +286,7 @@ export default function Navbar({ onOpenAiModal }) {
             className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold text-[#173B57] hover:bg-[#F0FDFA]"
           >
             <ShieldCheck className="w-4 h-4 text-[#0F766E]" />
-            <span>Track Application</span>
+            <span>{t('nav_track_application')}</span>
           </Link>
 
           <Link 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useLanguage } from '../context/LanguageContext';
 import FinancialCalculatorModal from '../components/FinancialCalculatorModal';
 import SchemeCompareModal from '../components/SchemeCompareModal';
 import ChannelPartnerMap from '../components/ChannelPartnerMap';
@@ -56,6 +57,7 @@ import {
 } from 'lucide-react';
 
 export default function MatchResultsPage() {
+  const { t, currentLang } = useLanguage();
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [results, setResults] = useState([]);
@@ -355,7 +357,7 @@ export default function MatchResultsPage() {
 
     if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(fullText);
-      utterance.lang = 'hi-IN';
+      utterance.lang = currentLang === 'pa' ? 'pa-IN' : currentLang === 'en' ? 'en-IN' : 'hi-IN';
       utterance.rate = 0.95;
       utterance.onend = () => setPlayingSchemeId(null);
       utterance.onerror = () => setPlayingSchemeId(null);
@@ -429,13 +431,15 @@ export default function MatchResultsPage() {
         <div>
           <div className="flex items-center gap-2 text-[#0F766E] text-xs font-bold uppercase tracking-wider mb-1">
             <Sparkles className="w-4 h-4 text-[#0F766E]" />
-            Eligibility Assessment Results
+            {t('matches_title', 'Eligibility Assessment Results')}
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-[#173B57]">
-            Matched Opportunities for {profile?.fullName || 'Beneficiary'}
+            {t('matches_title', 'Matched Opportunities')} {profile?.fullName ? `— ${profile.fullName}` : ''}
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 mt-1">
-            Sector: <span className="text-[#173B57] font-semibold">{profile?.sector}</span> • Location: <span className="text-[#173B57] font-semibold">{profile?.state}</span> • Funding Need: <span className="text-[#0F766E] font-bold">₹{profile?.fundingAmount?.toLocaleString('en-IN')}</span>
+            {profile?.sector ? <span>Sector: <span className="text-[#173B57] font-semibold">{profile?.sector}</span> • </span> : null}
+            {profile?.state ? <span>Location: <span className="text-[#173B57] font-semibold">{profile?.state}</span> • </span> : null}
+            Funding Need: <span className="text-[#0F766E] font-bold">₹{profile?.fundingAmount?.toLocaleString('en-IN') || '0'}</span>
           </p>
         </div>
 
@@ -444,7 +448,7 @@ export default function MatchResultsPage() {
             onClick={handleApplyAllEligible}
             className="px-4 py-2 rounded-xl bg-[#0F766E] hover:bg-[#115E59] text-white font-extrabold text-xs shadow-md hover:shadow-lg transition flex items-center gap-1.5"
           >
-            <Sparkles className="w-4 h-4 text-emerald-300" /> Apply to All Eligible Schemes (1-Click)
+            <Sparkles className="w-4 h-4 text-emerald-300" /> {t('btn_apply_all', 'Apply to All Eligible Schemes (1-Click)')}
           </button>
 
           {compareList.length > 0 && (
@@ -460,7 +464,7 @@ export default function MatchResultsPage() {
             onClick={() => navigate('/wizard')}
             className="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 text-[#173B57] font-bold text-xs border border-[#CBD5E1] transition shadow-sm"
           >
-            Edit Profile
+            {t('common_back', 'Edit Profile')}
           </button>
         </div>
       </div>
@@ -581,22 +585,27 @@ export default function MatchResultsPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-[#E2E8F0] pb-3 text-xs gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <Filter className="w-4 h-4 text-slate-500" />
-          {['ALL', 'ELIGIBLE', 'VERIFY', 'NOT_ELIGIBLE'].map(cat => (
+          {[
+            { id: 'ALL', label: `${t('matches_filter_all', 'All Catalog Schemes')} (${results.length})` },
+            { id: 'ELIGIBLE', label: t('matches_filter_eligible', 'Potentially Eligible') },
+            { id: 'VERIFY', label: t('matches_filter_verify', 'Needs Verification') },
+            { id: 'NOT_ELIGIBLE', label: t('common_no', 'Not Eligible') }
+          ].map(catObj => (
             <button
-              key={cat}
-              onClick={() => setFilterCategory(cat)}
+              key={catObj.id}
+              onClick={() => setFilterCategory(catObj.id)}
               className={`px-3 py-1.5 rounded-lg font-bold transition ${
-                filterCategory === cat
+                filterCategory === catObj.id
                   ? 'bg-[#0F766E] text-white shadow-sm'
                   : 'bg-white text-slate-600 border border-[#CBD5E1] hover:bg-slate-50 hover:text-[#173B57]'
               }`}
             >
-              {cat === 'ALL' ? `All Catalog Schemes (${results.length})` : cat.replace('_', ' ')}
+              {catObj.label}
             </button>
           ))}
         </div>
 
-        <span className="text-slate-500 text-[11px]">Ranked by Eligibility Fit & Match Score</span>
+        <span className="text-slate-500 text-[11px]">{t('matches_subtitle', 'Ranked by Eligibility Fit & Match Score')}</span>
       </div>
 
       {/* Scheme Results List (MATCHED OPPORTUNITIES CATALOG) */}
@@ -727,19 +736,19 @@ export default function MatchResultsPage() {
                 {/* Financial Highlights */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-[#F8FAFC] p-4 rounded-xl border border-[#E2E8F0] text-xs">
                   <div>
-                    <div className="text-slate-500 text-[10px] uppercase font-bold">Max Support</div>
+                    <div className="text-slate-500 text-[10px] uppercase font-bold">{t('matches_max_loan', 'Max Support')}</div>
                     <div className="font-extrabold text-[#173B57] text-sm">₹{((scheme.maximumSupport || 0) / 100000).toFixed(1)} Lakh</div>
                   </div>
                   <div>
-                    <div className="text-slate-500 text-[10px] uppercase font-bold">Subsidy Benefit</div>
+                    <div className="text-slate-500 text-[10px] uppercase font-bold">{t('matches_subsidy', 'Subsidy Benefit')}</div>
                     <div className="font-bold text-[#0F766E]">{scheme.subsidyPercentage ? `${scheme.subsidyPercentage}% Margin Subsidy` : 'Zero Direct Subsidy'}</div>
                   </div>
                   <div>
-                    <div className="text-slate-500 text-[10px] uppercase font-bold">Interest Rate</div>
+                    <div className="text-slate-500 text-[10px] uppercase font-bold">{t('matches_interest', 'Interest Rate')}</div>
                     <div className="font-semibold text-[#173B57]">{scheme.interestRate || '8.5'}% p.a.</div>
                   </div>
                   <div>
-                    <div className="text-slate-500 text-[10px] uppercase font-bold">Moratorium</div>
+                    <div className="text-slate-500 text-[10px] uppercase font-bold">{t('matches_moratorium', 'Moratorium')}</div>
                     <div className="font-semibold text-[#173B57]">{scheme.moratoriumPeriodMonths || 6} Months</div>
                   </div>
                 </div>
@@ -856,7 +865,7 @@ export default function MatchResultsPage() {
                     {/* Why You Match */}
                     <div className="p-4 bg-[#F0FDFA] rounded-xl border border-[#CCFBF1] space-y-2">
                       <div className="font-bold text-[#0F766E] flex items-center gap-1.5 text-xs">
-                        <CheckCircle2 className="w-4 h-4" /> Why You Match
+                        <CheckCircle2 className="w-4 h-4" /> {t('matches_why_match', 'Why You Match')}
                       </div>
                       <ul className="space-y-1.5 text-[#134E4A]">
                         {item.matchedCriteria?.map((m, i) => (
@@ -871,7 +880,7 @@ export default function MatchResultsPage() {
                     <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 space-y-2">
                       <div className="font-bold text-amber-800 flex items-center justify-between text-xs">
                         <span className="flex items-center gap-1.5">
-                          <AlertTriangle className="w-4 h-4 text-amber-600" /> Action Items & Verification Needs
+                          <AlertTriangle className="w-4 h-4 text-amber-600" /> {t('matches_missing_docs', 'Action Items & Verification Needs')}
                         </span>
                         <span className="text-[10px] text-amber-700 bg-amber-100 px-2 py-0.5 rounded font-bold">
                           कागज़ सहायता उपलब्ध
@@ -980,7 +989,7 @@ export default function MatchResultsPage() {
                       title="व्हाट्सएप पर इस योजना की पूरी जानकारी भेजें"
                     >
                       <Share2 className="w-3.5 h-3.5 text-emerald-100" />
-                      <span>व्हाट्सएप पर भेजें 📱</span>
+                      <span>{t('matches_share_whatsapp', 'Share on WhatsApp 📱')}</span>
                     </button>
 
                     <a
@@ -989,7 +998,7 @@ export default function MatchResultsPage() {
                       rel="noopener noreferrer"
                       className="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-[#0F766E] font-bold border border-[#0F766E] transition shadow-xs flex items-center gap-1.5"
                     >
-                      <span>Official Website</span>
+                      <span>{t('matches_apply_portal', 'Official Website ↗')}</span>
                       <ExternalLink className="w-3.5 h-3.5" />
                     </a>
                   </div>

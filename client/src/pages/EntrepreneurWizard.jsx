@@ -189,13 +189,13 @@ export default function EntrepreneurWizard() {
           </div>
           <div>
             <div className="font-extrabold text-[#173B57] text-sm flex items-center gap-2">
-              <span>कंप्यूटर पर फॉर्म नहीं भरना चाहते?</span>
+              <span>{t('wizard_banner_alt', 'कंप्यूटर पर फॉर्म नहीं भरना चाहते?')}</span>
               <span className="text-emerald-700 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider">
-                टोल-फ्री हेल्पलाइन
+                {t('wizard_banner_badge', 'टोल-फ्री हेल्पलाइन')}
               </span>
             </div>
             <p className="text-slate-600 text-xs mt-0.5">
-              2 मिनट के स्वचालित फोन कॉल पर पूरा फॉर्म बोलकर भरें। DTMF कीपैड (1-9) या आवाज़ से उत्तर दें।
+              {t('wizard_banner_desc', '2 मिनट के स्वचालित फोन कॉल पर पूरा फॉर्म बोलकर भरें। DTMF कीपैड (1-9) या आवाज़ से उत्तर दें।')}
             </p>
           </div>
         </div>
@@ -204,7 +204,7 @@ export default function EntrepreneurWizard() {
           onClick={() => window.dispatchEvent(new CustomEvent('yojnasetu_open_call_assistant'))}
           className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-sm transition active:scale-95 shrink-0 flex items-center gap-1.5"
         >
-          <span>📞 कॉल शुरू करें ↗</span>
+          <span>{t('wizard_banner_btn', '📞 कॉल शुरू करें ↗')}</span>
         </button>
       </div>
 
@@ -213,10 +213,10 @@ export default function EntrepreneurWizard() {
         <div>
           <div className="flex items-center gap-2 text-[#0F766E] text-xs font-bold uppercase tracking-wider mb-1">
             <Sparkles className="w-4 h-4 text-[#0F766E]" />
-            Eligibility Assessment Wizard
+            {t('wizard_title', 'Eligibility Assessment Wizard')}
           </div>
-          <h1 className="text-xl font-extrabold text-[#173B57]">Step {currentStep} of 7 — {steps[currentStep - 1].label}</h1>
-          <p className="text-xs text-slate-500">Discover and verify matching government schemes</p>
+          <h1 className="text-xl font-extrabold text-[#173B57]">Step {currentStep} of 7 — {steps[currentStep - 1]?.label}</h1>
+          <p className="text-xs text-slate-500">{t('wizard_step_desc', 'Discover and verify matching government schemes')}</p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -228,10 +228,10 @@ export default function EntrepreneurWizard() {
                 ? 'bg-rose-600 hover:bg-rose-700 text-white border-rose-500 animate-pulse'
                 : 'bg-[#0F766E] hover:bg-[#115E59] text-white border-[#0F766E]'
             }`}
-            title="हिंदी में बोलकर पूरा फॉर्म भरें (Voice-Only Hindi Flow)"
+            title="बोलकर पूरा फॉर्म भरें"
           >
             {isVoiceModeOn ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
-            <span>{isVoiceModeOn ? '🎤 आवाज़ मोड चालू है' : '🎤 बोलकर भरें'}</span>
+            <span>{isVoiceModeOn ? t('wizard_voice_on', '🎤 आवाज़ मोड चालू है') : t('wizard_voice_btn', '🎤 बोलकर भरें')}</span>
           </button>
 
           <button
@@ -239,7 +239,7 @@ export default function EntrepreneurWizard() {
             className="px-3.5 py-2 rounded-xl bg-[#F0FDFA] hover:bg-[#CCFBF1] text-[#0F766E] border border-[#14B8A6]/40 text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Load Demo Profile</span>
+            <span>{t('wizard_demo_btn', 'Load Demo Profile')}</span>
           </button>
         </div>
       </div>
@@ -853,7 +853,7 @@ export default function EntrepreneurWizard() {
               onClick={() => setCurrentStep(prev => prev - 1)}
               className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-[#173B57] border border-[#CBD5E1] font-bold text-xs transition flex items-center gap-1.5 shadow-sm"
             >
-              <ArrowLeft className="w-4 h-4" /> Back
+              <ArrowLeft className="w-4 h-4" /> {t('wizard_prev', '← Back')}
             </button>
           ) : <div />}
 
@@ -862,7 +862,7 @@ export default function EntrepreneurWizard() {
               onClick={() => setCurrentStep(prev => prev + 1)}
               className="px-5 py-2.5 rounded-xl bg-[#0F766E] hover:bg-[#115E59] text-white font-bold text-xs transition flex items-center gap-1.5 shadow-sm"
             >
-              Next Step <ArrowRight className="w-4 h-4" />
+              {t('wizard_next', 'Next Step →')} <ArrowRight className="w-4 h-4" />
             </button>
           ) : (
             <button
@@ -871,7 +871,7 @@ export default function EntrepreneurWizard() {
               className="px-6 py-3 rounded-xl bg-[#0F766E] hover:bg-[#115E59] text-white font-extrabold text-xs transition flex items-center gap-2 shadow-md"
             >
               <Sparkles className="w-4 h-4" />
-              <span>{loading ? 'Analyzing Eligibility...' : 'Analyze My Profile & Show Matches'}</span>
+              <span>{loading ? t('wizard_submitting', 'Evaluating Schemes...') : t('wizard_submit', 'Analyze My Profile & Show Matches')}</span>
             </button>
           )}
         </div>

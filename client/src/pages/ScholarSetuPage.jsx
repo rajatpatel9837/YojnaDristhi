@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useLanguage } from '../context/LanguageContext';
 import { GraduationCap, Sparkles, CheckCircle2, BookOpen, ExternalLink, Filter, ShieldCheck } from 'lucide-react';
 
 export default function ScholarSetuPage() {
+  const { t } = useLanguage();
   const [scholarships, setScholarships] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -41,9 +43,11 @@ export default function ScholarSetuPage() {
           ScholarSetu Extension Module
         </div>
 
-        <h1 className="text-2xl sm:text-3xl font-black tracking-tight">AI-Driven Scholarship Matching Platform</h1>
+        <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
+          {t('scholar_title', 'AI-Driven Scholarship Matching Platform')}
+        </h1>
         <p className="text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed">
-          ScholarSetu demonstrates the reusability of Yojna दृष्टि's Eligibility Matching Engine. The same hard filter and compatibility architecture translates complex academic, financial, and category scholarship criteria into clear opportunities for students.
+          {t('scholar_subtitle', 'ScholarSetu demonstrates the reusability of Yojna दृष्टि\'s Eligibility Matching Engine. The same hard filter and compatibility architecture translates complex academic, financial, and category scholarship criteria into clear opportunities for students.')}
         </p>
       </div>
 

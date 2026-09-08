@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 import DocumentOCRUploadZone from '../components/DocumentOCRUploadZone';
 import { 
   FileCheck, 
@@ -13,6 +14,7 @@ import {
 } from 'lucide-react';
 
 export default function DocumentVerificationPage() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   // Profile Form Data state initialized from localStorage or default
@@ -81,11 +83,11 @@ export default function DocumentVerificationPage() {
             
             <h1 className="text-2xl sm:text-3xl font-black text-[#173B57] tracking-tight flex items-center gap-3">
               <FileCheck className="w-8 h-8 text-[#0F766E]" />
-              DocVerifier — Instant Document Verification & Detail Extractor
+              {t('doc_verify_title', 'DocVerifier — Instant Document Verification & Detail Extractor')}
             </h1>
             
             <p className="text-xs sm:text-sm text-slate-600 max-w-3xl leading-relaxed">
-              Upload official central and state government certificates (Aadhaar, Income Certificate, Caste Certificate, MSME Udyam, PAN, Bank Statements). Our OCR engine analyzes image legibility, validates authenticity markers, and auto-populates your profile for maximum scheme eligibility.
+              {t('doc_verify_subtitle', 'Upload official central and state government certificates (Aadhaar, Income Certificate, Caste Certificate, MSME Udyam, PAN, Bank Statements). Our OCR engine analyzes image legibility, validates authenticity markers, and auto-populates your profile for maximum scheme eligibility.')}
             </p>
           </div>
 
@@ -93,7 +95,7 @@ export default function DocumentVerificationPage() {
             onClick={handleProceedToMatches}
             className="px-6 py-3.5 rounded-xl bg-[#0F766E] hover:bg-[#115E59] text-white font-bold text-xs transition flex items-center justify-center gap-2 shadow-sm shrink-0"
           >
-            <span>Proceed to Scheme Matches</span>
+            <span>{t('hero_cta_wizard', 'Proceed to Scheme Matches')}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
