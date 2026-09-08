@@ -6,6 +6,7 @@ const {
   submitOpportunityVerification
 } = require('../controllers/opportunityController');
 
+router.get('/', getMyOpportunities);
 router.post('/', createOpportunity);
 router.get('/my-opportunities', getMyOpportunities);
 router.post('/:id/submit-verification', submitOpportunityVerification);
