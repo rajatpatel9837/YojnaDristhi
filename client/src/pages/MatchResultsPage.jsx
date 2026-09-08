@@ -57,7 +57,7 @@ import {
 } from 'lucide-react';
 
 export default function MatchResultsPage() {
-  const { t, currentLang } = useLanguage();
+  const { t, currentLang, isHindi, isEnglish } = useLanguage();
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [results, setResults] = useState([]);
@@ -329,6 +329,19 @@ export default function MatchResultsPage() {
     const maxLakh = (maxSupport / 100000).toFixed(1);
     const subsidy = scheme?.subsidyPercentage || (scheme?.name?.includes('PMEGP') ? 35 : (scheme?.name?.includes('Mudra') ? 0 : 25));
     const interest = scheme?.interestRate || '8.5';
+
+    if (!isHindi && currentLang !== 'pa') {
+      const sector = userProfile?.sector || 'Small Enterprise / Manufacturing';
+      const category = userProfile?.category || 'All Categories';
+      const state = userProfile?.state || 'India';
+      return {
+        benefit: `Financial assistance up to ₹${maxLakh} Lakh. Includes up to ${subsidy}% government margin money subsidy (direct discount). Interest rate starts at ${interest}% p.a.`,
+        whoGets: `Entrepreneurs aged 18+ in ${category} category operating or starting in ${sector} in ${state}.`,
+        documents: `Aadhaar card, 6 months bank statement, income certificate, category certificate, and Udyam Registration.`,
+        caution: `Never pay middlemen or agents. Per RBI guidelines (RPCD.79), banks cannot mandate collateral or third-party guarantee for loans up to ₹10 Lakh!`
+      };
+    }
+
     const sector = userProfile?.sector || 'लघु उद्योग / विनिर्माण';
     const category = userProfile?.category || 'सभी वर्ग';
     const state = userProfile?.state || 'भारत';
@@ -353,7 +366,9 @@ export default function MatchResultsPage() {
     setPlayingSchemeId(schemeId);
 
     const points = getSimplifiedSchemePoints(scheme, profile, item);
-    const fullText = `योजना: ${scheme.name}। पहला: आपको क्या मिलेगा? ${points.benefit}। दूसरा: किसे मिलेगा? ${points.whoGets}। तीसरा: क्या कागज़ चाहिए? ${points.documents}। चौथा: सावधान रहें: ${points.caution}`;
+    const fullText = (!isHindi && currentLang !== 'pa')
+      ? `Scheme: ${scheme.name}. 1: What you get: ${points.benefit}. 2: Who gets it: ${points.whoGets}. 3: Documents required: ${points.documents}. 4: Caution: ${points.caution}`
+      : `योजना: ${scheme.name}। पहला: आपको क्या मिलेगा? ${points.benefit}। दूसरा: किसे मिलेगा? ${points.whoGets}। तीसरा: क्या कागज़ चाहिए? ${points.documents}। चौथा: सावधान रहें: ${points.caution}`;
 
     if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(fullText);
@@ -363,7 +378,7 @@ export default function MatchResultsPage() {
       utterance.onerror = () => setPlayingSchemeId(null);
       window.speechSynthesis.speak(utterance);
     } else {
-      alert('आपके ब्राउज़र में आवाज़ (Speech) की सुविधा उपलब्ध नहीं है।');
+      alert(isHindi ? 'आपके ब्राउज़र में आवाज़ (Speech) की सुविधा उपलब्ध नहीं है।' : 'Text-to-speech is not supported by your browser.');
       setPlayingSchemeId(null);
     }
   };
@@ -405,20 +420,20 @@ export default function MatchResultsPage() {
     if (status === 'POTENTIALLY_ELIGIBLE') {
       return (
         <span className="px-3 py-1 rounded-full bg-[#CCFBF1] text-[#115E59] border border-[#14B8A6]/40 text-xs font-bold flex items-center gap-1.5">
-          <CheckCircle2 className="w-4 h-4 text-[#0F766E]" /> 🟢 POTENTIALLY ELIGIBLE
+          <CheckCircle2 className="w-4 h-4 text-[#0F766E]" /> {isHindi ? '🟢 पूर्णतः पात्र' : '🟢 POTENTIALLY ELIGIBLE'}
         </span>
       );
     }
     if (status === 'VERIFY') {
       return (
         <span className="px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold flex items-center gap-1.5">
-          <AlertTriangle className="w-4 h-4 text-amber-600" /> 🟡 VERIFY CRITERIA
+          <AlertTriangle className="w-4 h-4 text-amber-600" /> {isHindi ? '🟡 सत्यापन आवश्यक' : '🟡 VERIFY CRITERIA'}
         </span>
       );
     }
     return (
       <span className="px-3 py-1 rounded-full bg-rose-50 text-rose-800 border border-rose-200 text-xs font-bold flex items-center gap-1.5">
-        <XCircle className="w-4 h-4 text-rose-600" /> 🔴 NOT ELIGIBLE
+        <XCircle className="w-4 h-4 text-rose-600" /> {isHindi ? '🔴 अपात्र' : '🔴 NOT ELIGIBLE'}
       </span>
     );
   };
@@ -437,9 +452,9 @@ export default function MatchResultsPage() {
             {t('matches_title', 'Matched Opportunities')} {profile?.fullName ? `— ${profile.fullName}` : ''}
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 mt-1">
-            {profile?.sector ? <span>Sector: <span className="text-[#173B57] font-semibold">{profile?.sector}</span> • </span> : null}
-            {profile?.state ? <span>Location: <span className="text-[#173B57] font-semibold">{profile?.state}</span> • </span> : null}
-            Funding Need: <span className="text-[#0F766E] font-bold">₹{profile?.fundingAmount?.toLocaleString('en-IN') || '0'}</span>
+            {profile?.sector ? <span>{isHindi ? 'क्षेत्र: ' : 'Sector: '}<span className="text-[#173B57] font-semibold">{profile?.sector}</span> • </span> : null}
+            {profile?.state ? <span>{isHindi ? 'स्थान: ' : 'Location: '}<span className="text-[#173B57] font-semibold">{profile?.state}</span> • </span> : null}
+            {isHindi ? 'ऋण आवश्यकता: ' : 'Funding Need: '}<span className="text-[#0F766E] font-bold">₹{profile?.fundingAmount?.toLocaleString('en-IN') || '0'}</span>
           </p>
         </div>
 
@@ -448,7 +463,7 @@ export default function MatchResultsPage() {
             onClick={handleApplyAllEligible}
             className="px-4 py-2 rounded-xl bg-[#0F766E] hover:bg-[#115E59] text-white font-extrabold text-xs shadow-md hover:shadow-lg transition flex items-center gap-1.5"
           >
-            <Sparkles className="w-4 h-4 text-emerald-300" /> {t('btn_apply_all', 'Apply to All Eligible Schemes (1-Click)')}
+            <Sparkles className="w-4 h-4 text-emerald-300" /> {t('btn_apply_all', isHindi ? 'सभी पात्र योजनाओं में आवेदन करें (1-क्लिक)' : 'Apply to All Eligible Schemes (1-Click)')}
           </button>
 
           {compareList.length > 0 && (
@@ -456,7 +471,7 @@ export default function MatchResultsPage() {
               onClick={() => setIsCompareOpen(true)}
               className="px-4 py-2 rounded-xl bg-[#173B57] hover:bg-[#1e496b] text-white font-bold text-xs shadow-sm transition flex items-center gap-1.5"
             >
-              <Layers className="w-4 h-4" /> Compare ({compareList.length}/3)
+              <Layers className="w-4 h-4" /> {isHindi ? `तुलना (${compareList.length}/3)` : `Compare (${compareList.length}/3)`}
             </button>
           )}
 
@@ -464,7 +479,7 @@ export default function MatchResultsPage() {
             onClick={() => navigate('/wizard')}
             className="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 text-[#173B57] font-bold text-xs border border-[#CBD5E1] transition shadow-sm"
           >
-            {t('common_back', 'Edit Profile')}
+            {t('common_back', isHindi ? 'प्रोफ़ाइल बदलें' : 'Edit Profile')}
           </button>
         </div>
       </div>
@@ -483,13 +498,15 @@ export default function MatchResultsPage() {
         <div className="space-y-1 text-center md:text-left">
           <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 text-[10px] font-black uppercase tracking-wider border border-emerald-400/30">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>जन-हित प्रो • Grassroots Citizen Superiority Engine</span>
+            <span>{isHindi ? 'जन-हित प्रो • नागरिक सशक्तिकरण इंजन' : 'Jan-Hit Pro • Grassroots Citizen Superiority Engine'}</span>
           </div>
           <h2 className="text-lg sm:text-xl font-black text-white flex items-center justify-center md:justify-start gap-2">
-            <span>योजना पर्चा & बैंक काउंटर रक्षा कवच</span>
+            <span>{isHindi ? 'योजना पर्चा & बैंक काउंटर रक्षा कवच' : 'Scheme Leaflet & Bank Counter Defense Shield'}</span>
           </h2>
           <p className="text-xs text-slate-200 max-w-xl">
-            1-क्लिक में आधिकारिक प्रिंट पर्चा निकालें, बैंक मैनेजर के बहानों का कानूनी जवाब दें, और कठिन नियमों को सरल 4 बिंदुओं में समझें।
+            {isHindi 
+              ? '1-क्लिक में आधिकारिक प्रिंट पर्चा निकालें, बैंक मैनेजर के बहानों का कानूनी जवाब दें, और कठिन नियमों को सरल 4 बिंदुओं में समझें।'
+              : 'Print official scheme summary leaflets in 1-click, legally counter bank manager excuses, and understand complex rules in 4 easy points.'}
           </p>
         </div>
 
@@ -499,10 +516,10 @@ export default function MatchResultsPage() {
             type="button"
             onClick={() => handleOpenParchaa()}
             className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition flex items-center gap-2 shadow-md active:scale-95"
-            title="शीर्ष योजना का आधिकारिक पर्चा प्रिंट करें"
+            title={isHindi ? "शीर्ष योजना का आधिकारिक पर्चा प्रिंट करें" : "Print official scheme leaflet"}
           >
             <Printer className="w-4 h-4 text-slate-950" />
-            <span>🖨️ योजना पर्चा निकालें</span>
+            <span>{isHindi ? '🖨️ योजना पर्चा निकालें' : '🖨️ Print Leaflet'}</span>
           </button>
 
           {/* Bank Counter Defense Shield Button */}
@@ -510,10 +527,10 @@ export default function MatchResultsPage() {
             type="button"
             onClick={() => setIsBankGuideOpen(true)}
             className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs border border-white/20 transition flex items-center gap-2 shadow-xs active:scale-95"
-            title="बैंक मैनेजर के बहानों का जवाब और RBI नियम"
+            title={isHindi ? "बैंक मैनेजर के बहानों का जवाब और RBI नियम" : "Bank manager objections & RBI rules"}
           >
             <ShieldCheck className="w-4 h-4 text-emerald-300" />
-            <span>🛡️ बैंक काउंटर गाइड</span>
+            <span>{isHindi ? '🛡️ बैंक काउंटर गाइड' : '🛡️ Bank Counter Guide'}</span>
           </button>
 
           {/* ⚖️ Rejection Appeal Generator Button */}
@@ -524,10 +541,10 @@ export default function MatchResultsPage() {
               setIsAppealOpen(true);
             }}
             className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs transition flex items-center gap-2 shadow-xs active:scale-95"
-            title="लोन खारिज या अकारण लटकाने पर विधिक अपील पत्र तैयार करें"
+            title={isHindi ? "लोन खारिज या अकारण लटकाने पर विधिक अपील पत्र तैयार करें" : "Generate legal appeal letter if loan is rejected"}
           >
             <Scale className="w-4 h-4 text-rose-200" />
-            <span>⚖️ लोन खारिज? अपील पत्र</span>
+            <span>{isHindi ? '⚖️ लोन खारिज? अपील पत्र' : '⚖️ Loan Rejected? Appeal'}</span>
           </button>
 
           {/* Jargon-Buster Mode Toggle Switch */}
@@ -539,10 +556,14 @@ export default function MatchResultsPage() {
                 ? 'bg-amber-400 text-slate-950 border-amber-300 ring-2 ring-amber-400/40'
                 : 'bg-white/10 text-slate-200 border-white/20 hover:bg-white/20'
             }`}
-            title="कठिन नियमों को आसान भाषा में बदलें"
+            title={isHindi ? "कठिन नियमों को आसान भाषा में बदलें" : "Convert complex rules into simple language"}
           >
             <Languages className="w-4 h-4" />
-            <span>{isJargonBusterOn ? '✓ सरल भाषा मोड ON' : 'सरल भाषा मोड बंद'}</span>
+            <span>
+              {isHindi
+                ? (isJargonBusterOn ? '✓ सरल भाषा मोड चालू' : 'सरल भाषा मोड बंद')
+                : (isJargonBusterOn ? '✓ Simple Mode ON' : 'Simple Mode OFF')}
+            </span>
           </button>
         </div>
       </div>
@@ -555,14 +576,17 @@ export default function MatchResultsPage() {
             <div className="space-y-1 text-center md:text-left">
               <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black uppercase tracking-wider border border-emerald-400/30">
                 <Sparkles className="w-3 h-3 text-emerald-300" />
-                <span>योजना क्रांति 3.0 • Multi-Scheme Stack Optimizer</span>
+                <span>{isHindi ? 'योजना क्रांति 3.0 • बहु-योजना स्टैक ऑप्टिमाइज़र' : 'YojnaKranti 3.0 • Multi-Scheme Stack Optimizer'}</span>
               </div>
               <h3 className="text-base sm:text-lg font-black text-white flex items-center justify-center md:justify-start gap-2">
                 <span>{currentBundle.icon || '🧺'}</span>
-                <span>स्मार्ट योजना बंडल: {currentBundle.title_hi}</span>
+                <span>{isHindi ? `स्मार्ट योजना बंडल: ${currentBundle.title_hi}` : `Smart Scheme Bundle: ${currentBundle.title_en || currentBundle.title_hi}`}</span>
               </h3>
               <p className="text-xs text-slate-300">
-                {currentBundle.schemes.length} पूरक योजनाओं को मिलाकर पाएं <span className="text-emerald-400 font-extrabold">{currentBundle.totalExtraSavings_hi}</span> (+{currentBundle.netGainPercent}% अतिरिक्त लाभ)
+                {isHindi
+                  ? `${currentBundle.schemes.length} पूरक योजनाओं को मिलाकर पाएं `
+                  : `Combine ${currentBundle.schemes.length} complementary schemes to unlock `}
+                <span className="text-emerald-400 font-extrabold">{currentBundle.totalExtraSavings_hi}</span> (+{currentBundle.netGainPercent}% {isHindi ? 'अतिरिक्त लाभ' : 'extra benefit'})
               </p>
             </div>
 
@@ -575,7 +599,7 @@ export default function MatchResultsPage() {
               className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black text-xs shadow-md transition flex items-center gap-2 shrink-0 active:scale-95"
             >
               <Layers className="w-4 h-4 text-slate-950" />
-              <span>बंडल योजनाएं देखें (Stack) ↗</span>
+              <span>{isHindi ? 'बंडल योजनाएं देखें (Stack) ↗' : 'View Stacked Bundle ↗'}</span>
             </button>
           </div>
         );
@@ -586,10 +610,10 @@ export default function MatchResultsPage() {
         <div className="flex flex-wrap items-center gap-2">
           <Filter className="w-4 h-4 text-slate-500" />
           {[
-            { id: 'ALL', label: `${t('matches_filter_all', 'All Catalog Schemes')} (${results.length})` },
-            { id: 'ELIGIBLE', label: t('matches_filter_eligible', 'Potentially Eligible') },
-            { id: 'VERIFY', label: t('matches_filter_verify', 'Needs Verification') },
-            { id: 'NOT_ELIGIBLE', label: t('common_no', 'Not Eligible') }
+            { id: 'ALL', label: `${t('matches_filter_all', isHindi ? 'सभी योजनाएं' : 'All Catalog Schemes')} (${results.length})` },
+            { id: 'ELIGIBLE', label: t('matches_filter_eligible', isHindi ? 'पात्र योजनाएं' : 'Potentially Eligible') },
+            { id: 'VERIFY', label: t('matches_filter_verify', isHindi ? 'सत्यापन आवश्यक' : 'Needs Verification') },
+            { id: 'NOT_ELIGIBLE', label: isHindi ? 'अपात्र योजनाएं' : 'Not Eligible' }
           ].map(catObj => (
             <button
               key={catObj.id}
@@ -649,10 +673,10 @@ export default function MatchResultsPage() {
                           setIsCashflowOpen(true);
                         }}
                         className="text-[11px] bg-amber-50 hover:bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full border border-amber-300 font-extrabold flex items-center gap-1 transition shadow-xs active:scale-95"
-                        title="रोज़ाना मुनाफ़ा vs क़िस्त सिम्युलेटर देखें"
+                        title={isHindi ? "रोज़ाना मुनाफ़ा vs क़िस्त सिम्युलेटर देखें" : "View daily profit vs EMI simulator"}
                       >
                         <Coffee className="w-3.5 h-3.5 text-amber-600" />
-                        <span>क़िस्त: ₹{Math.max(Math.round(((scheme.maximumSupport || 500000) * 0.65 * 0.085 / 12) / 30), 45)}/दिन</span>
+                        <span>{isHindi ? 'क़िस्त: ' : 'EMI: '}₹{Math.max(Math.round(((scheme.maximumSupport || 500000) * 0.65 * 0.085 / 12) / 30), 45)}/{isHindi ? 'दिन' : 'day'}</span>
                       </button>
 
                       {/* 🛡️ Anti-Corruption Zero Fee Badge */}
@@ -663,10 +687,10 @@ export default function MatchResultsPage() {
                           setIsAntiCorruptionOpen(true);
                         }}
                         className="text-[11px] bg-emerald-50 hover:bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full border border-emerald-300 font-extrabold flex items-center gap-1 transition shadow-xs active:scale-95"
-                        title="दलाल व रिश्वत रोधी शील्ड"
+                        title={isHindi ? "दलाल व रिश्वत रोधी शील्ड" : "Zero-bribe anti-middleman shield"}
                       >
                         <ShieldAlert className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>100% निःशुल्क सरकारी योजना</span>
+                        <span>{isHindi ? '100% निःशुल्क सरकारी योजना' : '100% Free Govt Scheme'}</span>
                       </button>
                     </div>
 
@@ -678,7 +702,7 @@ export default function MatchResultsPage() {
                   <div className="flex flex-wrap items-center gap-3 bg-[#F8FAFC] p-3 rounded-xl border border-[#E2E8F0] shrink-0">
                     <div className="text-center">
                       <div className="text-[10px] text-slate-500 uppercase font-bold flex items-center justify-center gap-1">
-                        <span>Match Fit</span>
+                        <span>{isHindi ? 'योग्यता मेल' : 'Match Fit'}</span>
                       </div>
                       <div className={`text-xl font-extrabold ${isNotEligible ? 'text-rose-600' : 'text-[#0F766E]'}`}>
                         {item.matchScore}%
@@ -688,7 +712,9 @@ export default function MatchResultsPage() {
                     <div className="w-px h-8 bg-slate-200" />
 
                     <div className="text-center">
-                      <div className="text-[10px] text-slate-500 uppercase font-bold">Readiness</div>
+                      <div className="text-[10px] text-slate-500 uppercase font-bold">
+                        {isHindi ? 'तैयारी स्कोर' : 'Readiness'}
+                      </div>
                       <div className="text-xl font-extrabold text-[#173B57]">{item.readinessScore || 85}%</div>
                     </div>
 
@@ -704,17 +730,17 @@ export default function MatchResultsPage() {
                             ? 'bg-rose-600 hover:bg-rose-700 text-white animate-pulse'
                             : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300'
                         }`}
-                        title="योजना का संक्षिप्त विवरण हिंदी में सुनें"
+                        title={isHindi ? "योजना का संक्षिप्त विवरण सुनें" : "Listen to scheme narration"}
                       >
                         {playingSchemeId === (scheme._id || scheme.slug || scheme.name) ? (
                           <>
                             <VolumeX className="w-3.5 h-3.5 text-white" />
-                            <span>रोकें</span>
+                            <span>{isHindi ? 'रोकें' : 'Stop'}</span>
                           </>
                         ) : (
                           <>
                             <Volume2 className="w-3.5 h-3.5 text-emerald-700" />
-                            <span>सुनें 🔊</span>
+                            <span>{isHindi ? 'सुनें 🔊' : 'Listen 🔊'}</span>
                           </>
                         )}
                       </button>
@@ -723,10 +749,10 @@ export default function MatchResultsPage() {
                         type="button"
                         onClick={() => handleOpenParchaa(scheme, item)}
                         className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white hover:bg-slate-100 text-[#173B57] border border-[#CBD5E1] transition flex items-center gap-1.5 shadow-xs active:scale-95"
-                        title="इस योजना का आधिकारिक 1-पेज पर्चा प्रिंट करें"
+                        title={isHindi ? "इस योजना का आधिकारिक 1-पेज पर्चा प्रिंट करें" : "Print official 1-page leaflet"}
                       >
                         <Printer className="w-3.5 h-3.5 text-slate-700" />
-                        <span>पर्चा 🖨️</span>
+                        <span>{isHindi ? 'पर्चा 🖨️' : 'Leaflet 🖨️'}</span>
                       </button>
                     </div>
                   </div>
@@ -737,19 +763,21 @@ export default function MatchResultsPage() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-[#F8FAFC] p-4 rounded-xl border border-[#E2E8F0] text-xs">
                   <div>
                     <div className="text-slate-500 text-[10px] uppercase font-bold">{t('matches_max_loan', 'Max Support')}</div>
-                    <div className="font-extrabold text-[#173B57] text-sm">₹{((scheme.maximumSupport || 0) / 100000).toFixed(1)} Lakh</div>
+                    <div className="font-extrabold text-[#173B57] text-sm">₹{((scheme.maximumSupport || 0) / 100000).toFixed(1)} {isHindi ? 'लाख' : 'Lakh'}</div>
                   </div>
                   <div>
                     <div className="text-slate-500 text-[10px] uppercase font-bold">{t('matches_subsidy', 'Subsidy Benefit')}</div>
-                    <div className="font-bold text-[#0F766E]">{scheme.subsidyPercentage ? `${scheme.subsidyPercentage}% Margin Subsidy` : 'Zero Direct Subsidy'}</div>
+                    <div className="font-bold text-[#0F766E]">
+                      {scheme.subsidyPercentage ? `${scheme.subsidyPercentage}% ${isHindi ? 'मार्जिन सब्सिडी' : 'Margin Subsidy'}` : (isHindi ? 'कोई सीधी सब्सिडी नहीं' : 'Zero Direct Subsidy')}
+                    </div>
                   </div>
                   <div>
                     <div className="text-slate-500 text-[10px] uppercase font-bold">{t('matches_interest', 'Interest Rate')}</div>
-                    <div className="font-semibold text-[#173B57]">{scheme.interestRate || '8.5'}% p.a.</div>
+                    <div className="font-semibold text-[#173B57]">{scheme.interestRate || '8.5'}% {isHindi ? 'प्रति वर्ष' : 'p.a.'}</div>
                   </div>
                   <div>
                     <div className="text-slate-500 text-[10px] uppercase font-bold">{t('matches_moratorium', 'Moratorium')}</div>
-                    <div className="font-semibold text-[#173B57]">{scheme.moratoriumPeriodMonths || 6} Months</div>
+                    <div className="font-semibold text-[#173B57]">{scheme.moratoriumPeriodMonths || 6} {isHindi ? 'माह' : 'Months'}</div>
                   </div>
                 </div>
 
@@ -759,9 +787,11 @@ export default function MatchResultsPage() {
                     <div className="flex items-center justify-between gap-2 flex-wrap">
                       <div className="flex items-center gap-2">
                         <span className="px-2.5 py-0.5 rounded-full bg-emerald-600 text-white font-extrabold text-[10px] tracking-wide uppercase flex items-center gap-1 shadow-xs">
-                          <Sparkles className="w-3 h-3 text-emerald-200" /> सरल भाषा में समझें (Jargon-Buster)
+                          <Sparkles className="w-3 h-3 text-emerald-200" /> {isHindi ? 'सरल भाषा में समझें (Jargon-Buster)' : 'Understand in Simple Terms (Jargon-Buster)'}
                         </span>
-                        <span className="text-[11px] text-slate-500 hidden sm:inline">सरकारी कागज़ी पेचीदगियों से मुक्ति — 4 सीधी बातें</span>
+                        <span className="text-[11px] text-slate-500 hidden sm:inline">
+                          {isHindi ? 'सरकारी कागज़ी पेचीदगियों से मुक्ति — 4 सीधी बातें' : 'No bureaucratic clutter — 4 key points'}
+                        </span>
                       </div>
 
                       <button
@@ -776,12 +806,12 @@ export default function MatchResultsPage() {
                         {playingSchemeId === (scheme._id || scheme.slug || scheme.name) ? (
                           <>
                             <VolumeX className="w-3 h-3" />
-                            <span>⏹️ आवाज़ बंद करें</span>
+                            <span>{isHindi ? '⏹️ आवाज़ बंद करें' : '⏹️ Stop Narration'}</span>
                           </>
                         ) : (
                           <>
                             <Volume2 className="w-3 h-3" />
-                            <span>🔊 बोलकर समझाएं</span>
+                            <span>{isHindi ? '🔊 बोलकर समझाएं' : '🔊 Listen Narration'}</span>
                           </>
                         )}
                       </button>
@@ -794,7 +824,7 @@ export default function MatchResultsPage() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
                           <div className="bg-white/90 p-3.5 rounded-xl border border-emerald-200/70 space-y-1 shadow-xs">
                             <div className="font-extrabold text-emerald-800 flex items-center gap-1.5 text-xs">
-                              <span>💰</span> आपको क्या मिलेगा?
+                              <span>💰</span> {isHindi ? 'आपको क्या मिलेगा?' : 'What will you get?'}
                             </div>
                             <p className="text-slate-700 text-[11px] leading-relaxed font-medium">
                               {points.benefit}
@@ -803,7 +833,7 @@ export default function MatchResultsPage() {
 
                           <div className="bg-white/90 p-3.5 rounded-xl border border-sky-200/70 space-y-1 shadow-xs">
                             <div className="font-extrabold text-sky-800 flex items-center gap-1.5 text-xs">
-                              <span>👤</span> किसे मिलेगा?
+                              <span>👤</span> {isHindi ? 'किसे मिलेगा?' : 'Who is eligible?'}
                             </div>
                             <p className="text-slate-700 text-[11px] leading-relaxed font-medium">
                               {points.whoGets}
@@ -812,7 +842,7 @@ export default function MatchResultsPage() {
 
                           <div className="bg-white/90 p-3.5 rounded-xl border border-amber-200/70 space-y-1 shadow-xs">
                             <div className="font-extrabold text-amber-800 flex items-center gap-1.5 text-xs">
-                              <span>📄</span> क्या कागज़ चाहिए?
+                              <span>📄</span> {isHindi ? 'क्या कागज़ चाहिए?' : 'Required Documents'}
                             </div>
                             <p className="text-slate-700 text-[11px] leading-relaxed font-medium">
                               {points.documents}
@@ -821,7 +851,7 @@ export default function MatchResultsPage() {
 
                           <div className="bg-white/90 p-3.5 rounded-xl border border-rose-200/70 space-y-1 shadow-xs">
                             <div className="font-extrabold text-rose-800 flex items-center gap-1.5 text-xs">
-                              <span>⚠️</span> सावधान रहें
+                              <span>⚠️</span> {isHindi ? 'सावधान रहें' : 'Keep in Mind'}
                             </div>
                             <p className="text-slate-700 text-[11px] leading-relaxed font-medium">
                               {points.caution}
@@ -838,7 +868,7 @@ export default function MatchResultsPage() {
                   /* NOT ELIGIBLE CARD: SHOW WHY YOU DO NOT MATCH */
                   <div className="p-4 bg-rose-50 rounded-xl border border-rose-200 space-y-2 text-xs">
                     <div className="font-bold text-rose-700 flex items-center gap-1.5 text-xs">
-                      <XCircle className="w-4 h-4 text-rose-600" /> Why You Do Not Match
+                      <XCircle className="w-4 h-4 text-rose-600" /> {isHindi ? 'अपात्रता के कारण' : 'Why You Do Not Match'}
                     </div>
                     <ul className="space-y-1.5 text-rose-900">
                       {item.failedCriteria?.length > 0 ? (
@@ -846,14 +876,14 @@ export default function MatchResultsPage() {
                           <li key={i} className="flex items-start gap-1.5 text-[11px]">
                             <span className="text-rose-600 shrink-0 font-bold">✕</span>
                             <div>
-                              <span className="font-bold text-rose-800">{typeof fail === 'object' ? fail.field : 'Criterion Mismatch'}:</span>{' '}
+                              <span className="font-bold text-rose-800">{typeof fail === 'object' ? fail.field : (isHindi ? 'शर्त मेल नहीं खाती' : 'Criterion Mismatch')}:</span>{' '}
                               {typeof fail === 'object' ? fail.reason : fail}
                             </div>
                           </li>
                         ))
                       ) : (
                         <li className="text-[11px] flex items-center gap-1">
-                          <span>✕</span> Location or Demographic criteria restriction for this specific state scheme.
+                          <span>✕</span> {isHindi ? 'इस विशिष्ट राज्य योजना के लिए स्थान या जनसांख्यिकी मानदंड प्रतिबंध।' : 'Location or Demographic criteria restriction for this specific state scheme.'}
                         </li>
                       )}
                     </ul>
@@ -883,7 +913,7 @@ export default function MatchResultsPage() {
                           <AlertTriangle className="w-4 h-4 text-amber-600" /> {t('matches_missing_docs', 'Action Items & Verification Needs')}
                         </span>
                         <span className="text-[10px] text-amber-700 bg-amber-100 px-2 py-0.5 rounded font-bold">
-                          कागज़ सहायता उपलब्ध
+                          {isHindi ? 'कागज़ सहायता उपलब्ध' : 'Doc Help Available'}
                         </span>
                       </div>
                       <div className="space-y-1.5">
@@ -907,13 +937,13 @@ export default function MatchResultsPage() {
                                 }}
                                 className="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-[10px] shrink-0 transition flex items-center gap-1 self-start sm:self-auto shadow-xs active:scale-95"
                               >
-                                <span>कागज़ कैसे बनवाएं? ↗</span>
+                                <span>{isHindi ? 'कागज़ कैसे बनवाएं? ↗' : 'How to obtain? ↗'}</span>
                               </button>
                             </div>
                           );
                         }) : (
                           <div className="flex items-center justify-between text-[11px] text-emerald-800 bg-emerald-50/70 p-2 rounded-lg border border-emerald-200">
-                            <span>✓ All required documents & certificates ready for application.</span>
+                            <span>{isHindi ? '✓ आवेदन के लिए सभी आवश्यक दस्तावेज तैयार हैं।' : '✓ All required documents & certificates ready for application.'}</span>
                             <button
                               type="button"
                               onClick={() => {
@@ -922,7 +952,7 @@ export default function MatchResultsPage() {
                               }}
                               className="text-[10px] text-emerald-700 font-bold underline hover:text-emerald-900"
                             >
-                              कागज़ गाइड देखें
+                              {isHindi ? 'कागज़ गाइड देखें' : 'View Document Guide'}
                             </button>
                           </div>
                         )}
@@ -939,7 +969,7 @@ export default function MatchResultsPage() {
                       onClick={() => handleApplySingle(scheme)}
                       className="px-3.5 py-2 rounded-lg bg-[#0F766E] hover:bg-[#115E59] text-white font-bold transition flex items-center gap-1.5 shadow-sm"
                     >
-                      <Sparkles className="w-3.5 h-3.5" /> Auto-Fill Application
+                      <Sparkles className="w-3.5 h-3.5" /> {isHindi ? 'ऑटो-फ़िल आवेदन' : 'Auto-Fill Application'}
                     </button>
 
                     <button
@@ -949,14 +979,14 @@ export default function MatchResultsPage() {
                       className="px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition flex items-center gap-1.5 shadow-sm"
                     >
                       <Printer className="w-3.5 h-3.5 text-emerald-200" />
-                      <span>योजना पर्चा निकालें 🖨️</span>
+                      <span>{isHindi ? 'योजना पर्चा निकालें 🖨️' : 'Print Leaflet 🖨️'}</span>
                     </button>
 
                     <button
                       onClick={() => handleOpenCompanion(scheme)}
                       className="px-3.5 py-2 rounded-lg bg-[#F0FDFA] hover:bg-[#CCFBF1] text-[#0F766E] border border-[#14B8A6]/40 font-bold transition flex items-center gap-1.5 shadow-xs"
                     >
-                      <span>Guide Me Through This ↗️</span>
+                      <span>{isHindi ? 'मार्गदर्शन प्राप्त करें ↗️' : 'Guide Me Through This ↗️'}</span>
                     </button>
 
                     <button
@@ -966,7 +996,7 @@ export default function MatchResultsPage() {
                       }}
                       className="px-3.5 py-2 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-[#CBD5E1] font-bold transition flex items-center gap-1.5"
                     >
-                      <Calculator className="w-3.5 h-3.5 text-slate-500" /> Calculator
+                      <Calculator className="w-3.5 h-3.5 text-slate-500" /> {isHindi ? 'कैलकुलेटर' : 'Calculator'}
                     </button>
 
                     <button
@@ -977,7 +1007,7 @@ export default function MatchResultsPage() {
                           : 'bg-white hover:bg-slate-50 text-[#173B57] border border-[#CBD5E1]'
                       }`}
                     >
-                      <Layers className="w-3.5 h-3.5" /> {isCompared ? 'Compared' : 'Compare'}
+                      <Layers className="w-3.5 h-3.5" /> {isCompared ? (isHindi ? 'तुलना में शामिल' : 'Compared') : (isHindi ? 'तुलना करें' : 'Compare')}
                     </button>
                   </div>
 
@@ -986,10 +1016,10 @@ export default function MatchResultsPage() {
                       type="button"
                       onClick={() => handleShareSchemeToWhatsApp(scheme, item)}
                       className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition shadow-xs flex items-center gap-1.5 active:scale-95"
-                      title="व्हाट्सएप पर इस योजना की पूरी जानकारी भेजें"
+                      title={isHindi ? "व्हाट्सएप पर इस योजना की पूरी जानकारी भेजें" : "Share scheme details on WhatsApp"}
                     >
                       <Share2 className="w-3.5 h-3.5 text-emerald-100" />
-                      <span>{t('matches_share_whatsapp', 'Share on WhatsApp 📱')}</span>
+                      <span>{t('matches_share_whatsapp', isHindi ? 'व्हाट्सएप पर भेजें 📱' : 'Share on WhatsApp 📱')}</span>
                     </button>
 
                     <a
@@ -998,7 +1028,7 @@ export default function MatchResultsPage() {
                       rel="noopener noreferrer"
                       className="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-[#0F766E] font-bold border border-[#0F766E] transition shadow-xs flex items-center gap-1.5"
                     >
-                      <span>{t('matches_apply_portal', 'Official Website ↗')}</span>
+                      <span>{t('matches_apply_portal', isHindi ? 'आधिकारिक वेबसाइट ↗' : 'Official Website ↗')}</span>
                       <ExternalLink className="w-3.5 h-3.5" />
                     </a>
                   </div>
@@ -1019,16 +1049,18 @@ export default function MatchResultsPage() {
           <div className="space-y-0.5">
             <div className="flex items-center gap-2 text-[#0F766E] font-bold uppercase text-[10px] tracking-wider">
               <ShieldCheck className="w-3.5 h-3.5 text-[#0F766E]" />
-              Application Progress & PFMS Fund Disbursal Lifecycle
+              {isHindi ? 'आवेदन स्थिति और PFMS प्रत्यक्ष लाभ हस्तांतरण' : 'Application Progress & PFMS Fund Disbursal Lifecycle'}
             </div>
-            <h2 className="text-xl font-extrabold text-[#173B57]">Active Scheme Progress & PFMS Disbursal</h2>
+            <h2 className="text-xl font-extrabold text-[#173B57]">
+              {isHindi ? 'सक्रिय योजना प्रगति एवं PFMS ट्रैकिंग' : 'Active Scheme Progress & PFMS Disbursal'}
+            </h2>
           </div>
 
           <button
             onClick={() => navigate('/track-application')}
             className="px-3.5 py-1.5 rounded-xl bg-[#F0FDFA] hover:bg-[#CCFBF1] text-[#0F766E] border border-[#14B8A6]/40 text-xs font-bold transition flex items-center gap-1 shrink-0 shadow-sm"
           >
-            Full Tracking Portal <ArrowRight className="w-3.5 h-3.5" />
+            {isHindi ? 'संपूर्ण ट्रैकिंग पोर्टल' : 'Full Tracking Portal'} <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
@@ -1205,42 +1237,52 @@ export default function MatchResultsPage() {
         <div className="p-5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold text-[#173B57] flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#0F766E]" /> Recommended Action Pathway for Application
+              <Sparkles className="w-4 h-4 text-[#0F766E]" /> {isHindi ? 'आवेदन के लिए अनुशंसित चरण' : 'Recommended Action Pathway for Application'}
             </h3>
-            <span className="text-[11px] text-slate-500 font-medium">Step-by-step guidance</span>
+            <span className="text-[11px] text-slate-500 font-medium">
+              {isHindi ? 'चरण-दर-चरण मार्गदर्शन' : 'Step-by-step guidance'}
+            </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
             <div className="p-3 rounded-lg bg-white border border-[#E2E8F0] space-y-1">
               <div className="flex items-center gap-2 text-[#0F766E] font-bold text-[11px]">
                 <span className="w-5 h-5 rounded-full bg-[#CCFBF1] flex items-center justify-center text-[10px]">1</span>
-                <span>Review Profile</span>
+                <span>{isHindi ? 'प्रोफ़ाइल जांचें' : 'Review Profile'}</span>
               </div>
-              <p className="text-[11px] text-slate-500">Confirm business details & funding request are accurate.</p>
+              <p className="text-[11px] text-slate-500">
+                {isHindi ? 'व्यवसाय विवरण और ऋण आवश्यकता की पुष्टि करें।' : 'Confirm business details & funding request are accurate.'}
+              </p>
             </div>
 
             <div className="p-3 rounded-lg bg-white border border-[#E2E8F0] space-y-1">
               <div className="flex items-center gap-2 text-[#0F766E] font-bold text-[11px]">
                 <span className="w-5 h-5 rounded-full bg-[#CCFBF1] flex items-center justify-center text-[10px]">2</span>
-                <span>Run DocVerifier</span>
+                <span>{isHindi ? 'दस्तावेज़ सत्यापित करें' : 'Run DocVerifier'}</span>
               </div>
-              <p className="text-[11px] text-slate-500">Scan Aadhaar, Income & Udyam certificates for instant extraction.</p>
+              <p className="text-[11px] text-slate-500">
+                {isHindi ? 'आधार, आय व उद्यम प्रमाणपत्र स्कैन कर तुरंत डेटा निकालें।' : 'Scan Aadhaar, Income & Udyam certificates for instant extraction.'}
+              </p>
             </div>
 
             <div className="p-3 rounded-lg bg-white border border-[#E2E8F0] space-y-1">
               <div className="flex items-center gap-2 text-[#0F766E] font-bold text-[11px]">
                 <span className="w-5 h-5 rounded-full bg-[#CCFBF1] flex items-center justify-center text-[10px]">3</span>
-                <span>Calculate Subsidy</span>
+                <span>{isHindi ? 'सब्सिडी कैलकुलेट करें' : 'Calculate Subsidy'}</span>
               </div>
-              <p className="text-[11px] text-slate-500">Use Financial Calculator to estimate margin money & loan EMI.</p>
+              <p className="text-[11px] text-slate-500">
+                {isHindi ? 'मार्जिन मनी और ऋण क़िस्त (EMI) का अनुमान लगाएं।' : 'Use Financial Calculator to estimate margin money & loan EMI.'}
+              </p>
             </div>
 
             <div className="p-3 rounded-lg bg-white border border-[#E2E8F0] space-y-1">
               <div className="flex items-center gap-2 text-[#0F766E] font-bold text-[11px]">
                 <span className="w-5 h-5 rounded-full bg-[#CCFBF1] flex items-center justify-center text-[10px]">4</span>
-                <span>Apply on Portal</span>
+                <span>{isHindi ? 'पोर्टल पर आवेदन करें' : 'Apply on Portal'}</span>
               </div>
-              <p className="text-[11px] text-slate-500">Visit official KVIC / MSME / Bank portal with pre-verified dossier.</p>
+              <p className="text-[11px] text-slate-500">
+                {isHindi ? 'सत्यापित विवरण के साथ आधिकारिक KVIC / MSME / बैंक पोर्टल पर जाएं।' : 'Visit official KVIC / MSME / Bank portal with pre-verified dossier.'}
+              </p>
             </div>
           </div>
         </div>
@@ -1254,14 +1296,20 @@ export default function MatchResultsPage() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-0.5 rounded-full bg-[#CCFBF1] text-[#115E59] text-[10px] font-bold uppercase tracking-wider border border-[#14B8A6]/40 flex items-center gap-1">
-                  <Zap className="w-3 h-3 text-[#0F766E]" /> AI Discovered Schemes
+                  <Zap className="w-3 h-3 text-[#0F766E]" /> {isHindi ? 'AI द्वारा खोजी गई योजनाएं' : 'AI Discovered Schemes'}
                 </span>
-                <span className="text-xs text-[#0F766E] font-bold">+3 Tailored Schemes Generated</span>
+                <span className="text-xs text-[#0F766E] font-bold">
+                  {isHindi ? '+3 अनुकूलित योजनाएं' : '+3 Tailored Schemes Generated'}
+                </span>
               </div>
-              <h2 className="text-lg font-bold text-[#173B57] mt-1">Additional High-Fit Opportunities Discovered via AI</h2>
+              <h2 className="text-lg font-bold text-[#173B57] mt-1">
+                {isHindi ? 'AI द्वारा खोजी गई अतिरिक्त उच्च-अनुकूल योजनाएं' : 'Additional High-Fit Opportunities Discovered via AI'}
+              </h2>
             </div>
             <p className="text-xs text-slate-500 max-w-xs">
-              Generated in real-time based on your state ({profile?.state}), sector ({profile?.sector}), and background.
+              {isHindi
+                ? `आपके राज्य (${profile?.state}), क्षेत्र (${profile?.sector}) के आधार पर रीयल-टाइम में तैयार।`
+                : `Generated in real-time based on your state (${profile?.state}), sector (${profile?.sector}), and background.`}
             </p>
           </div>
 
@@ -1276,10 +1324,10 @@ export default function MatchResultsPage() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="px-2 py-0.5 rounded bg-[#CCFBF1] text-[#115E59] text-[10px] font-bold border border-[#14B8A6]/30">
-                        AI RECOMMENDED
+                        {isHindi ? 'AI अनुशंसित' : 'AI RECOMMENDED'}
                       </span>
                       <span className="text-xs font-bold text-[#0F766E] bg-[#F0FDFA] px-2 py-0.5 rounded border border-[#CCFBF1]">
-                        {item.matchScore}% Match
+                        {item.matchScore}% {isHindi ? 'मेल' : 'Match'}
                       </span>
                     </div>
 
@@ -1291,15 +1339,17 @@ export default function MatchResultsPage() {
 
                   <div className="bg-[#F8FAFC] p-3 rounded-lg border border-[#E2E8F0] space-y-1.5 text-xs">
                     <div className="flex justify-between">
-                      <span className="text-slate-500">Max Support:</span>
-                      <span className="font-bold text-[#173B57]">₹{((scheme.maximumSupport || 2500000) / 100000).toFixed(1)} Lakh</span>
+                      <span className="text-slate-500">{isHindi ? 'अधिकतम सहायता:' : 'Max Support:'}</span>
+                      <span className="font-bold text-[#173B57]">₹{((scheme.maximumSupport || 2500000) / 100000).toFixed(1)} {isHindi ? 'लाख' : 'Lakh'}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-500">Subsidy / Benefit:</span>
-                      <span className="font-bold text-[#0F766E]">{scheme.subsidyPercentage ? `${scheme.subsidyPercentage}% Margin Subsidy` : 'Direct Grant'}</span>
+                      <span className="text-slate-500">{isHindi ? 'सब्सिडी / लाभ:' : 'Subsidy / Benefit:'}</span>
+                      <span className="font-bold text-[#0F766E]">
+                        {scheme.subsidyPercentage ? `${scheme.subsidyPercentage}% ${isHindi ? 'मार्जिन सब्सिडी' : 'Margin Subsidy'}` : (isHindi ? 'प्रत्यक्ष अनुदान' : 'Direct Grant')}
+                      </span>
                     </div>
                     <div className="pt-1.5 border-t border-slate-200 text-[11px] text-[#0F766E] font-medium">
-                      💡 {scheme.aiReasoning || `Specially recommended for your ${profile?.sector} business in ${profile?.state}.`}
+                      💡 {scheme.aiReasoning || (isHindi ? `आपके ${profile?.state} में ${profile?.sector} व्यवसाय के लिए विशेष रूप से अनुशंसित।` : `Specially recommended for your ${profile?.sector} business in ${profile?.state}.`)}
                     </div>
                   </div>
 
@@ -1311,7 +1361,7 @@ export default function MatchResultsPage() {
                       }}
                       className="text-[#0F766E] hover:text-[#115E59] font-bold text-xs flex items-center gap-1"
                     >
-                      <Calculator className="w-3.5 h-3.5" /> Calculate
+                      <Calculator className="w-3.5 h-3.5" /> {isHindi ? 'कैलकुलेटर' : 'Calculate'}
                     </button>
 
                     <a
@@ -1320,8 +1370,8 @@ export default function MatchResultsPage() {
                       rel="noopener noreferrer"
                       className="px-3 py-1.5 rounded-lg bg-[#0F766E] hover:bg-[#115E59] text-white font-bold text-xs transition flex items-center gap-1 shadow-sm"
                     >
-                      <span>Apply Portal</span>
-                      <ExternalLink className="w-3 h-3" />
+                      <span>{isHindi ? 'आवेदन पोर्टल' : 'Apply Portal'}</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
                     </a>
                   </div>
                 </div>

@@ -12,6 +12,7 @@ import {
   ShieldAlert,
   Sparkles
 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 import DOCUMENT_GUIDE_DATA from '../data/documentGuideData.js';
 
 /**
@@ -26,19 +27,35 @@ export default function MissingDocumentResolverModal({
   userState = 'Bihar',
   onViewCSCMap
 }) {
+  const { isHindi } = useLanguage();
+
   if (!isOpen || !documentId) return null;
 
   const doc = DOCUMENT_GUIDE_DATA[documentId] || {
     label_hi: documentId,
+    label_en: documentId,
     govtFee: '₹15 - ₹50',
+    govtFee_en: '₹15 - ₹50',
     timeline: '7 - 10 कार्य दिवस',
+    timeline_en: '7 - 10 Working Days',
     description_hi: 'यह दस्तावेज़ सरकारी योजना में सत्यापन के लिए अनिवार्य है।',
+    description_en: 'This document is mandatory for verification under government schemes.',
     requiredDocs_hi: ['आधार कार्ड', 'निवास प्रमाण पत्र', 'फोटो'],
+    requiredDocs_en: ['Aadhaar Card', 'Residence Proof', 'Photograph'],
     statePortals: [
       { state: 'All India', portalName: 'Digital Seva CSC Portal', url: 'https://digitalseva.csc.gov.in' }
     ],
-    toutWarning_hi: '⚠️ किसी अनाधिकृत दलाल को पैसे न दें। केवल सरकारी सीएससी केंद्र या ई-डिस्ट्रिक्ट पोर्टल से बनवाएं।'
+    toutWarning_hi: '⚠️ किसी अनाधिकृत दलाल को पैसे न दें। केवल सरकारी सीएससी केंद्र या ई-डिस्ट्रिक्ट पोर्टल से बनवाएं।',
+    toutWarning_en: '⚠️ Never pay unauthorized touts or brokers. Apply solely through government CSC centers or e-District portals.'
   };
+
+  const docLabel = isHindi ? doc.label_hi : (doc.label_en || doc.label_hi || documentId);
+  const docFee = isHindi ? doc.govtFee : (doc.govtFee_en || doc.govtFee);
+  const docTimeline = isHindi ? doc.timeline : (doc.timeline_en || doc.timeline);
+  const docValidity = isHindi ? (doc.validity || 'आजीवन') : (doc.validity_en || doc.validity || 'Lifetime');
+  const docDesc = isHindi ? doc.description_hi : (doc.description_en || doc.description_hi);
+  const docWarning = isHindi ? doc.toutWarning_hi : (doc.toutWarning_en || doc.toutWarning_hi);
+  const docRequired = isHindi ? (doc.requiredDocs_hi || []) : (doc.requiredDocs_en || doc.requiredDocs_hi || []);
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-fadeIn">
@@ -49,14 +66,14 @@ export default function MissingDocumentResolverModal({
           <div className="space-y-1">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/30 text-amber-200 text-[10px] font-extrabold uppercase tracking-wider border border-amber-400/30">
               <Sparkles className="w-3 h-3 text-amber-300" />
-              <span>कागज़ नहीं है? ऐसे बनवाएं (Gap Solver)</span>
+              <span>{isHindi ? 'कागज़ नहीं है? ऐसे बनवाएं (Gap Solver)' : 'Missing Document? Resolve Here (Gap Solver)'}</span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
               <span>{doc.icon || '📄'}</span>
-              <span>{doc.label_hi}</span>
+              <span>{docLabel}</span>
             </h2>
             <p className="text-xs text-amber-100/90 font-medium">
-              आधिकारिक सरकारी प्रक्रिया, न्यूनतम फीस और डायरेक्ट पोर्टल लिंक
+              {isHindi ? 'आधिकारिक सरकारी प्रक्रिया, न्यूनतम फीस और डायरेक्ट पोर्टल लिंक' : 'Official government procedure, minimal statutory fees, and direct portal links'}
             </p>
           </div>
 
@@ -64,7 +81,7 @@ export default function MissingDocumentResolverModal({
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-xl text-amber-200 hover:text-white hover:bg-amber-800/80 transition"
-            title="बंद करें"
+            title={isHindi ? 'बंद करें' : 'Close'}
           >
             <X className="w-5 h-5" />
           </button>
@@ -78,48 +95,48 @@ export default function MissingDocumentResolverModal({
             <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200">
               <div className="flex items-center gap-1.5 text-emerald-700 font-bold text-[11px] mb-1">
                 <Coins className="w-4 h-4 text-emerald-600" />
-                <span>सरकारी फीस (Govt Fee)</span>
+                <span>{isHindi ? 'सरकारी फीस (Govt Fee)' : 'Govt Fee'}</span>
               </div>
               <div className="text-base sm:text-lg font-black text-emerald-900">
-                {doc.govtFee}
+                {docFee}
               </div>
             </div>
 
             <div className="p-3.5 rounded-xl bg-sky-50 border border-sky-200">
               <div className="flex items-center gap-1.5 text-sky-700 font-bold text-[11px] mb-1">
                 <Clock className="w-4 h-4 text-sky-600" />
-                <span>बनने का समय (Timeline)</span>
+                <span>{isHindi ? 'बनने का समय (Timeline)' : 'Timeline'}</span>
               </div>
               <div className="text-base sm:text-lg font-black text-sky-900">
-                {doc.timeline}
+                {docTimeline}
               </div>
             </div>
 
             <div className="p-3.5 rounded-xl bg-purple-50 border border-purple-200 col-span-2 sm:col-span-1">
               <div className="flex items-center gap-1.5 text-purple-700 font-bold text-[11px] mb-1">
                 <FileText className="w-4 h-4 text-purple-600" />
-                <span>मान्यता (Validity)</span>
+                <span>{isHindi ? 'मान्यता (Validity)' : 'Validity'}</span>
               </div>
               <div className="text-xs sm:text-sm font-bold text-purple-900">
-                {doc.validity || 'आजीवन'}
+                {docValidity}
               </div>
             </div>
           </div>
 
           {/* Description */}
           <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 leading-relaxed text-xs sm:text-sm">
-            {doc.description_hi}
+            {docDesc}
           </div>
 
           {/* Tout Warning Banner */}
-          {doc.toutWarning_hi && (
+          {docWarning && (
             <div className="p-3.5 rounded-xl bg-rose-50 border-2 border-rose-200 text-rose-900 flex items-start gap-2.5">
               <ShieldAlert className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
               <div className="space-y-0.5 text-xs">
                 <strong className="font-extrabold text-rose-800 uppercase block tracking-wider text-[10px]">
-                  सावधानी व सतर्कता (Anti-Fraud Advisory)
+                  {isHindi ? 'सावधानी व सतर्कता (Anti-Fraud Advisory)' : 'Anti-Fraud Advisory & Warning'}
                 </strong>
-                <p className="leading-relaxed">{doc.toutWarning_hi}</p>
+                <p className="leading-relaxed">{docWarning}</p>
               </div>
             </div>
           )}
@@ -128,10 +145,10 @@ export default function MissingDocumentResolverModal({
           <div className="space-y-2">
             <h4 className="font-extrabold text-[#173B57] text-xs uppercase tracking-wide flex items-center gap-1.5">
               <FileText className="w-3.5 h-3.5 text-[#0F766E]" />
-              <span>आवेदन के लिए क्या-क्या साथ ले जाएं:</span>
+              <span>{isHindi ? 'आवेदन के लिए क्या-क्या साथ ले जाएं:' : 'Required Documents Checklist to Carry:'}</span>
             </h4>
             <ul className="grid grid-cols-1 gap-2">
-              {doc.requiredDocs_hi.map((req, i) => (
+              {docRequired.map((req, i) => (
                 <li key={i} className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-700">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                   <span>{req}</span>
@@ -144,7 +161,7 @@ export default function MissingDocumentResolverModal({
           <div className="space-y-2.5">
             <h4 className="font-extrabold text-[#173B57] text-xs uppercase tracking-wide flex items-center gap-1.5">
               <ExternalLink className="w-3.5 h-3.5 text-[#0F766E]" />
-              <span>आधिकारिक सरकारी ई-डिस्ट्रिक्ट पोर्टल लिंक्स (Direct Online Apply):</span>
+              <span>{isHindi ? 'आधिकारिक सरकारी ई-डिस्ट्रिक्ट पोर्टल लिंक्स (Direct Online Apply):' : 'Official Government e-District & RTPS Direct Portal Links:'}</span>
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {doc.statePortals.map((portal, idx) => (
@@ -180,7 +197,7 @@ export default function MissingDocumentResolverModal({
             className="px-4 py-2.5 rounded-xl bg-[#0F766E] hover:bg-[#115E59] text-white font-bold transition flex items-center gap-2 shadow-sm"
           >
             <MapPin className="w-4 h-4" />
-            <span>🗺️ नज़दीकी सीएससी / बैंक शाखा देखें</span>
+            <span>{isHindi ? '🗺️ नज़दीकी सीएससी / बैंक शाखा देखें' : '🗺️ Locate Nearby CSC / Bank Branch'}</span>
           </button>
 
           <button
@@ -188,7 +205,7 @@ export default function MissingDocumentResolverModal({
             onClick={onClose}
             className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-bold border border-slate-300 transition"
           >
-            बंद करें
+            {isHindi ? 'बंद करें' : 'Close'}
           </button>
         </div>
 

@@ -28,7 +28,7 @@ import {
 import DocumentOCRUploadZone from '../components/DocumentOCRUploadZone';
 
 export default function LandingPage({ onOpenAiModal }) {
-  const { t } = useLanguage();
+  const { t, isHindi } = useLanguage();
   const navigate = useNavigate();
 
   const [isSnapModalOpen, setIsSnapModalOpen] = useState(false);
@@ -191,13 +191,15 @@ export default function LandingPage({ onOpenAiModal }) {
         <div className="text-center max-w-2xl mx-auto mb-10 space-y-2">
           <div className="inline-flex items-center gap-1 text-xs font-bold text-[#0F766E] uppercase tracking-wider">
             <Award className="w-3.5 h-3.5" />
-            Public Service Innovation
+            {isHindi ? 'सार्वजनिक सेवा नवाचार' : 'Public Service Innovation'}
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-[#173B57]">
-            Empowering Marginalized & Small Entrepreneurs
+            {isHindi ? 'वंचित व छोटे उद्यमियों का सशक्तीकरण' : 'Empowering Marginalized & Small Entrepreneurs'}
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-            Translating complex central and state government policy criteria into simple, transparent, and actionable financial opportunities.
+            {isHindi 
+              ? 'जटिल केंद्रीय व राज्य नीति नियमों को पारदर्शी, सरल व त्वरित वित्तीय अवसरों में बदलना।' 
+              : 'Translating complex central and state government policy criteria into simple, transparent, and actionable financial opportunities.'}
           </p>
         </div>
 
@@ -223,16 +225,28 @@ export default function LandingPage({ onOpenAiModal }) {
             <div className="w-12 h-12 rounded-xl bg-[#F0FDFA] text-[#0F766E] border border-[#CCFBF1] flex items-center justify-center font-bold">
               <FileCheck className="w-6 h-6" />
             </div>
-            <h3 className="font-bold text-lg text-[#173B57]">DocVerifier AI & OCR</h3>
-            <p className="text-xs text-slate-600 leading-relaxed">Scan Aadhaar, Income & Udyam certificates for instant authenticity verification and auto-profile completion.</p>
+            <h3 className="font-bold text-lg text-[#173B57]">
+              {isHindi ? 'दस्तावेज़ सत्यापन AI और OCR' : 'DocVerifier AI & OCR'}
+            </h3>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              {isHindi 
+                ? 'आधार, आय और उद्यम प्रमाण पत्र स्कैन कर तुरंत प्रामाणिकता जांचें और प्रोफ़ाइल भरें।' 
+                : 'Scan Aadhaar, Income & Udyam certificates for instant authenticity verification and auto-profile completion.'}
+            </p>
           </div>
 
           <div className="p-6 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm hover:border-[#0F766E] transition space-y-3">
             <div className="w-12 h-12 rounded-xl bg-[#F0FDFA] text-[#0F766E] border border-[#CCFBF1] flex items-center justify-center font-bold">
               <ShieldCheck className="w-6 h-6" />
             </div>
-            <h3 className="font-bold text-lg text-[#173B57]">Application & DBT Tracking</h3>
-            <p className="text-xs text-slate-600 leading-relaxed">Track every milestone from submission and nodal committee approval to treasury sanction and PFMS bank credit.</p>
+            <h3 className="font-bold text-lg text-[#173B57]">
+              {isHindi ? 'आवेदन एवं DBT संवितरण ट्रैकिंग' : 'Application & DBT Tracking'}
+            </h3>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              {isHindi 
+                ? 'नोडल समिति अनुमोदन से लेकर ट्रेजरी स्वीकृति और बैंक खाते में डीबीटी क्रेडिट तक ट्रैक करें।' 
+                : 'Track every milestone from submission and nodal committee approval to treasury sanction and PFMS bank credit.'}
+            </p>
           </div>
 
           <div className="p-6 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm hover:border-[#0F766E] transition space-y-3">
@@ -247,8 +261,14 @@ export default function LandingPage({ onOpenAiModal }) {
             <div className="w-12 h-12 rounded-xl bg-[#F0FDFA] text-[#0F766E] border border-[#CCFBF1] flex items-center justify-center font-bold">
               <Globe className="w-6 h-6" />
             </div>
-            <h3 className="font-bold text-lg text-[#173B57]">Multilingual Voice Assistant</h3>
-            <p className="text-xs text-slate-600 leading-relaxed">Accessible in English, Hindi, and Punjabi with speech recognition and audio playback for low-literacy citizens.</p>
+            <h3 className="font-bold text-lg text-[#173B57]">
+              {isHindi ? 'बहुभाषी वॉइस असिस्टेंट' : 'Multilingual Voice Assistant'}
+            </h3>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              {isHindi 
+                ? 'कम पढ़े-लिखे नागरिकों के लिए हिंदी, अंग्रेजी व पंजाबी में वॉइस इनपुट व ऑडियो प्लेबैक।' 
+                : 'Accessible in English, Hindi, and Punjabi with speech recognition and audio playback for low-literacy citizens.'}
+            </p>
           </div>
 
         </div>
@@ -259,21 +279,61 @@ export default function LandingPage({ onOpenAiModal }) {
         <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 sm:p-10 shadow-sm space-y-8">
           
           <div className="text-center max-w-xl mx-auto space-y-1">
-            <span className="text-xs font-bold text-[#0F766E] uppercase tracking-wider">Clear & Transparent Journey</span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#173B57]">How Yojna दृष्टि Works</h2>
-            <p className="text-xs text-slate-500">From single profile input to official fund disbursal in 8 structured steps</p>
+            <span className="text-xs font-bold text-[#0F766E] uppercase tracking-wider">
+              {isHindi ? 'पारदर्शी व सुगम यात्रा' : 'Clear & Transparent Journey'}
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#173B57]">
+              {isHindi ? 'योजना दृष्टि कैसे काम करता है' : 'How Yojna दृष्टि Works'}
+            </h2>
+            <p className="text-xs text-slate-500">
+              {isHindi 
+                ? 'एकल प्रोफ़ाइल इनपुट से लेकर बैंक खाते में आधिकारिक संवितरण तक 8 चरण' 
+                : 'From single profile input to official fund disbursal in 8 structured steps'}
+            </p>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
             {[
-              { num: '01', title: 'Tell Us About Yourself', desc: 'Enter personal & category details once' },
-              { num: '02', title: 'Add Enterprise Scope', desc: 'Business stage, sector, turnover & Udyam' },
-              { num: '03', title: 'Eligibility Filtering', desc: 'Rule-based hard criteria verification' },
-              { num: '04', title: 'Compatibility Score', desc: 'Weighted scoring for maximum benefits' },
-              { num: '05', title: 'Personalized Matches', desc: 'Classified into 🟢 Eligible & 🟡 Verify' },
-              { num: '06', title: 'DocVerifier AI Scan', desc: 'Instant OCR check on certificates' },
-              { num: '07', title: 'Channel Partner Map', desc: 'Locate authorized nodal bank branches' },
-              { num: '08', title: 'End-to-End Tracking', desc: 'Real-time PFMS treasury & DBT updates' }
+              { 
+                num: '01', 
+                title: isHindi ? 'अपनी बुनियादी जानकारी बताएं' : 'Tell Us About Yourself', 
+                desc: isHindi ? 'व्यक्तिगत और श्रेणी विवरण एक बार दर्ज करें' : 'Enter personal & category details once' 
+              },
+              { 
+                num: '02', 
+                title: isHindi ? 'व्यवसाय का दायरा जोड़ें' : 'Add Enterprise Scope', 
+                desc: isHindi ? 'व्यवसाय स्तर, क्षेत्र, टर्नओवर और उद्यम स्थिति' : 'Business stage, sector, turnover & Udyam' 
+              },
+              { 
+                num: '03', 
+                title: isHindi ? 'सख्त पात्रता फ़िल्टरिंग' : 'Eligibility Filtering', 
+                desc: isHindi ? 'नियम-आधारित सरकारी मानदंडों का सत्यापन' : 'Rule-based hard criteria verification' 
+              },
+              { 
+                num: '04', 
+                title: isHindi ? 'अनुकूलता स्कोर गणना' : 'Compatibility Score', 
+                desc: isHindi ? 'अधिकतम लाभ हेतु भारित स्कोरिंग' : 'Weighted scoring for maximum benefits' 
+              },
+              { 
+                num: '05', 
+                title: isHindi ? 'व्यक्तिगत योजना मिलान' : 'Personalized Matches', 
+                desc: isHindi ? '🟢 पूर्णतः पात्र और 🟡 सत्यापन आवश्यक में वर्गीकृत' : 'Classified into 🟢 Eligible & 🟡 Verify' 
+              },
+              { 
+                num: '06', 
+                title: isHindi ? 'दस्तावेज़ AI व OCR स्कैन' : 'DocVerifier AI Scan', 
+                desc: isHindi ? 'प्रमाण पत्रों की तुरंत सत्यता जांच' : 'Instant OCR check on certificates' 
+              },
+              { 
+                num: '07', 
+                title: isHindi ? 'चैनल पार्टनर बैंक मैप' : 'Channel Partner Map', 
+                desc: isHindi ? 'नज़दीकी अधिकृत नोडल बैंक शाखाएं खोजें' : 'Locate authorized nodal bank branches' 
+              },
+              { 
+                num: '08', 
+                title: isHindi ? 'संवितरण व PFMS ट्रैकिंग' : 'End-to-End Tracking', 
+                desc: isHindi ? 'ट्रेजरी स्वीकृति और बैंक खाते में DBT अपडेट' : 'Real-time PFMS treasury & DBT updates' 
+              }
             ].map((step, i) => (
               <div key={i} className="p-4 rounded-xl bg-[#F7FAFA] border border-[#E2E8F0] hover:border-[#14B8A6] transition space-y-2">
                 <span className="text-xs font-black text-[#0F766E] font-mono bg-[#CCFBF1] px-2 py-0.5 rounded">{step.num}</span>
@@ -326,13 +386,17 @@ export default function LandingPage({ onOpenAiModal }) {
               <div className="space-y-1">
                 <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 text-[10px] font-black uppercase tracking-wider border border-amber-300/30">
                   <Camera className="w-3 h-3 text-amber-300" />
-                  <span>ज़ीरो-टाइपिंग योजना खोज (Zero-Typing)</span>
+                  <span>{isHindi ? 'ज़ीरो-टाइपिंग योजना खोज (Zero-Typing)' : 'Zero-Typing Scheme Search'}</span>
                 </div>
                 <h2 className="text-xl sm:text-2xl font-black text-white">
-                  📸 सिर्फ कागज़ की फोटो डालें — कोई फॉर्म नहीं भरना
+                  {isHindi 
+                    ? '📸 सिर्फ कागज़ की फोटो डालें — कोई फॉर्म नहीं भरना' 
+                    : '📸 Snap Document Photo — No Manual Form Filling'}
                 </h2>
                 <p className="text-xs text-slate-200">
-                  अपना आधार कार्ड, आय प्रमाण पत्र या उद्यम सर्टिफिकेट अपलोड करें। AI अपने आप जानकारी निकालकर तुरंत योग्य योजनाएं दिखाएगा।
+                  {isHindi 
+                    ? 'अपना आधार कार्ड, आय प्रमाण पत्र या उद्यम सर्टिफिकेट अपलोड करें। AI अपने आप जानकारी निकालकर तुरंत योग्य योजनाएं दिखाएगा।' 
+                    : 'Upload a photo of your Aadhaar, Income, or Udyam Certificate. AI automatically extracts fields and discovers eligible schemes instantly.'}
                 </p>
               </div>
 
@@ -356,7 +420,9 @@ export default function LandingPage({ onOpenAiModal }) {
               {/* Action Bar inside modal */}
               <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
                 <div className="text-xs text-slate-500 text-center sm:text-left">
-                  🔒 सुरक्षित सरकारी प्रोटोकॉल। दस्तावेज़ केवल योजना पात्रता मिलान के लिए पढ़े जाते हैं।
+                  {isHindi 
+                    ? '🔒 सुरक्षित सरकारी प्रोटोकॉल। दस्तावेज़ केवल योजना पात्रता मिलान के लिए पढ़े जाते हैं।' 
+                    : '🔒 Secure government protocol. Documents are evaluated solely for scheme eligibility assessment.'}
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -368,7 +434,7 @@ export default function LandingPage({ onOpenAiModal }) {
                     }}
                     className="px-5 py-2.5 rounded-xl bg-[#0F766E] hover:bg-[#115E59] text-white font-extrabold text-xs shadow-md transition flex items-center gap-2 active:scale-95"
                   >
-                    <span>सीधे योजनाएं देखें →</span>
+                    <span>{isHindi ? 'सीधे योजनाएं देखें →' : 'View Schemes Directly →'}</span>
                   </button>
                 </div>
               </div>

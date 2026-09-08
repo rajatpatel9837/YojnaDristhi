@@ -25,7 +25,7 @@ import InlineMicrophoneButton from '../components/InlineMicrophoneButton';
 import { WIZARD_VOICE_SCHEMA } from '../voice/wizardVoiceSchema';
 
 export default function EntrepreneurWizard() {
-  const { t } = useLanguage();
+  const { t, isHindi, isEnglish } = useLanguage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -215,7 +215,9 @@ export default function EntrepreneurWizard() {
             <Sparkles className="w-4 h-4 text-[#0F766E]" />
             {t('wizard_title', 'Eligibility Assessment Wizard')}
           </div>
-          <h1 className="text-xl font-extrabold text-[#173B57]">Step {currentStep} of 7 — {steps[currentStep - 1]?.label}</h1>
+          <h1 className="text-xl font-extrabold text-[#173B57]">
+            {isHindi ? `चरण ${currentStep} / 7 — ${steps[currentStep - 1]?.label}` : `Step ${currentStep} of 7 — ${steps[currentStep - 1]?.label}`}
+          </h1>
           <p className="text-xs text-slate-500">{t('wizard_step_desc', 'Discover and verify matching government schemes')}</p>
         </div>
 
@@ -238,9 +240,9 @@ export default function EntrepreneurWizard() {
             type="button"
             onClick={() => window.dispatchEvent(new CustomEvent('yojnasetu_open_call_assistant'))}
             className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm border border-emerald-500"
-            title="कॉल द्वारा सहायता पाएं"
+            title={isHindi ? "कॉल द्वारा सहायता पाएं" : "Get assistance by phone call"}
           >
-            <span>📞 कॉल द्वारा सहायता पाएं</span>
+            <span>{t('wizard_call_btn', isHindi ? '📞 कॉल द्वारा सहायता पाएं' : '📞 Call Helpline')}</span>
           </button>
 
           <button
@@ -302,12 +304,12 @@ export default function EntrepreneurWizard() {
         {/* STEP 1: Personal Information */}
         {currentStep === 1 && (
           <div className="space-y-4">
-            <h3 className="text-base font-bold text-[#173B57] mb-4 border-b border-[#E2E8F0] pb-2">Step 1 — Personal Information</h3>
+            <h3 className="text-base font-bold text-[#173B57] mb-4 border-b border-[#E2E8F0] pb-2">{t('step_1_title', 'Step 1 — Personal Information')}</h3>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label htmlFor="fullName" className="block text-slate-600 font-semibold">Full Name</label>
+                  <label htmlFor="fullName" className="block text-slate-600 font-semibold">{t('field_full_name', 'Full Name')}</label>
                   <InlineMicrophoneButton
                     fieldDef={getVoiceFieldDef('fullName')}
                     onValueCaptured={(val) => handleInputChange('fullName', val)}
@@ -319,14 +321,14 @@ export default function EntrepreneurWizard() {
                   type="text"
                   value={formData.fullName}
                   onChange={(e) => handleInputChange('fullName', e.target.value)}
-                  placeholder="e.g. Sunita Devi"
+                  placeholder={t('field_full_name_placeholder', 'e.g. Sunita Devi')}
                   className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('fullName')}`}
                 />
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label htmlFor="age" className="block text-slate-600 font-semibold">Age (Years)</label>
+                  <label htmlFor="age" className="block text-slate-600 font-semibold">{t('field_age', 'Age (Years)')}</label>
                   <InlineMicrophoneButton
                     fieldDef={getVoiceFieldDef('age')}
                     onValueCaptured={(val) => handleInputChange('age', val)}
@@ -344,7 +346,7 @@ export default function EntrepreneurWizard() {
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label htmlFor="gender" className="block text-slate-600 font-semibold">Gender</label>
+                  <label htmlFor="gender" className="block text-slate-600 font-semibold">{t('field_gender', 'Gender')}</label>
                   <InlineMicrophoneButton
                     fieldDef={getVoiceFieldDef('gender')}
                     onValueCaptured={(val) => handleInputChange('gender', val)}
@@ -357,16 +359,16 @@ export default function EntrepreneurWizard() {
                   onChange={(e) => handleInputChange('gender', e.target.value)}
                   className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('gender')}`}
                 >
-                  <option value="Female">Female</option>
-                  <option value="Male">Male</option>
-                  <option value="Transgender">Transgender</option>
-                  <option value="Other">Other</option>
+                  <option value="Female">{t('field_gender_female', 'Female')}</option>
+                  <option value="Male">{t('field_gender_male', 'Male')}</option>
+                  <option value="Transgender">{t('field_gender_trans', 'Transgender')}</option>
+                  <option value="Other">{t('field_gender_other', 'Other')}</option>
                 </select>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label htmlFor="state" className="block text-slate-600 font-semibold">State</label>
+                  <label htmlFor="state" className="block text-slate-600 font-semibold">{t('field_state', 'State')}</label>
                   <InlineMicrophoneButton
                     fieldDef={getVoiceFieldDef('state')}
                     onValueCaptured={(val) => handleInputChange('state', val)}
@@ -379,19 +381,19 @@ export default function EntrepreneurWizard() {
                   onChange={(e) => handleInputChange('state', e.target.value)}
                   className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('state')}`}
                 >
-                  <option value="Bihar">Bihar</option>
-                  <option value="Punjab">Punjab</option>
-                  <option value="Uttar Pradesh">Uttar Pradesh</option>
-                  <option value="Jharkhand">Jharkhand</option>
-                  <option value="Maharashtra">Maharashtra</option>
-                  <option value="Rajasthan">Rajasthan</option>
-                  <option value="Madhya Pradesh">Madhya Pradesh</option>
+                  <option value="Bihar">{isHindi ? 'बिहार' : 'Bihar'}</option>
+                  <option value="Punjab">{isHindi ? 'पंजाब' : 'Punjab'}</option>
+                  <option value="Uttar Pradesh">{isHindi ? 'उत्तर प्रदेश' : 'Uttar Pradesh'}</option>
+                  <option value="Jharkhand">{isHindi ? 'झारखंड' : 'Jharkhand'}</option>
+                  <option value="Maharashtra">{isHindi ? 'महाराष्ट्र' : 'Maharashtra'}</option>
+                  <option value="Rajasthan">{isHindi ? 'राजस्थान' : 'Rajasthan'}</option>
+                  <option value="Madhya Pradesh">{isHindi ? 'मध्य प्रदेश' : 'Madhya Pradesh'}</option>
                 </select>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label htmlFor="district" className="block text-slate-600 font-semibold">District / City</label>
+                  <label htmlFor="district" className="block text-slate-600 font-semibold">{t('field_district', 'District / City')}</label>
                   <InlineMicrophoneButton
                     fieldDef={getVoiceFieldDef('district')}
                     onValueCaptured={(val) => handleInputChange('district', val)}
@@ -403,13 +405,14 @@ export default function EntrepreneurWizard() {
                   type="text"
                   value={formData.district}
                   onChange={(e) => handleInputChange('district', e.target.value)}
+                  placeholder={isHindi ? "जैसे: पटना या लुधियाना" : "e.g. Patna"}
                   className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('district')}`}
                 />
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label htmlFor="areaType" className="block text-slate-600 font-semibold">Area Type</label>
+                  <label htmlFor="areaType" className="block text-slate-600 font-semibold">{t('field_area_type', 'Area Type')}</label>
                   <InlineMicrophoneButton
                     fieldDef={getVoiceFieldDef('areaType')}
                     onValueCaptured={(val) => handleInputChange('areaType', val)}
@@ -422,8 +425,8 @@ export default function EntrepreneurWizard() {
                   onChange={(e) => handleInputChange('areaType', e.target.value)}
                   className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('areaType')}`}
                 >
-                  <option value="Rural">Rural</option>
-                  <option value="Urban">Urban</option>
+                  <option value="Rural">{t('field_area_rural', 'Rural')}</option>
+                  <option value="Urban">{t('field_area_urban', 'Urban')}</option>
                 </select>
               </div>
             </div>
@@ -433,12 +436,12 @@ export default function EntrepreneurWizard() {
         {/* STEP 2: Business Details */}
         {currentStep === 2 && (
           <div className="space-y-4">
-            <h3 className="text-base font-bold text-[#173B57] mb-4 border-b border-[#E2E8F0] pb-2">Step 2 — Business Details</h3>
+            <h3 className="text-base font-bold text-[#173B57] mb-4 border-b border-[#E2E8F0] pb-2">{t('step_2_title', 'Step 2 — Business Details')}</h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label htmlFor="businessName" className="block text-slate-600 font-semibold">Business Name</label>
+                  <label htmlFor="businessName" className="block text-slate-600 font-semibold">{t('field_business_name', 'Business Name')}</label>
                   <InlineMicrophoneButton
                     fieldDef={getVoiceFieldDef('businessName')}
                     onValueCaptured={(val) => handleInputChange('businessName', val)}
@@ -450,14 +453,14 @@ export default function EntrepreneurWizard() {
                   type="text"
                   value={formData.businessName}
                   onChange={(e) => handleInputChange('businessName', e.target.value)}
-                  placeholder="e.g. Sunita Food Products"
+                  placeholder={t('field_business_name_placeholder', 'e.g. Sunita Food Products')}
                   className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('businessName')}`}
                 />
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label htmlFor="sector" className="block text-slate-600 font-semibold">Business Sector</label>
+                  <label htmlFor="sector" className="block text-slate-600 font-semibold">{t('field_sector', 'Business Sector')}</label>
                   <InlineMicrophoneButton
                     fieldDef={getVoiceFieldDef('sector')}
                     onValueCaptured={(val) => handleInputChange('sector', val)}
@@ -470,20 +473,20 @@ export default function EntrepreneurWizard() {
                   onChange={(e) => handleInputChange('sector', e.target.value)}
                   className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('sector')}`}
                 >
-                  <option value="Food processing">Food processing</option>
-                  <option value="Manufacturing">Manufacturing</option>
-                  <option value="Services">Services</option>
-                  <option value="Dairy">Dairy</option>
-                  <option value="Retail">Retail</option>
-                  <option value="Textiles">Textiles / Handloom</option>
-                  <option value="Agriculture allied">Agriculture allied</option>
-                  <option value="Trading">Trading</option>
+                  <option value="Food processing">{isHindi ? 'खाद्य प्रसंस्करण' : 'Food processing'}</option>
+                  <option value="Manufacturing">{isHindi ? 'विनिर्माण / उत्पादन' : 'Manufacturing'}</option>
+                  <option value="Services">{isHindi ? 'सेवा क्षेत्र' : 'Services'}</option>
+                  <option value="Dairy">{isHindi ? 'डेयरी व पशुपालन' : 'Dairy'}</option>
+                  <option value="Retail">{isHindi ? 'खुदरा व्यापार' : 'Retail'}</option>
+                  <option value="Textiles">{isHindi ? 'वस्त्र एवं हथकरघा' : 'Textiles / Handloom'}</option>
+                  <option value="Agriculture allied">{isHindi ? 'कृषि आधारित' : 'Agriculture allied'}</option>
+                  <option value="Trading">{isHindi ? 'थोक व खुदरा व्यापार' : 'Trading'}</option>
                 </select>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label htmlFor="stage" className="block text-slate-600 font-semibold">Business Stage</label>
+                  <label htmlFor="stage" className="block text-slate-600 font-semibold">{t('field_stage', 'Business Stage')}</label>
                   <InlineMicrophoneButton
                     fieldDef={getVoiceFieldDef('stage')}
                     onValueCaptured={(val) => handleInputChange('stage', val)}
@@ -496,16 +499,16 @@ export default function EntrepreneurWizard() {
                   onChange={(e) => handleInputChange('stage', e.target.value)}
                   className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('stage')}`}
                 >
-                  <option value="Idea">Idea</option>
-                  <option value="New business">New business</option>
-                  <option value="Existing business">Existing business</option>
-                  <option value="Expansion">Expansion</option>
+                  <option value="Idea">{t('field_stage_idea', 'Idea')}</option>
+                  <option value="New business">{t('field_stage_new', 'New business')}</option>
+                  <option value="Existing business">{t('field_stage_existing', 'Existing business')}</option>
+                  <option value="Expansion">{t('field_stage_expansion', 'Expansion')}</option>
                 </select>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label htmlFor="annualTurnover" className="block text-slate-600 font-semibold">Annual Turnover (₹)</label>
+                  <label htmlFor="annualTurnover" className="block text-slate-600 font-semibold">{t('field_annual_turnover', 'Annual Turnover (₹)')}</label>
                   <InlineMicrophoneButton
                     fieldDef={getVoiceFieldDef('annualTurnover')}
                     onValueCaptured={(val) => handleInputChange('annualTurnover', val)}
@@ -523,7 +526,7 @@ export default function EntrepreneurWizard() {
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label htmlFor="udyamStatus" className="block text-slate-600 font-semibold">Udyam Registration Status</label>
+                  <label htmlFor="udyamStatus" className="block text-slate-600 font-semibold">{t('field_udyam_status', 'Udyam Registration Status')}</label>
                   <InlineMicrophoneButton
                     fieldDef={getVoiceFieldDef('udyamStatus')}
                     onValueCaptured={(val) => handleInputChange('udyamStatus', val)}
@@ -536,15 +539,15 @@ export default function EntrepreneurWizard() {
                   onChange={(e) => handleInputChange('udyamStatus', e.target.value)}
                   className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('udyamStatus')}`}
                 >
-                  <option value="Registered">Registered</option>
-                  <option value="Not Registered">Not Registered</option>
-                  <option value="Applied">Applied</option>
+                  <option value="Registered">{t('field_udyam_registered', 'Registered')}</option>
+                  <option value="Not Registered">{t('field_udyam_not_registered', 'Not Registered')}</option>
+                  <option value="Applied">{t('field_udyam_in_process', 'Applied')}</option>
                 </select>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label htmlFor="employeesCount" className="block text-slate-600 font-semibold">Employees Count</label>
+                  <label htmlFor="employeesCount" className="block text-slate-600 font-semibold">{isHindi ? 'कर्मचारियों की संख्या' : 'Employees Count'}</label>
                   <InlineMicrophoneButton
                     fieldDef={getVoiceFieldDef('employeesCount')}
                     onValueCaptured={(val) => handleInputChange('employeesCount', val)}
@@ -566,12 +569,12 @@ export default function EntrepreneurWizard() {
         {/* STEP 3: Financial Details */}
         {currentStep === 3 && (
           <div className="space-y-4">
-            <h3 className="text-base font-bold text-[#173B57] mb-4 border-b border-[#E2E8F0] pb-2">Step 3 — Financial Information</h3>
+            <h3 className="text-base font-bold text-[#173B57] mb-4 border-b border-[#E2E8F0] pb-2">{t('step_3_title', 'Step 3 — Financial Profile')}</h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label htmlFor="familyIncome" className="block text-slate-600 font-semibold">Annual Family Income (₹)</label>
+                  <label htmlFor="familyIncome" className="block text-slate-600 font-semibold">{t('field_annual_income', 'Annual Family Income (₹)')}</label>
                   <InlineMicrophoneButton
                     fieldDef={getVoiceFieldDef('familyIncome')}
                     onValueCaptured={(val) => handleInputChange('familyIncome', val)}
@@ -589,7 +592,7 @@ export default function EntrepreneurWizard() {
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label htmlFor="ownContribution" className="block text-slate-600 font-semibold">Own Contribution / Savings (₹)</label>
+                  <label htmlFor="ownContribution" className="block text-slate-600 font-semibold">{isHindi ? 'स्वयं का अंशदान / बचत (₹)' : 'Own Contribution / Savings (₹)'}</label>
                   <InlineMicrophoneButton
                     fieldDef={getVoiceFieldDef('ownContribution')}
                     onValueCaptured={(val) => handleInputChange('ownContribution', val)}
@@ -615,7 +618,7 @@ export default function EntrepreneurWizard() {
                     onChange={(e) => handleInputChange('hasIncomeCertificate', e.target.checked)}
                     className="accent-emerald-500 w-4 h-4 rounded cursor-pointer"
                   />
-                  <label htmlFor="hasIncomeCertificate" className="text-slate-700 font-semibold cursor-pointer">Income Certificate Available</label>
+                  <label htmlFor="hasIncomeCertificate" className="text-slate-700 font-semibold cursor-pointer">{isHindi ? 'आय प्रमाण पत्र उपलब्ध है' : 'Income Certificate Available'}</label>
                 </div>
                 <InlineMicrophoneButton
                   fieldDef={getVoiceFieldDef('hasIncomeCertificate')}
@@ -633,7 +636,7 @@ export default function EntrepreneurWizard() {
                     onChange={(e) => handleInputChange('existingLoans', e.target.checked)}
                     className="accent-emerald-500 w-4 h-4 rounded cursor-pointer"
                   />
-                  <label htmlFor="existingLoans" className="text-slate-700 font-semibold cursor-pointer">Existing Business Loans Active</label>
+                  <label htmlFor="existingLoans" className="text-slate-700 font-semibold cursor-pointer">{isHindi ? 'मौजूदा बैंक ऋण सक्रिय है' : 'Existing Business Loans Active'}</label>
                 </div>
                 <InlineMicrophoneButton
                   fieldDef={getVoiceFieldDef('existingLoans')}
@@ -647,12 +650,12 @@ export default function EntrepreneurWizard() {
         {/* STEP 4: Social & Eligibility */}
         {currentStep === 4 && (
           <div className="space-y-4">
-            <h3 className="text-base font-bold text-[#173B57] mb-4 border-b border-[#E2E8F0] pb-2">Step 4 — Social & Category Details</h3>
+            <h3 className="text-base font-bold text-[#173B57] mb-4 border-b border-[#E2E8F0] pb-2">{t('step_4_title', 'Step 4 — Social & Inclusion Details')}</h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label htmlFor="category" className="block text-slate-600 font-semibold">Social Category</label>
+                  <label htmlFor="category" className="block text-slate-600 font-semibold">{t('field_category', 'Category / Social Group')}</label>
                   <InlineMicrophoneButton
                     fieldDef={getVoiceFieldDef('category')}
                     onValueCaptured={(val) => handleInputChange('category', val)}
@@ -665,11 +668,11 @@ export default function EntrepreneurWizard() {
                   onChange={(e) => handleInputChange('category', e.target.value)}
                   className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('category')}`}
                 >
-                  <option value="SC">Scheduled Caste (SC)</option>
-                  <option value="ST">Scheduled Tribe (ST)</option>
-                  <option value="OBC">Other Backward Class (OBC)</option>
-                  <option value="EWS">Economically Weaker Section (EWS)</option>
-                  <option value="General">General Category</option>
+                  <option value="SC">{isHindi ? 'अनुसूचित जाति (SC)' : 'Scheduled Caste (SC)'}</option>
+                  <option value="ST">{isHindi ? 'अनुसूचित जनजाति (ST)' : 'Scheduled Tribe (ST)'}</option>
+                  <option value="OBC">{isHindi ? 'अन्य पिछड़ा वर्ग (OBC)' : 'Other Backward Class (OBC)'}</option>
+                  <option value="EWS">{isHindi ? 'आर्थिक रूप से कमजोर वर्ग (EWS)' : 'Economically Weaker Section (EWS)'}</option>
+                  <option value="General">{isHindi ? 'सामान्य श्रेणी (General)' : 'General Category'}</option>
                 </select>
               </div>
 
@@ -684,7 +687,7 @@ export default function EntrepreneurWizard() {
                       onChange={(e) => handleInputChange('isWomanEntrepreneur', e.target.checked)}
                       className="accent-emerald-500 w-4 h-4 rounded cursor-pointer"
                     />
-                    <label htmlFor="isWomanEntrepreneur" className="text-slate-700 font-semibold cursor-pointer">Woman Entrepreneur Enterprise</label>
+                    <label htmlFor="isWomanEntrepreneur" className="text-slate-700 font-semibold cursor-pointer">{t('field_is_woman', 'Woman Entrepreneur Enterprise')}</label>
                   </div>
                   <InlineMicrophoneButton
                     fieldDef={getVoiceFieldDef('isWomanEntrepreneur')}
@@ -702,7 +705,7 @@ export default function EntrepreneurWizard() {
                       onChange={(e) => handleInputChange('isFirstGeneration', e.target.checked)}
                       className="accent-emerald-500 w-4 h-4 rounded cursor-pointer"
                     />
-                    <label htmlFor="isFirstGeneration" className="text-slate-700 font-semibold cursor-pointer">First Generation Entrepreneur</label>
+                    <label htmlFor="isFirstGeneration" className="text-slate-700 font-semibold cursor-pointer">{isHindi ? 'पहली पीढ़ी का उद्यमी (First Generation)' : 'First Generation Entrepreneur'}</label>
                   </div>
                   <InlineMicrophoneButton
                     fieldDef={getVoiceFieldDef('isFirstGeneration')}
@@ -720,7 +723,7 @@ export default function EntrepreneurWizard() {
                       onChange={(e) => handleInputChange('isPwD', e.target.checked)}
                       className="accent-emerald-500 w-4 h-4 rounded cursor-pointer"
                     />
-                    <label htmlFor="isPwD" className="text-slate-700 font-semibold cursor-pointer">Person with Benchmark Disability (PwD)</label>
+                    <label htmlFor="isPwD" className="text-slate-700 font-semibold cursor-pointer">{t('field_is_pwd', 'Person with Benchmark Disability (PwD)')}</label>
                   </div>
                   <InlineMicrophoneButton
                     fieldDef={getVoiceFieldDef('isPwD')}
@@ -735,12 +738,16 @@ export default function EntrepreneurWizard() {
         {/* STEP 5: Funding Requirements */}
         {currentStep === 5 && (
           <div className="space-y-4">
-            <h3 className="text-base font-bold text-[#173B57] mb-4 border-b border-[#E2E8F0] pb-2">Step 5 — Funding Requirements</h3>
+            <h3 className="text-base font-bold text-[#173B57] mb-4 border-b border-[#E2E8F0] pb-2">
+              {t('step_5_title', 'Step 5 — Funding Requirements')}
+            </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label htmlFor="fundingAmount" className="block text-slate-600 font-semibold">Total Required Funding (₹)</label>
+                  <label htmlFor="fundingAmount" className="block text-slate-600 font-semibold">
+                    {t('field_funding_amount', 'Total Required Funding (₹)')}
+                  </label>
                   <InlineMicrophoneButton
                     fieldDef={getVoiceFieldDef('fundingAmount')}
                     onValueCaptured={(val) => handleInputChange('fundingAmount', val)}
@@ -758,7 +765,9 @@ export default function EntrepreneurWizard() {
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label htmlFor="fundingPurpose" className="block text-slate-600 font-semibold">Funding Purpose</label>
+                  <label htmlFor="fundingPurpose" className="block text-slate-600 font-semibold">
+                    {t('field_funding_purpose', 'Funding Purpose')}
+                  </label>
                   <InlineMicrophoneButton
                     fieldDef={getVoiceFieldDef('fundingPurpose')}
                     onValueCaptured={(val) => handleInputChange('fundingPurpose', val)}
@@ -770,7 +779,7 @@ export default function EntrepreneurWizard() {
                   type="text"
                   value={formData.fundingPurpose}
                   onChange={(e) => handleInputChange('fundingPurpose', e.target.value)}
-                  placeholder="e.g. Machinery procurement"
+                  placeholder={isHindi ? 'जैसे: मशीनरी खरीद या कच्चा माल' : 'e.g. Machinery procurement'}
                   className={`w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1] ${getVoiceActiveBorder('fundingPurpose')}`}
                 />
               </div>
@@ -781,20 +790,26 @@ export default function EntrepreneurWizard() {
         {/* STEP 6: Document Readiness */}
         {currentStep === 6 && (
           <div className="space-y-4">
-            <h3 className="text-base font-bold text-[#173B57] mb-2 border-b border-[#E2E8F0] pb-2">Step 6 — Document Readiness</h3>
-            <p className="text-slate-400 text-xs">Select documents you currently possess. Missing documents will be listed in your readiness gap analysis.</p>
+            <h3 className="text-base font-bold text-[#173B57] mb-2 border-b border-[#E2E8F0] pb-2">
+              {t('step_6_title', 'Step 6 — Document Readiness')}
+            </h3>
+            <p className="text-slate-500 text-xs">
+              {isHindi ? 'वे दस्तावेज़ चुनें जो वर्तमान में आपके पास हैं। छूटे हुए दस्तावेज़ों की सूची आपकी पात्रता रिपोर्ट में दी जाएगी।' : 'Select documents you currently possess. Missing documents will be listed in your readiness gap analysis.'}
+            </p>
 
             <div className="p-3.5 rounded-xl bg-gradient-to-r from-emerald-950/40 via-slate-900 to-sky-950/40 border border-emerald-500/30 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-emerald-300 text-xs">
                 <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Need instant AI file scanning & auto-extraction? Try <strong>DocVerifier AI</strong> at the top bar.</span>
+                <span>
+                  {isHindi ? 'त्वरित AI फ़ाइल स्कैनिंग और ऑटो-एक्सट्रैक्शन चाहिए? ऊपर दिए गए डॉक-वेरीफ़ायर AI को आज़माएँ।' : 'Need instant AI file scanning & auto-extraction? Try DocVerifier AI at the top bar.'}
+                </span>
               </div>
               <button
                 type="button"
                 onClick={() => navigate('/doc-verify')}
                 className="px-3 py-1.5 rounded-lg bg-[#0F766E] hover:bg-[#115E59] text-white font-bold text-[11px] shrink-0 transition shadow-sm"
               >
-                Open DocVerifier AI →
+                {isHindi ? 'डॉक-वेरीफ़ायर AI खोलें →' : 'Open DocVerifier AI →'}
               </button>
             </div>
 
@@ -809,6 +824,15 @@ export default function EntrepreneurWizard() {
                 'Bank Statement'
               ].map((doc, idx) => {
                 const isSelected = (formData.documentsAvailable || []).includes(doc);
+                const docLabels = {
+                  'Income Certificate': isHindi ? 'आय प्रमाण पत्र' : 'Income Certificate',
+                  'Category Certificate': isHindi ? 'जाति / श्रेणी प्रमाण पत्र' : 'Category Certificate',
+                  'Business Registration': isHindi ? 'व्यवसाय पंजीकरण प्रमाण' : 'Business Registration',
+                  'Aadhaar/Identity': isHindi ? 'आधार कार्ड / पहचान प्रमाण' : 'Aadhaar / Identity Proof',
+                  'Udyam Certificate': isHindi ? 'उद्यम आधार प्रमाण पत्र' : 'Udyam Certificate',
+                  'Project Report': isHindi ? 'प्रोजेक्ट रिपोर्ट (DPR)' : 'Project Report (DPR)',
+                  'Bank Statement': isHindi ? 'बैंक खाता विवरण (पासबुक)' : 'Bank Statement / Passbook'
+                };
                 return (
                   <div
                     key={idx}
@@ -819,7 +843,7 @@ export default function EntrepreneurWizard() {
                         : 'bg-white border-[#E2E8F0] text-slate-600 hover:border-[#14B8A6]'
                     }`}
                   >
-                    <span>{doc}</span>
+                    <span>{docLabels[doc] || doc}</span>
                     {isSelected ? <CheckCircle2 className="w-4 h-4 text-[#0F766E]" /> : <div className="w-4 h-4 rounded-full border border-slate-300" />}
                   </div>
                 );
@@ -831,26 +855,42 @@ export default function EntrepreneurWizard() {
         {/* STEP 7: Review & Match */}
         {currentStep === 7 && (
           <div className="space-y-6">
-            <h2 className="text-base font-bold text-[#173B57] border-b border-[#E2E8F0] pb-2">Step 7 — Review Your Profile</h2>
+            <h2 className="text-base font-bold text-[#173B57] border-b border-[#E2E8F0] pb-2">
+              {t('step_7_title', 'Step 7 — Review Your Profile')}
+            </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
               <div className="p-4 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] space-y-1">
-                <div className="font-bold text-[#0F766E] uppercase text-[10px]">Personal & Social Category</div>
-                <div className="text-[#173B57] font-semibold">{formData.fullName} ({formData.age} yrs, {formData.gender})</div>
-                <div className="text-slate-600">Category: <span className="font-bold text-[#173B57]">{formData.category}</span></div>
-                <div className="text-slate-600">Location: {formData.district}, {formData.state} ({formData.areaType})</div>
+                <div className="font-bold text-[#0F766E] uppercase text-[10px]">
+                  {isHindi ? 'व्यक्तिगत एवं सामाजिक विवरण' : 'Personal & Social Category'}
+                </div>
+                <div className="text-[#173B57] font-semibold">
+                  {formData.fullName} ({formData.age} {isHindi ? 'वर्ष' : 'yrs'}, {formData.gender === 'Female' ? (isHindi ? 'महिला' : 'Female') : (isHindi ? 'पुरुष' : 'Male')})
+                </div>
+                <div className="text-slate-600">
+                  {isHindi ? 'श्रेणी' : 'Category'}: <span className="font-bold text-[#173B57]">{formData.category}</span>
+                </div>
+                <div className="text-slate-600">
+                  {isHindi ? 'स्थान' : 'Location'}: {formData.district}, {formData.state} ({formData.areaType})
+                </div>
               </div>
 
               <div className="p-4 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] space-y-1">
-                <div className="font-bold text-[#173B57] uppercase text-[10px]">Business & Funding Need</div>
-                <div className="text-[#173B57] font-semibold">{formData.businessName || 'Proposed Enterprise'}</div>
-                <div className="text-slate-600">Sector: {formData.sector} ({formData.stage})</div>
-                <div className="text-slate-600">Funding Need: <span className="font-bold text-[#0F766E]">₹{formData.fundingAmount.toLocaleString('en-IN')}</span></div>
+                <div className="font-bold text-[#173B57] uppercase text-[10px]">
+                  {isHindi ? 'व्यवसाय एवं ऋण आवश्यकता' : 'Business & Funding Need'}
+                </div>
+                <div className="text-[#173B57] font-semibold">{formData.businessName || (isHindi ? 'प्रस्तावित उद्यम' : 'Proposed Enterprise')}</div>
+                <div className="text-slate-600">
+                  {isHindi ? 'क्षेत्र' : 'Sector'}: {formData.sector} ({formData.stage})
+                </div>
+                <div className="text-slate-600">
+                  {isHindi ? 'ऋण आवश्यकता' : 'Funding Need'}: <span className="font-bold text-[#0F766E]">₹{formData.fundingAmount.toLocaleString('en-IN')}</span>
+                </div>
               </div>
             </div>
 
             <div className="p-4 rounded-xl bg-[#F0FDFA] border border-[#CCFBF1] text-[#115E59] text-center font-bold">
-              Ready to evaluate explainable eligibility across 15+ central & state schemes!
+              {isHindi ? '15+ केंद्रीय और राज्य योजनाओं में पारदर्शी पात्रता की जांच के लिए तैयार!' : 'Ready to evaluate explainable eligibility across 15+ central & state schemes!'}
             </div>
           </div>
         )}

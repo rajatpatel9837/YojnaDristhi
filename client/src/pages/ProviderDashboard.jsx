@@ -24,8 +24,10 @@ import {
   ArrowRight,
   ExternalLink
 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function ProviderDashboard() {
+  const { t, isHindi } = useLanguage();
   const [activeTab, setActiveTab] = useState('VERIFICATION'); // VERIFICATION, OPPORTUNITIES, VAULT, AUDIT
   const [org, setOrg] = useState(null);
   const [opportunities, setOpportunities] = useState([]);
@@ -184,11 +186,13 @@ export default function ProviderDashboard() {
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
             <Building2 className="w-5 h-5 text-[#0F766E]" />
-            <h1 className="text-2xl font-black text-[#173B57]">{org?.legalName || org?.name || 'Company & CSR Portal'}</h1>
+            <h1 className="text-2xl font-black text-[#173B57]">{org?.legalName || org?.name || (isHindi ? 'कंपनी एवं CSR पोर्टल' : 'Company & CSR Portal')}</h1>
             <VerificationBadge status={org?.verification?.status || 'PENDING'} type="ORGANIZATION" />
           </div>
           <p className="text-xs text-slate-600 max-w-2xl">
-            Complete Organization KYB verification, submit official documents, and manage verified CSR opportunities & grants for Indian entrepreneurs.
+            {isHindi 
+              ? 'संगठन KYB सत्यापन पूरा करें, आधिकारिक दस्तावेज़ जमा करें, और सत्यापित CSR अनुदान प्रबंधित करें।' 
+              : 'Complete Organization KYB verification, submit official documents, and manage verified CSR opportunities & grants for Indian entrepreneurs.'}
           </p>
         </div>
 
@@ -197,7 +201,8 @@ export default function ProviderDashboard() {
             onClick={() => setIsCreateOppOpen(true)}
             className="px-4 py-2.5 rounded-xl bg-[#0F766E] hover:bg-[#115E59] text-white font-bold text-xs shadow-sm transition flex items-center gap-1.5"
           >
-            <PlusCircle className="w-4 h-4" /> Create Opportunity / Grant
+            <PlusCircle className="w-4 h-4" /> 
+            <span>{isHindi ? 'नई योजना / ग्रांट जोड़ें' : 'Create Opportunity / Grant'}</span>
           </button>
         </div>
       </div>
@@ -206,9 +211,16 @@ export default function ProviderDashboard() {
       <div className="bg-[#F0FDFA] border border-[#CCFBF1] rounded-2xl p-4 text-xs text-[#134E4A] flex items-start gap-3 shadow-sm">
         <ShieldCheck className="w-5 h-5 text-[#0F766E] shrink-0 mt-0.5" />
         <div className="space-y-1">
-          <div className="font-bold text-[#0F766E]">Platform Transparency Mandate:</div>
+          <div className="font-bold text-[#0F766E]">
+            {isHindi ? 'प्लेटफ़ॉर्म पारदर्शिता अधिदेश:' : 'Platform Transparency Mandate:'}
+          </div>
           <p className="text-[11px] text-slate-600 leading-relaxed">
-            <strong className="text-[#173B57]">Legal Registration ≠ Government Authorization.</strong> Being a verified legal company, NGO, or CSR agency permits opportunity creation, but does NOT automatically classify your opportunities as official government schemes. Official Government badges require verified Gazette Notifications / Government Orders.
+            <strong className="text-[#173B57]">
+              {isHindi ? 'कानूनी पंजीकरण ≠ सरकारी प्राधिकरण।' : 'Legal Registration ≠ Government Authorization.'}
+            </strong>{' '}
+            {isHindi 
+              ? 'एक सत्यापित कंपनी, एनजीओ, या सीएसआर एजेंसी होना अवसर बनाने की अनुमति देता है, लेकिन यह आपके अवसरों को स्वतः सरकारी योजना के रूप में वर्गीकृत नहीं करता। आधिकारिक सरकारी बैज के लिए सत्यापित राजपत्र अधिसूचना आवश्यक है।' 
+              : 'Being a verified legal company, NGO, or CSR agency permits opportunity creation, but does NOT automatically classify your opportunities as official government schemes. Official Government badges require verified Gazette Notifications / Government Orders.'}
           </p>
         </div>
       </div>
@@ -223,7 +235,8 @@ export default function ProviderDashboard() {
               : 'border-transparent text-slate-500 hover:text-[#173B57]'
           }`}
         >
-          <Building2 className="w-4 h-4" /> Organization Verification Stepper
+          <Building2 className="w-4 h-4" /> 
+          <span>{isHindi ? 'संगठन सत्यापन चरण' : 'Organization Verification Stepper'}</span>
         </button>
 
         <button
@@ -234,7 +247,8 @@ export default function ProviderDashboard() {
               : 'border-transparent text-slate-500 hover:text-[#173B57]'
           }`}
         >
-          <Layers className="w-4 h-4" /> My Opportunities & Grants ({opportunities.length})
+          <Layers className="w-4 h-4" /> 
+          <span>{isHindi ? `मेरे अवसर एवं ग्रांट्स (${opportunities.length})` : `My Opportunities & Grants (${opportunities.length})`}</span>
         </button>
 
         <button
@@ -245,7 +259,8 @@ export default function ProviderDashboard() {
               : 'border-transparent text-slate-500 hover:text-[#173B57]'
           }`}
         >
-          <Lock className="w-4 h-4" /> Secure Document Vault
+          <Lock className="w-4 h-4" /> 
+          <span>{isHindi ? 'सुरक्षित दस्तावेज़ वॉल्ट' : 'Secure Document Vault'}</span>
         </button>
 
         <button
@@ -256,7 +271,8 @@ export default function ProviderDashboard() {
               : 'border-transparent text-slate-500 hover:text-[#173B57]'
           }`}
         >
-          <History className="w-4 h-4" /> Verification Audit Trail
+          <History className="w-4 h-4" /> 
+          <span>{isHindi ? 'सत्यापन ऑडिट ट्रेल' : 'Verification Audit Trail'}</span>
         </button>
       </div>
 

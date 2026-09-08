@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import confetti from 'canvas-confetti';
 import { HeartHandshake, Sparkles, CheckCircle2, ShieldCheck, CreditCard, DollarSign } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function SponsorshipPage() {
+  const { t, isHindi } = useLanguage();
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -52,7 +54,7 @@ export default function SponsorshipPage() {
 
       fetchCampaigns();
     } catch (err) {
-      alert('Demo payment processed!');
+      alert(isHindi ? 'डेमो भुगतान पूरा हुआ!' : 'Demo payment processed!');
     } finally {
       setProcessing(false);
     }
@@ -65,21 +67,29 @@ export default function SponsorshipPage() {
       <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 sm:p-8 text-[#173B57] space-y-4 shadow-sm">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#CCFBF1] border border-[#14B8A6]/40 text-[#115E59] text-xs font-bold">
           <HeartHandshake className="w-4 h-4 text-[#0F766E]" />
-          Sponsor a Beneficiary
+          <span>{isHindi ? 'लाभार्थी को प्रायोजित करें' : 'Sponsor a Beneficiary'}</span>
         </div>
 
-        <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Direct Micro-Sponsorship for Small Businesses</h1>
+        <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
+          {isHindi ? 'छोटे व्यवसायों के लिए प्रत्यक्ष सूक्ष्म-प्रायोजन' : 'Direct Micro-Sponsorship for Small Businesses'}
+        </h1>
         <p className="text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed">
-          Empower verified marginalized entrepreneurs by bridging their funding gap for critical machinery, solar equipment, or working capital.
+          {isHindi 
+            ? 'सत्यापित वंचित उद्यमियों को महत्वपूर्ण मशीनरी, उपकरण या कार्यशील पूंजी के लिए सीधे वित्तीय सहायता प्रदान करें।' 
+            : 'Empower verified marginalized entrepreneurs by bridging their funding gap for critical machinery, solar equipment, or working capital.'}
         </p>
       </div>
 
       {/* Campaign Grid */}
       <div className="space-y-4">
-        <h2 className="font-bold text-[#173B57] text-sm">Active Beneficiary Funding Requests</h2>
+        <h2 className="font-bold text-[#173B57] text-sm">
+          {isHindi ? 'सक्रिय लाभार्थी वित्तपोषण अनुरोध' : 'Active Beneficiary Funding Requests'}
+        </h2>
 
         {loading ? (
-          <div className="text-center py-12 text-slate-500 text-xs bg-white border border-[#E2E8F0] rounded-2xl">Loading sponsorship campaigns...</div>
+          <div className="text-center py-12 text-slate-500 text-xs bg-white border border-[#E2E8F0] rounded-2xl">
+            {isHindi ? 'प्रायोजन अभियान लोड हो रहे हैं...' : 'Loading sponsorship campaigns...'}
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
             {campaigns.map((c, idx) => {
@@ -102,8 +112,12 @@ export default function SponsorshipPage() {
                   {/* Progress Bar */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-[11px]">
-                      <span className="text-slate-500">Raised: <strong className="text-[#0F766E] font-bold">₹{c.raisedAmount?.toLocaleString('en-IN')}</strong></span>
-                      <span className="text-slate-500">Goal: <strong className="text-[#173B57] font-bold">₹{c.targetAmount?.toLocaleString('en-IN')}</strong></span>
+                      <span className="text-slate-500">
+                        {isHindi ? 'प्राप्त:' : 'Raised:'} <strong className="text-[#0F766E] font-bold">₹{c.raisedAmount?.toLocaleString('en-IN')}</strong>
+                      </span>
+                      <span className="text-slate-500">
+                        {isHindi ? 'लक्ष्य:' : 'Goal:'} <strong className="text-[#173B57] font-bold">₹{c.targetAmount?.toLocaleString('en-IN')}</strong>
+                      </span>
                     </div>
                     <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200">
                       <div className="bg-[#0F766E] h-full rounded-full transition-all duration-500" style={{ width: `${progressPct}%` }} />
@@ -117,7 +131,7 @@ export default function SponsorshipPage() {
                     }}
                     className="w-full py-2.5 rounded-xl bg-[#0F766E] hover:bg-[#115E59] text-white font-bold transition text-xs shadow-sm"
                   >
-                    Sponsor This Business
+                    {isHindi ? 'इस व्यवसाय को प्रायोजित करें' : 'Sponsor This Business'}
                   </button>
                 </div>
               );
@@ -133,7 +147,7 @@ export default function SponsorshipPage() {
             <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
               <h2 className="font-bold text-[#173B57] text-sm flex items-center gap-2">
                 <CreditCard className="w-4 h-4 text-[#0F766E]" />
-                Simulated Payment Gateway
+                {isHindi ? 'सिम्युलेटेड भुगतान गेटवे' : 'Simulated Payment Gateway'}
               </h2>
               <button onClick={() => setSelectedCampaign(null)} className="text-slate-400 hover:text-[#173B57]">✕</button>
             </div>
@@ -143,24 +157,39 @@ export default function SponsorshipPage() {
                 <div className="w-12 h-12 rounded-full bg-[#CCFBF1] border border-[#14B8A6]/40 text-[#0F766E] flex items-center justify-center mx-auto">
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
-                <h3 className="text-lg font-bold text-[#173B57]">Sponsorship Successful!</h3>
-                <p className="text-slate-600 text-xs">Thank you for empowering {selectedCampaign.beneficiaryCode}.</p>
+                <h3 className="text-lg font-bold text-[#173B57]">
+                  {isHindi ? '🎉 प्रायोजन सफल!' : '🎉 Sponsorship Successful!'}
+                </h3>
+                <p className="text-slate-600 text-xs">
+                  {isHindi 
+                    ? `${selectedCampaign.beneficiaryCode} को सशक्त बनाने के लिए आपका धन्यवाद।` 
+                    : `Thank you for empowering ${selectedCampaign.beneficiaryCode}.`}
+                </p>
                 <div className="p-3 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] text-[11px] text-left space-y-1 font-mono">
                   <div>Transaction ID: <span className="text-[#0F766E] font-bold">{receipt.transactionId}</span></div>
                   <div>Amount Paid: ₹{receipt.amount?.toLocaleString('en-IN')}</div>
                   <div>Sponsor: {receipt.sponsorName}</div>
                 </div>
-                <button onClick={() => setSelectedCampaign(null)} className="w-full py-2 bg-[#0F766E] hover:bg-[#115E59] text-white rounded-xl font-bold transition shadow-sm">Done</button>
+                <button 
+                  onClick={() => setSelectedCampaign(null)} 
+                  className="w-full py-2 bg-[#0F766E] hover:bg-[#115E59] text-white rounded-xl font-bold transition shadow-sm"
+                >
+                  {isHindi ? 'समाप्त करें' : 'Done'}
+                </button>
               </div>
             ) : (
               <form onSubmit={handlePay} className="space-y-4">
                 <div className="p-3 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] space-y-1">
                   <div className="font-bold text-[#173B57] text-xs">{selectedCampaign.title}</div>
-                  <div className="text-[11px] text-slate-500">Beneficiary Code: {selectedCampaign.beneficiaryCode}</div>
+                  <div className="text-[11px] text-slate-500">
+                    {isHindi ? 'लाभार्थी कोड:' : 'Beneficiary Code:'} {selectedCampaign.beneficiaryCode}
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-[#173B57] font-bold mb-1">Sponsorship Contribution (₹)</label>
+                  <label className="block text-[#173B57] font-bold mb-1">
+                    {isHindi ? 'प्रायोजन राशि (₹)' : 'Sponsorship Contribution (₹)'}
+                  </label>
                   <input
                     type="number"
                     min="100"
@@ -173,7 +202,9 @@ export default function SponsorshipPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[#173B57] font-bold mb-1">Sponsor Full Name</label>
+                  <label className="block text-[#173B57] font-bold mb-1">
+                    {isHindi ? 'प्रायोजक का पूरा नाम' : 'Sponsor Full Name'}
+                  </label>
                   <input
                     type="text"
                     value={sponsorName}
@@ -191,12 +222,12 @@ export default function SponsorshipPage() {
                     onChange={(e) => setIsAnonymous(e.target.checked)}
                     className="accent-[#0F766E]"
                   />
-                  <label htmlFor="anon">Donate anonymously</label>
+                  <label htmlFor="anon">{isHindi ? 'गुमनाम रूप से सहायता करें' : 'Donate anonymously'}</label>
                 </div>
 
                 <div className="p-2.5 rounded-lg bg-[#F0FDFA] border border-[#CCFBF1] text-[10px] text-[#115E59] flex items-center gap-1.5">
                   <ShieldCheck className="w-3.5 h-3.5 text-[#0F766E]" />
-                  <span>Sandbox Mock Payment - No real money will be charged</span>
+                  <span>{isHindi ? 'सैंडबॉक्स मॉक भुगतान - कोई वास्तविक शुल्क नहीं कटेगा' : 'Sandbox Mock Payment - No real money will be charged'}</span>
                 </div>
 
                 <button
@@ -204,7 +235,7 @@ export default function SponsorshipPage() {
                   disabled={processing}
                   className="w-full py-2.5 rounded-xl bg-[#0F766E] hover:bg-[#115E59] text-white font-bold text-xs shadow-sm transition disabled:opacity-50"
                 >
-                  {processing ? 'Processing Payment...' : `Contribute ₹${Number(amount).toLocaleString('en-IN')}`}
+                  {processing ? (isHindi ? 'भुगतान प्रोसेस हो रहा है...' : 'Processing Payment...') : `${isHindi ? 'सहायता करें' : 'Contribute'} ₹${Number(amount).toLocaleString('en-IN')}`}
                 </button>
               </form>
             )}

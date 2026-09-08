@@ -18,7 +18,7 @@ import {
 import ApplicationProgressTracker from '../components/ApplicationProgressTracker';
 
 export default function TrackApplicationPage() {
-  const { t } = useLanguage();
+  const { t, isHindi } = useLanguage();
   const [applications, setApplications] = useState([]);
   const [selectedAppId, setSelectedAppId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -99,7 +99,7 @@ export default function TrackApplicationPage() {
         });
       }
 
-      setUpdateMessage('✓ Status updated successfully!');
+      setUpdateMessage(isHindi ? '✓ स्थिति सफलतापूर्वक अपडेट की गई!' : '✓ Status updated successfully!');
       setShowOfficerModal(false);
       fetchApplications();
     } catch (err) {
@@ -118,13 +118,13 @@ export default function TrackApplicationPage() {
         <div>
           <div className="flex items-center gap-2 text-[#0F766E] font-bold uppercase text-xs tracking-wider mb-1">
             <FileCheck className="w-4 h-4 text-[#0F766E]" />
-            National Portal for Application & Fund Disbursal Tracking
+            {isHindi ? 'आवेदन एवं संवितरण ट्रैकिंग हेतु राष्ट्रीय पोर्टल' : 'National Portal for Application & Fund Disbursal Tracking'}
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-[#173B57]">
-            {t('track_title', 'Track Scheme Application & PFMS Disbursal')}
+            {t('track_title', isHindi ? 'योजना आवेदन एवं PFMS संवितरण ट्रैकर' : 'Track Scheme Application & PFMS Disbursal')}
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 mt-1">
-            {t('track_subtitle', 'Transparent real-time tracking from Verification and Ministry Sanction to Direct Benefit Transfer (DBT) settlement.')}
+            {t('track_subtitle', isHindi ? 'दस्तावेज़ सत्यापन एवं मंत्रालय स्वीकृति से लेकर बैंक खाते में DBT संवितरण तक वास्तविक समय ट्रैकिंग।' : 'Transparent real-time tracking from Verification and Ministry Sanction to Direct Benefit Transfer (DBT) settlement.')}
           </p>
         </div>
 
@@ -134,7 +134,7 @@ export default function TrackApplicationPage() {
             className="px-4 py-2.5 rounded-xl bg-[#F59E0B] hover:bg-[#D97706] text-white font-bold text-xs shadow-sm transition flex items-center gap-2"
           >
             <Sliders className="w-4 h-4" />
-            <span>Officer Portal Mode (Update Status)</span>
+            <span>{isHindi ? 'अधिकारी पोर्टल मोड (स्थिति बदलें)' : 'Officer Portal Mode (Update Status)'}</span>
           </button>
         </div>
       </div>
@@ -143,14 +143,15 @@ export default function TrackApplicationPage() {
       <div className="space-y-3">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <h2 className="text-sm font-bold text-[#173B57] flex items-center gap-2">
-            <Building className="w-4 h-4 text-[#0F766E]" /> Active Applications ({filteredApps.length})
+            <Building className="w-4 h-4 text-[#0F766E]" /> 
+            <span>{isHindi ? `सक्रिय आवेदन (${filteredApps.length})` : `Active Applications (${filteredApps.length})`}</span>
           </h2>
 
           <div className="relative w-full sm:w-72">
             <Search className="w-4 h-4 text-[#64748B] absolute left-3 top-2.5" />
             <input
               type="text"
-              placeholder={t('track_placeholder', 'Search Application ID or Scheme...')}
+              placeholder={t('track_placeholder', isHindi ? 'आवेदन संख्या या योजना खोजें...' : 'Search Application ID or Scheme...')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-3 py-2 rounded-xl bg-white border border-[#CBD5E1] text-[#173B57] text-xs placeholder-slate-400 focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1]"
@@ -161,7 +162,7 @@ export default function TrackApplicationPage() {
         {loading ? (
           <div className="text-center py-12 text-slate-500 bg-white border border-[#E2E8F0] rounded-2xl">
             <RefreshCw className="w-6 h-6 text-[#0F766E] animate-spin mx-auto mb-2" />
-            <p className="text-xs">Loading application records...</p>
+            <p className="text-xs">{isHindi ? 'आवेदन रिकॉर्ड लोड हो रहे हैं...' : 'Loading application records...'}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -191,8 +192,12 @@ export default function TrackApplicationPage() {
                   </div>
 
                   <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                    <span className="text-slate-500">Amount: <strong className="text-[#173B57]">₹{(app.requestedAmount || 50000).toLocaleString('en-IN')}</strong></span>
-                    <span className="text-[#0F766E] font-bold">{app.progressPercentage || 15}% Completed</span>
+                    <span className="text-slate-500">
+                      {isHindi ? 'राशि:' : 'Amount:'} <strong className="text-[#173B57]">₹{(app.requestedAmount || 50000).toLocaleString('en-IN')}</strong>
+                    </span>
+                    <span className="text-[#0F766E] font-bold">
+                      {app.progressPercentage || 15}% {isHindi ? 'पूर्ण' : 'Completed'}
+                    </span>
                   </div>
                 </div>
               );
@@ -209,7 +214,7 @@ export default function TrackApplicationPage() {
         />
       ) : (
         <div className="text-center py-16 bg-white border border-[#E2E8F0] rounded-2xl text-slate-500">
-          <p className="text-xs">Select an application above to view detailed progress and financial status.</p>
+          <p className="text-xs">{isHindi ? 'विस्तृत प्रगति और वित्तीय स्थिति देखने के लिए ऊपर किसी आवेदन का चयन करें।' : 'Select an application above to view detailed progress and financial status.'}</p>
         </div>
       )}
 
@@ -221,9 +226,12 @@ export default function TrackApplicationPage() {
             <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
               <div>
                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#F59E0B] flex items-center gap-1">
-                  <Sliders className="w-3.5 h-3.5" /> Government Verification Officer Portal
+                  <Sliders className="w-3.5 h-3.5" /> 
+                  <span>{isHindi ? 'सरकारी सत्यापन अधिकारी पोर्टल' : 'Government Verification Officer Portal'}</span>
                 </span>
-                <h3 className="text-base font-extrabold text-[#173B57]">Update Application Lifecycle Status</h3>
+                <h3 className="text-base font-extrabold text-[#173B57]">
+                  {isHindi ? 'आवेदन चक्र स्थिति अपडेट करें' : 'Update Application Lifecycle Status'}
+                </h3>
               </div>
               <button 
                 onClick={() => setShowOfficerModal(false)}
@@ -236,7 +244,9 @@ export default function TrackApplicationPage() {
 
             <form onSubmit={handleOfficerUpdateStatus} className="space-y-4 text-xs">
               <div>
-                <label className="block text-[#173B57] font-bold mb-1">Target Application ID</label>
+                <label className="block text-[#173B57] font-bold mb-1">
+                  {isHindi ? 'लक्षित आवेदन क्रमांक' : 'Target Application ID'}
+                </label>
                 <input
                   type="text"
                   disabled
@@ -246,26 +256,30 @@ export default function TrackApplicationPage() {
               </div>
 
               <div>
-                <label className="block text-[#173B57] font-bold mb-1">Authoritative Lifecycle Stage</label>
+                <label className="block text-[#173B57] font-bold mb-1">
+                  {isHindi ? 'आधिकारिक चक्र चरण' : 'Authoritative Lifecycle Stage'}
+                </label>
                 <select
                   value={targetStatus}
                   onChange={(e) => setTargetStatus(e.target.value)}
                   className="w-full p-2.5 rounded-lg bg-white border border-[#CBD5E1] text-[#173B57] font-semibold focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#CCFBF1]"
                 >
-                  <option value="DOCUMENT_VERIFICATION">1. Documents Verification</option>
-                  <option value="ELIGIBILITY_VERIFICATION">2. Eligibility Verification</option>
-                  <option value="APPROVED">3. Officer Approval (Application Approved)</option>
-                  <option value="SANCTIONED">4. Sanctioned (Ministry Sanction Letter Issued)</option>
-                  <option value="RELEASED">5. Fund Released (Nodal Treasury Release Order)</option>
-                  <option value="PAYMENT_SUCCESS">6. Payment/Credit (DBT Credit Settled to Bank)</option>
-                  <option value="COMPLETED">7. Completed (Application Journey Complete)</option>
-                  <option value="REJECTED">8. Rejected</option>
+                  <option value="DOCUMENT_VERIFICATION">{isHindi ? '1. दस्तावेज़ सत्यापन' : '1. Documents Verification'}</option>
+                  <option value="ELIGIBILITY_VERIFICATION">{isHindi ? '2. पात्रता सत्यापन' : '2. Eligibility Verification'}</option>
+                  <option value="APPROVED">{isHindi ? '3. अधिकारी अनुमोदन (मंज़ूर)' : '3. Officer Approval (Application Approved)'}</option>
+                  <option value="SANCTIONED">{isHindi ? '4. मंत्रालय स्वीकृति पत्र जारी' : '4. Sanctioned (Ministry Sanction Letter Issued)'}</option>
+                  <option value="RELEASED">{isHindi ? '5. कोषागार राशि रिलीज़ आदेश' : '5. Fund Released (Nodal Treasury Release Order)'}</option>
+                  <option value="PAYMENT_SUCCESS">{isHindi ? '6. बैंक खाते में DBT क्रेडिट' : '6. Payment/Credit (DBT Credit Settled to Bank)'}</option>
+                  <option value="COMPLETED">{isHindi ? '7. यात्रा पूर्ण' : '7. Completed (Application Journey Complete)'}</option>
+                  <option value="REJECTED">{isHindi ? '8. अस्वीकृत' : '8. Rejected'}</option>
                 </select>
               </div>
 
               {['SANCTIONED', 'RELEASED', 'PAYMENT_SUCCESS'].includes(targetStatus) && (
                 <div>
-                  <label className="block text-[#173B57] font-bold mb-1">Sanction / Disbursal Amount (₹)</label>
+                  <label className="block text-[#173B57] font-bold mb-1">
+                    {isHindi ? 'स्वीकृति / संवितरण राशि (₹)' : 'Sanction / Disbursal Amount (₹)'}
+                  </label>
                   <input
                     type="number"
                     value={sanctionAmount}
@@ -276,12 +290,14 @@ export default function TrackApplicationPage() {
               )}
 
               <div>
-                <label className="block text-[#173B57] font-bold mb-1">Verification Officer Remarks</label>
+                <label className="block text-[#173B57] font-bold mb-1">
+                  {isHindi ? 'सत्यापन अधिकारी की टिप्पणी' : 'Verification Officer Remarks'}
+                </label>
                 <textarea
                   rows={3}
                   value={officerRemarks}
                   onChange={(e) => setOfficerRemarks(e.target.value)}
-                  placeholder="Enter verification notes, sanction order number, or treasury release details..."
+                  placeholder={isHindi ? 'सत्यापन टिप्पणी, स्वीकृति आदेश संख्या या ट्रेजरी विवरण दर्ज करें...' : 'Enter verification notes, sanction order number, or treasury release details...'}
                   className="w-full p-2.5 rounded-lg bg-white border border-[#CBD5E1] text-[#173B57] focus:outline-none focus:border-[#0F766E]"
                 />
               </div>
@@ -292,14 +308,14 @@ export default function TrackApplicationPage() {
                   onClick={() => setShowOfficerModal(false)}
                   className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-[#173B57] font-bold"
                 >
-                  Cancel
+                  {isHindi ? 'रद्द करें' : 'Cancel'}
                 </button>
                 <button
                   type="submit"
                   disabled={updating}
                   className="px-5 py-2 rounded-lg bg-[#0F766E] hover:bg-[#115E59] text-white font-bold shadow-sm disabled:opacity-50"
                 >
-                  {updating ? 'Updating...' : 'Update Status'}
+                  {updating ? (isHindi ? 'अपडेट हो रहा है...' : 'Updating...') : (isHindi ? 'स्थिति अपडेट करें' : 'Update Status')}
                 </button>
               </div>
             </form>
