@@ -53,6 +53,7 @@ export default function App() {
                   <Route path="/admin" element={<AdminDashboard />} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
+                  <Route path="*" element={<LandingPage onOpenAiModal={() => setIsAiModalOpen(true)} />} />
                 </Routes>
               </main>
 

@@ -100,8 +100,15 @@ export default function MatchResultsPage() {
   const [selectedSchemeForCorruption, setSelectedSchemeForCorruption] = useState(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem('ys_current_profile');
-    let userProfile = saved ? JSON.parse(saved) : null;
+    let userProfile = null;
+    try {
+      const saved = localStorage.getItem('ys_current_profile');
+      if (saved && saved !== 'undefined') {
+        userProfile = JSON.parse(saved);
+      }
+    } catch (e) {
+      console.warn('Failed to parse ys_current_profile', e);
+    }
 
     if (!userProfile) {
       userProfile = {
