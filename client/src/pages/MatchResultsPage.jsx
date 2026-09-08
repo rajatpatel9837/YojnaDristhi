@@ -33,6 +33,15 @@ import SchemeParchaaModal from '../components/SchemeParchaaModal';
 import MissingDocumentResolverModal from '../components/MissingDocumentResolverModal';
 import BankCounterGuideModal from '../components/BankCounterGuideModal';
 import DOCUMENT_GUIDE_DATA from '../data/documentGuideData.js';
+
+// YojnaKranti 3.0 Components & Data
+import SchemeReadinessScoreCard from '../components/SchemeReadinessScoreCard';
+import SchemeBasketModal from '../components/SchemeBasketModal';
+import RejectionAppealModal from '../components/RejectionAppealModal';
+import DailyCashflowSimulatorModal from '../components/DailyCashflowSimulatorModal';
+import AntiCorruptionShieldModal from '../components/AntiCorruptionShieldModal';
+import { SCHEME_BUNDLES, getMatchingBundle } from '../data/schemeBundlesData.js';
+
 import { 
   Printer, 
   Volume2, 
@@ -40,7 +49,10 @@ import {
   Languages, 
   BookOpen, 
   Share2, 
-  PhoneCall 
+  PhoneCall,
+  Coffee,
+  Scale,
+  ShieldAlert
 } from 'lucide-react';
 
 export default function MatchResultsPage() {
@@ -76,6 +88,16 @@ export default function MatchResultsPage() {
   const [selectedDocIdForResolver, setSelectedDocIdForResolver] = useState(null);
   const [isJargonBusterOn, setIsJargonBusterOn] = useState(true);
   const [playingSchemeId, setPlayingSchemeId] = useState(null);
+
+  // YojnaKranti 3.0 ("योजना क्रांति") state
+  const [isBasketOpen, setIsBasketOpen] = useState(false);
+  const [selectedBundle, setSelectedBundle] = useState(null);
+  const [isAppealOpen, setIsAppealOpen] = useState(false);
+  const [selectedSchemeForAppeal, setSelectedSchemeForAppeal] = useState(null);
+  const [isCashflowOpen, setIsCashflowOpen] = useState(false);
+  const [selectedSchemeForCashflow, setSelectedSchemeForCashflow] = useState(null);
+  const [isAntiCorruptionOpen, setIsAntiCorruptionOpen] = useState(false);
+  const [selectedSchemeForCorruption, setSelectedSchemeForCorruption] = useState(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('ys_current_profile');
@@ -345,6 +367,24 @@ export default function MatchResultsPage() {
     setIsParchaaOpen(true);
   };
 
+  const handleShareSchemeToWhatsApp = (scheme, item) => {
+    const maxSupport = scheme?.maximumSupport || 500000;
+    const maxLakh = (maxSupport / 100000).toFixed(1);
+    const subsidy = scheme?.subsidyPercentage || (scheme?.name?.includes('PMEGP') ? 35 : (scheme?.name?.includes('Mudra') ? 0 : 25));
+    const subsidyAmount = Math.round((maxSupport * subsidy) / 100);
+
+    const text = `*योजना सेतू AI (Yojna दृष्टि) — योजना विवरण*\n\n` +
+      `🏛️ *योजना का नाम:* ${scheme.name}\n` +
+      `👤 *उद्यमी:* ${profile?.fullName || 'उद्यमी'} (${profile?.category || 'सामान्य'}, ${profile?.state || 'भारत'})\n` +
+      `💰 *परियोजना ऋण सहायता:* ₹${maxLakh} लाख तक\n` +
+      `🎁 *सरकारी सब्सिडी (छूट):* ${subsidy}% (लगभग ₹${subsidyAmount.toLocaleString('en-IN')})\n` +
+      `🛡️ *RBI सुरक्षा:* ₹10 लाख तक कोई ज़मीन या गारंटी बंधक रखना अनिवार्य नहीं है।\n\n` +
+      `👉 *आवेदन व पात्रता देखने हेतु:* ${window.location.origin}/matches`;
+
+    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  };
+
   const filteredResults = results.filter(r => {
     if (filterCategory === 'ELIGIBLE') return r.eligibilityStatus === 'POTENTIALLY_ELIGIBLE';
     if (filterCategory === 'VERIFY') return r.eligibilityStatus === 'VERIFY';
@@ -418,6 +458,15 @@ export default function MatchResultsPage() {
         </div>
       </div>
 
+      {/* 🏆 CIBIL-Style "योजना रेडीनेस स्कोर" (Scheme Readiness Score: 0 to 1000) */}
+      <SchemeReadinessScoreCard 
+        profile={profile}
+        onResolveDocument={(docId) => {
+          setSelectedDocIdForResolver(docId);
+          setIsDocResolverOpen(true);
+        }}
+      />
+
       {/* "जन-हित प्रो" — Grassroots Superiority Action Banner */}
       <div className="bg-gradient-to-r from-teal-900 via-[#173B57] to-[#0F766E] rounded-2xl p-4 sm:p-5 text-white shadow-md border border-teal-500/30 flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="space-y-1 text-center md:text-left">
@@ -456,6 +505,20 @@ export default function MatchResultsPage() {
             <span>🛡️ बैंक काउंटर गाइड</span>
           </button>
 
+          {/* ⚖️ Rejection Appeal Generator Button */}
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedSchemeForAppeal(results[0]?.scheme);
+              setIsAppealOpen(true);
+            }}
+            className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs transition flex items-center gap-2 shadow-xs active:scale-95"
+            title="लोन खारिज या अकारण लटकाने पर विधिक अपील पत्र तैयार करें"
+          >
+            <Scale className="w-4 h-4 text-rose-200" />
+            <span>⚖️ लोन खारिज? अपील पत्र</span>
+          </button>
+
           {/* Jargon-Buster Mode Toggle Switch */}
           <button
             type="button"
@@ -472,6 +535,40 @@ export default function MatchResultsPage() {
           </button>
         </div>
       </div>
+
+      {/* 🧺 "योजना क्रांति 3.0" — Smart Scheme Stacking Bundle Banner */}
+      {(() => {
+        const currentBundle = getMatchingBundle(profile);
+        return (
+          <div className="bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 rounded-2xl p-4 sm:p-5 text-white shadow-md border border-emerald-500/30 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="space-y-1 text-center md:text-left">
+              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black uppercase tracking-wider border border-emerald-400/30">
+                <Sparkles className="w-3 h-3 text-emerald-300" />
+                <span>योजना क्रांति 3.0 • Multi-Scheme Stack Optimizer</span>
+              </div>
+              <h3 className="text-base sm:text-lg font-black text-white flex items-center justify-center md:justify-start gap-2">
+                <span>{currentBundle.icon || '🧺'}</span>
+                <span>स्मार्ट योजना बंडल: {currentBundle.title_hi}</span>
+              </h3>
+              <p className="text-xs text-slate-300">
+                {currentBundle.schemes.length} पूरक योजनाओं को मिलाकर पाएं <span className="text-emerald-400 font-extrabold">{currentBundle.totalExtraSavings_hi}</span> (+{currentBundle.netGainPercent}% अतिरिक्त लाभ)
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedBundle(currentBundle);
+                setIsBasketOpen(true);
+              }}
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black text-xs shadow-md transition flex items-center gap-2 shrink-0 active:scale-95"
+            >
+              <Layers className="w-4 h-4 text-slate-950" />
+              <span>बंडल योजनाएं देखें (Stack) ↗</span>
+            </button>
+          </div>
+        );
+      })()}
 
       {/* Filter Tabs */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-[#E2E8F0] pb-3 text-xs gap-3">
@@ -527,6 +624,34 @@ export default function MatchResultsPage() {
                       <span className="text-[11px] bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full border border-slate-200 font-medium">
                         {scheme.sourceType}
                       </span>
+
+                      {/* 📊 Daily Cashflow Simulator Badge */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedSchemeForCashflow(scheme);
+                          setIsCashflowOpen(true);
+                        }}
+                        className="text-[11px] bg-amber-50 hover:bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full border border-amber-300 font-extrabold flex items-center gap-1 transition shadow-xs active:scale-95"
+                        title="रोज़ाना मुनाफ़ा vs क़िस्त सिम्युलेटर देखें"
+                      >
+                        <Coffee className="w-3.5 h-3.5 text-amber-600" />
+                        <span>क़िस्त: ₹{Math.max(Math.round(((scheme.maximumSupport || 500000) * 0.65 * 0.085 / 12) / 30), 45)}/दिन</span>
+                      </button>
+
+                      {/* 🛡️ Anti-Corruption Zero Fee Badge */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedSchemeForCorruption(scheme);
+                          setIsAntiCorruptionOpen(true);
+                        }}
+                        className="text-[11px] bg-emerald-50 hover:bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full border border-emerald-300 font-extrabold flex items-center gap-1 transition shadow-xs active:scale-95"
+                        title="दलाल व रिश्वत रोधी शील्ड"
+                      >
+                        <ShieldAlert className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>100% निःशुल्क सरकारी योजना</span>
+                      </button>
                     </div>
 
                     <h2 className="text-lg font-bold text-[#173B57] tracking-tight pt-1">{scheme.name}</h2>
@@ -840,15 +965,27 @@ export default function MatchResultsPage() {
                     </button>
                   </div>
 
-                  <a
-                    href={scheme.officialUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-[#0F766E] font-bold border border-[#0F766E] transition shadow-xs flex items-center gap-1.5"
-                  >
-                    <span>Official Website</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleShareSchemeToWhatsApp(scheme, item)}
+                      className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition shadow-xs flex items-center gap-1.5 active:scale-95"
+                      title="व्हाट्सएप पर इस योजना की पूरी जानकारी भेजें"
+                    >
+                      <Share2 className="w-3.5 h-3.5 text-emerald-100" />
+                      <span>व्हाट्सएप पर भेजें 📱</span>
+                    </button>
+
+                    <a
+                      href={scheme.officialUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-[#0F766E] font-bold border border-[#0F766E] transition shadow-xs flex items-center gap-1.5"
+                    >
+                      <span>Official Website</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
                 </div>
 
               </div>
@@ -1266,6 +1403,41 @@ export default function MatchResultsPage() {
       <BankCounterGuideModal
         isOpen={isBankGuideOpen}
         onClose={() => setIsBankGuideOpen(false)}
+      />
+
+      {/* 🧺 1. Scheme Stacking & Basket Optimizer Modal */}
+      <SchemeBasketModal
+        isOpen={isBasketOpen}
+        onClose={() => setIsBasketOpen(false)}
+        bundle={selectedBundle || getMatchingBundle(profile)}
+        profile={profile}
+        onApplyBundle={(bundle) => {
+          handleApplyAllEligible();
+        }}
+      />
+
+      {/* ⚖️ 2. AI Rejection Reverser & Bank Denial Appeal Generator Modal */}
+      <RejectionAppealModal
+        isOpen={isAppealOpen}
+        onClose={() => setIsAppealOpen(false)}
+        profile={profile}
+        scheme={selectedSchemeForAppeal || results[0]?.scheme}
+      />
+
+      {/* 📊 3. "रोज़ाना मुनाफ़ा vs क़िस्त" Debt-Fear Simulator Modal */}
+      <DailyCashflowSimulatorModal
+        isOpen={isCashflowOpen}
+        onClose={() => setIsCashflowOpen(false)}
+        scheme={selectedSchemeForCashflow || results[0]?.scheme}
+        profile={profile}
+      />
+
+      {/* 🛡️ 4. "दलाल और रिश्वत रोधी शील्ड" (Anti-Middleman Corruption Shield Modal) */}
+      <AntiCorruptionShieldModal
+        isOpen={isAntiCorruptionOpen}
+        onClose={() => setIsAntiCorruptionOpen(false)}
+        schemeName={selectedSchemeForCorruption?.name || results[0]?.scheme?.name}
+        profile={profile}
       />
 
     </div>
