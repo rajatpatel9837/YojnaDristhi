@@ -45,6 +45,24 @@ export default function PhoneCallAssistantModal({ isOpen, onClose }) {
   const timerIntervalRef = useRef(null);
   const audioPlayerRef = useRef(null);
 
+  // End Call / Reset
+  const handleEndCall = (resetState = true) => {
+    stopRingtone();
+    if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    if (audioPlayerRef.current) {
+      audioPlayerRef.current.pause();
+      audioPlayerRef.current = null;
+    }
+    if (resetState) {
+      setCallState('IDLE');
+      setCallTimer(0);
+      setCurrentStep(0);
+      setDispatchStatus(null);
+      setSmsBanner(false);
+    }
+  };
+
   // Stop ringtone and timer on unmount or close
   useEffect(() => {
     if (!isOpen) {
@@ -303,24 +321,6 @@ export default function PhoneCallAssistantModal({ isOpen, onClose }) {
       documentsAvailable: ['Aadhaar/Identity', 'Income Certificate']
     };
     localStorage.setItem('ys_current_profile', JSON.stringify(finalProfile));
-  };
-
-  // End Call / Reset
-  const handleEndCall = (resetState = true) => {
-    stopRingtone();
-    if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
-    if (audioPlayerRef.current) {
-      audioPlayerRef.current.pause();
-      audioPlayerRef.current = null;
-    }
-    if (resetState) {
-      setCallState('IDLE');
-      setCallTimer(0);
-      setCurrentStep(0);
-      setDispatchStatus(null);
-      setSmsBanner(false);
-    }
   };
 
   const dialpadKeys = [

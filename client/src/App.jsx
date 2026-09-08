@@ -62,16 +62,20 @@ export default function App() {
               {/* Floating AskYojnaSetu Sarvam AI Multilingual Voice Chatbot */}
               <AskYojnaSetuChatbot />
 
-              <AskYojnaSetuModal
-                isOpen={isAiModalOpen}
-                onClose={() => setIsAiModalOpen(false)}
-              />
+              {isAiModalOpen && (
+                <AskYojnaSetuModal
+                  isOpen={isAiModalOpen}
+                  onClose={() => setIsAiModalOpen(false)}
+                />
+              )}
 
               {/* Yojna Call Assistant Telephone Simulator Modal */}
-              <PhoneCallAssistantModal
-                isOpen={isCallAssistantOpen}
-                onClose={() => setIsCallAssistantOpen(false)}
-              />
+              {isCallAssistantOpen && (
+                <PhoneCallAssistantModal
+                  isOpen={isCallAssistantOpen}
+                  onClose={() => setIsCallAssistantOpen(false)}
+                />
+              )}
 
             </div>
           </Router>
