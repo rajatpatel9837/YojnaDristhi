@@ -3,10 +3,20 @@
 @tailwind utilities;
 
 @layer base {
-  body {
+  html, body {
     font-family: 'Inter', 'Manrope', system-ui, -apple-system, sans-serif;
     background-color: #F7FAFA;
     color: #173B57;
+    overflow-x: hidden;
+    max-width: 100%;
+    width: 100%;
+  }
+
+  #root {
+    overflow-x: hidden;
+    max-width: 100%;
+    width: 100%;
+    min-height: 100vh;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -40,61 +50,339 @@
 }
 
 /* Government Tech Reusable Utility Styles */
-.gov-card {
+.gov-card, .ys-card {
   background-color: #FFFFFF;
   border: 1px solid #E2E8F0;
   border-radius: 0.875rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
 }
 
-.gov-card-interactive {
+.gov-card-interactive, .ys-card-interactive {
   background-color: #FFFFFF;
   border: 1px solid #E2E8F0;
   border-radius: 0.875rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.gov-card-interactive:hover {
+.gov-card-interactive:hover, .ys-card-interactive:hover {
   border-color: #0F766E;
-  box-shadow: 0 4px 6px -1px rgba(15, 118, 110, 0.1), 0 2px 4px -2px rgba(15, 118, 110, 0.06);
+  box-shadow: 0 4px 10px -1px rgba(15, 118, 110, 0.08), 0 2px 4px -2px rgba(15, 118, 110, 0.04);
 }
 
-.gov-btn-primary {
+/* YojnaSetu Page & Layout Classes */
+.ys-page {
+  background-color: #F7FAFA;
+  min-height: 100vh;
+  padding-top: 1.5rem;
+  padding-bottom: 3rem;
+}
+
+.ys-container {
+  max-width: 80rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+@media (min-width: 640px) {
+  .ys-container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+@media (min-width: 1024px) {
+  .ys-container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* Section Headings */
+.ys-section-heading {
+  margin-bottom: 1.5rem;
+}
+.ys-section-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.075em;
+  color: #0F766E;
+  margin-bottom: 0.25rem;
+}
+.ys-section-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #173B57;
+  letter-spacing: -0.02em;
+}
+.ys-section-subtext {
+  font-size: 0.875rem;
+  color: #64748B;
+  margin-top: 0.25rem;
+}
+
+/* YojnaSetu Buttons */
+.gov-btn-primary, .ys-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
   background-color: #0F766E;
   color: #FFFFFF;
-  font-weight: 600;
+  font-size: 0.875rem;
+  font-weight: 700;
   padding: 0.625rem 1.25rem;
-  border-radius: 0.625rem;
+  border-radius: 0.75rem;
+  border: 1px solid transparent;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   transition: all 0.15s ease-in-out;
+  cursor: pointer;
+  user-select: none;
 }
-.gov-btn-primary:hover {
+.gov-btn-primary:hover, .ys-btn-primary:hover {
   background-color: #115E59;
 }
-.gov-btn-primary:focus {
-  outline: 2px solid #14B8A6;
-  outline-offset: 2px;
+.gov-btn-primary:active, .ys-btn-primary:active {
+  background-color: #0D504C;
+}
+.gov-btn-primary:focus-visible, .ys-btn-primary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #14B8A6;
+}
+.gov-btn-primary:disabled, .ys-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
-.gov-btn-secondary {
+.gov-btn-secondary, .ys-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
   background-color: #FFFFFF;
   color: #173B57;
-  font-weight: 600;
-  border: 1px solid #E2E8F0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  border: 1px solid #CBD5E1;
   padding: 0.625rem 1.25rem;
-  border-radius: 0.625rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
   transition: all 0.15s ease-in-out;
+  cursor: pointer;
+  user-select: none;
 }
-.gov-btn-secondary:hover {
+.gov-btn-secondary:hover, .ys-btn-secondary:hover {
   background-color: #F8FAFC;
-  border-color: #CBD5E1;
+  border-color: #94A3B8;
+  color: #0F172A;
+}
+.gov-btn-secondary:active, .ys-btn-secondary:active {
+  background-color: #F1F5F9;
+}
+.gov-btn-secondary:focus-visible, .ys-btn-secondary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #0F766E;
+}
+.gov-btn-secondary:disabled, .ys-btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
-.gov-badge-mint {
-  background-color: #CCFBF1;
-  color: #115E59;
-  border: 1px solid rgba(20, 184, 166, 0.35);
+.ys-btn-quiet {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-height: 40px;
+  background-color: transparent;
+  color: #64748B;
+  font-size: 0.8125rem;
   font-weight: 600;
+  padding: 0.5rem 0.875rem;
+  border-radius: 0.625rem;
+  border: 1px solid transparent;
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+}
+.ys-btn-quiet:hover {
+  background-color: #F1F5F9;
+  color: #173B57;
+}
+.ys-btn-quiet:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #CBD5E1;
+}
+
+.ys-btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  background-color: #DC2626;
+  color: #FFFFFF;
+  font-size: 0.875rem;
+  font-weight: 700;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid transparent;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+}
+.ys-btn-danger:hover {
+  background-color: #B91C1C;
+}
+.ys-btn-danger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #EF4444;
+}
+
+/* YojnaSetu Badges */
+.gov-badge-mint, .ys-badge-success {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  background-color: #CCFBF1;
+  color: #0F766E;
+  border: 1px solid rgba(20, 184, 166, 0.35);
+  font-weight: 700;
   padding: 0.25rem 0.625rem;
   border-radius: 9999px;
   font-size: 0.75rem;
+  letter-spacing: 0.025em;
 }
+
+.ys-badge-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  background-color: #FEF3C7;
+  color: #92400E;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  font-weight: 700;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  letter-spacing: 0.025em;
+}
+
+.ys-badge-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  background-color: #E0F2FE;
+  color: #0369A1;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  font-weight: 700;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  letter-spacing: 0.025em;
+}
+
+.ys-badge-error {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  background-color: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  font-weight: 700;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  letter-spacing: 0.025em;
+}
+
+/* YojnaSetu Form Controls */
+.ys-input, .ys-select {
+  width: 100%;
+  background-color: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  color: #173B57;
+  transition: all 0.15s ease-in-out;
+}
+.ys-input::placeholder {
+  color: #94A3B8;
+}
+.ys-input:focus, .ys-select:focus {
+  outline: none;
+  border-color: #0F766E;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+}
+.ys-input:disabled, .ys-select:disabled {
+  background-color: #F1F5F9;
+  color: #94A3B8;
+  cursor: not-allowed;
+}
+
+/* Feature Icon Tile */
+.ys-icon-tile {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.75rem;
+  background-color: #F0FDFA;
+  border: 1px solid #CCFBF1;
+  color: #0F766E;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* YojnaSetu Modal Shell */
+.ys-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  overflow-y: auto;
+  background-color: rgba(23, 59, 87, 0.6);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+}
+@media (min-width: 640px) {
+  .ys-modal-overlay {
+    padding: 1.5rem;
+  }
+}
+
+.ys-modal-dialog {
+  background-color: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 1rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 92vh;
+  color: #173B57;
+}
+
+.ys-modal-header {
+  padding: 1rem 1.25rem;
+  background-color: #F8FAFC;
+  border-bottom: 1px solid #E2E8F0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+@media (min-width: 640px) {
+  .ys-modal-header {
+    padding: 1.25rem 1.5rem;
+  }
+}
+
+

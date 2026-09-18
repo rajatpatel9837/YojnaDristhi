@@ -3,8 +3,8 @@
  * 
  * ============================================================================
  * PRODUCTION NOTE:
- * This is a sandbox / simulation adapter for Smart India Hackathon demonstrations.
- * In a live production environment, this module would integrate with the official
+ * This is a sandbox / simulation adapter for sandbox demonstrations.
+ * In a live production environment, this module integrates with the official
  * DigiLocker Partner API (https://digilocker.gov.in) using OAuth 2.0 PKCE authorization,
  * digitally signed XML/JSON payloads, and UIDAI e-KYC consent artifacts.
  * 
@@ -140,7 +140,7 @@ const fetchConsentedDocuments = async (userId, requestedDocTypes = [], profileHi
     sessionId,
     expiresInSeconds: Math.round(SESSION_TTL_MS / 1000),
     documents: mockDocuments,
-    disclaimer: 'Sandbox simulated DigiLocker payload for hackathon demonstration. Valid for 45 minutes in temporary server cache only.'
+    disclaimer: 'Sandbox simulated DigiLocker payload for demonstration. Valid for 45 minutes in temporary server cache only.'
   };
 };
 

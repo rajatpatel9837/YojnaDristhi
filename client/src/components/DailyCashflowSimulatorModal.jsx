@@ -67,20 +67,20 @@ export default function DailyCashflowSimulatorModal({
   const emiShareOfDailyProfit = Math.min(Math.round((dailyEmiGovt / estimatedDailyProfit) * 100), 100);
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-fadeIn">
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[92vh] text-slate-100">
+    <div className="ys-modal-overlay animate-fadeIn">
+      <div className="ys-modal-dialog max-w-3xl">
         
         {/* Header Bar */}
-        <div className="bg-gradient-to-r from-emerald-950 via-teal-900 to-slate-900 p-5 sm:p-6 border-b border-emerald-500/20 flex items-start justify-between gap-3">
+        <div className="ys-modal-header">
           <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-black uppercase tracking-wider border border-emerald-400/30">
-              <Calculator className="w-3.5 h-3.5 text-emerald-300" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#CCFBF1] text-[#0F766E] text-xs font-bold uppercase tracking-wider border border-[#14B8A6]/30">
+              <Calculator className="w-3.5 h-3.5 text-[#0F766E]" />
               <span>{isHindi ? 'रोज़ाना मुनाफ़ा vs क़िस्त सिम्युलेटर' : 'Daily Profit vs EMI Simulator'}</span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
+            <h2 className="text-xl sm:text-2xl font-black text-[#173B57] flex items-center gap-2">
               <span>{isHindi ? '📊 क़िस्त का डर दूर करें — दैनिक कमाई से हिसाब' : '📊 Overcome Debt Fear — Daily Micro-Repayment Math'}</span>
             </h2>
-            <p className="text-xs text-slate-300 max-w-xl leading-relaxed">
+            <p className="text-xs text-slate-600 max-w-xl leading-relaxed">
               {isHindi
                 ? 'बैंक की भारी-भरकम किस्तों के डर से न रुकें। जानिए कि आपकी रोज़ की 2-3 कप चाय या थोड़े से मुनाफ़े से यह लोन कैसे चुकता होगा।'
                 : 'Do not fear lump-sum bank installments. See how just 2-3 cups of tea or a fraction of daily earnings covers your loan.'}
@@ -90,50 +90,51 @@ export default function DailyCashflowSimulatorModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition active:scale-95 shrink-0"
+            className="p-2 rounded-xl text-slate-400 hover:text-[#173B57] hover:bg-slate-100 transition shrink-0"
+            aria-label="Close"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Scrollable Body */}
-        <div className="p-5 sm:p-6 overflow-y-auto space-y-6 text-xs">
+        <div className="p-5 sm:p-6 overflow-y-auto space-y-6 text-xs text-[#173B57]">
           
           {/* Big Hero Stat: Daily Burden & Tea Cup Analogy */}
-          <div className="bg-gradient-to-br from-emerald-500/15 via-teal-500/5 to-transparent p-5 rounded-3xl border border-emerald-500/30 flex flex-col sm:flex-row items-center justify-between gap-5 text-center sm:text-left">
+          <div className="bg-[#F0FDFA] p-5 rounded-2xl border border-[#14B8A6]/30 flex flex-col sm:flex-row items-center justify-between gap-5 text-center sm:text-left">
             <div className="space-y-1.5">
-              <div className="text-[11px] text-emerald-400 font-extrabold uppercase tracking-wide flex items-center justify-center sm:justify-start gap-1.5">
-                <Coffee className="w-4 h-4 text-amber-400" />
+              <div className="text-[11px] text-[#0F766E] font-bold uppercase tracking-wide flex items-center justify-center sm:justify-start gap-1.5">
+                <Coffee className="w-4 h-4 text-amber-600" />
                 <span>{isHindi ? 'दैनिक आसान बोझ (Daily Repayment Burden)' : 'Daily Repayment Burden'}</span>
               </div>
-              <div className="text-3xl sm:text-4xl font-black text-white flex items-center justify-center sm:justify-start gap-1">
-                <span>{isHindi ? 'सिर्फ' : 'Only'}</span>
-                <span className="text-emerald-400">₹{dailyEmiGovt}</span>
-                <span className="text-lg text-slate-300 font-bold">{isHindi ? '/प्रति दिन' : '/day'}</span>
+              <div className="text-3xl sm:text-4xl font-black text-[#173B57] flex items-center justify-center sm:justify-start gap-1">
+                <span className="text-sm text-slate-500 font-bold">{isHindi ? 'सिर्फ' : 'Only'}</span>
+                <span className="text-[#0F766E]">₹{dailyEmiGovt}</span>
+                <span className="text-sm text-slate-500 font-bold">{isHindi ? '/प्रति दिन' : '/day'}</span>
               </div>
-              <p className="text-xs text-slate-300">
-                {isHindi ? 'मासिक क़िस्त:' : 'Monthly EMI:'} <span className="font-bold text-white">₹{monthlyEmiGovt.toLocaleString('en-IN')}/{isHindi ? 'माह' : 'mo'}</span> • {isHindi ? 'सरकारी छूट (सब्सिडी):' : 'Govt Subsidy:'} <span className="font-bold text-emerald-400">₹{subsidyAmount.toLocaleString('en-IN')}</span>
+              <p className="text-xs text-slate-600">
+                {isHindi ? 'मासिक क़िस्त:' : 'Monthly EMI:'} <span className="font-bold text-[#173B57]">₹{monthlyEmiGovt.toLocaleString('en-IN')}/{isHindi ? 'माह' : 'mo'}</span> • {isHindi ? 'सरकारी छूट (सब्सिडी):' : 'Govt Subsidy:'} <span className="font-bold text-[#0F766E]">₹{subsidyAmount.toLocaleString('en-IN')}</span>
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700 text-center shrink-0 space-y-1">
+            <div className="p-4 rounded-xl bg-white border border-[#CBD5E1] text-center shrink-0 space-y-1 shadow-2xs">
               <div className="text-2xl">☕ ☕ ☕</div>
-              <div className="text-[11px] font-bold text-amber-300">
+              <div className="text-[11px] font-bold text-amber-800">
                 {isHindi ? 'रोज़ की मात्र 2-3 कप चाय के बराबर!' : 'Equivalent to 2-3 cups of tea daily!'}
               </div>
-              <div className="text-[10px] text-slate-400">
+              <div className="text-[10px] text-slate-500">
                 {isHindi ? 'किसी भी छोटे काम से आसानी से चुकता' : 'Easily manageable from basic business cashflow'}
               </div>
             </div>
           </div>
 
           {/* Interactive Sliders */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-800/50 border border-slate-700/60">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
             {/* Slider 1: Loan Amount */}
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs">
-                <span className="text-slate-300 font-bold">{isHindi ? 'ऋण राशि (Loan Amount):' : 'Loan Amount:'}</span>
-                <span className="font-extrabold text-emerald-400 font-mono">₹{loanAmount.toLocaleString('en-IN')}</span>
+                <span className="text-[#173B57] font-bold">{isHindi ? 'ऋण राशि (Loan Amount):' : 'Loan Amount:'}</span>
+                <span className="font-bold text-[#0F766E] font-mono">₹{loanAmount.toLocaleString('en-IN')}</span>
               </div>
               <input
                 type="range"
@@ -142,7 +143,7 @@ export default function DailyCashflowSimulatorModal({
                 step={25000}
                 value={loanAmount}
                 onChange={(e) => setLoanAmount(Number(e.target.value))}
-                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-400"
+                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#0F766E]"
               />
               <div className="flex justify-between text-[10px] text-slate-500 font-mono">
                 <span>{isHindi ? '₹50 हज़ार' : '₹50k'}</span>
@@ -154,8 +155,8 @@ export default function DailyCashflowSimulatorModal({
             {/* Slider 2: Daily Expected Profit */}
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs">
-                <span className="text-slate-300 font-bold">{isHindi ? 'आपकी रोज़ाना अपेक्षित कमाई (Daily Profit):' : 'Expected Daily Profit:'}</span>
-                <span className="font-extrabold text-sky-400 font-mono">₹{estimatedDailyProfit}/{isHindi ? 'दिन' : 'day'}</span>
+                <span className="text-[#173B57] font-bold">{isHindi ? 'आपकी रोज़ाना अपेक्षित कमाई (Daily Profit):' : 'Expected Daily Profit:'}</span>
+                <span className="font-bold text-[#0369A1] font-mono">₹{estimatedDailyProfit}/{isHindi ? 'दिन' : 'day'}</span>
               </div>
               <input
                 type="range"
@@ -164,7 +165,7 @@ export default function DailyCashflowSimulatorModal({
                 step={50}
                 value={estimatedDailyProfit}
                 onChange={(e) => setEstimatedDailyProfit(Number(e.target.value))}
-                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-sky-400"
+                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#0284C7]"
               />
               <div className="flex justify-between text-[10px] text-slate-500 font-mono">
                 <span>₹300/{isHindi ? 'दिन' : 'day'}</span>
@@ -176,55 +177,55 @@ export default function DailyCashflowSimulatorModal({
 
           {/* Side-by-Side Comparison: Govt Subsidized vs Private Moneylender */}
           <div className="space-y-2">
-            <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+            <h3 className="text-xs font-bold text-[#173B57] uppercase tracking-wider">
               {isHindi ? 'सरकारी योजना बनाम साहूकार/प्राइवेट लोन का अंतर:' : 'Govt Scheme vs Private Moneylender Comparison:'}
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Govt Card */}
-              <div className="p-4 rounded-2xl bg-emerald-950/30 border border-emerald-500/40 space-y-3">
+              <div className="p-4 rounded-xl bg-[#F0FDFA] border border-[#14B8A6]/40 space-y-3 shadow-2xs">
                 <div className="flex items-center justify-between">
-                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black uppercase">
+                  <span className="px-2.5 py-0.5 rounded-full bg-[#CCFBF1] text-[#0F766E] text-[10px] font-bold uppercase">
                     {isHindi ? '🟢 सरकारी सब्सिडी लोन' : '🟢 Govt Subsidized Loan'}
                   </span>
-                  <span className="text-xs font-black text-emerald-400">{defaultInterest}% {isHindi ? 'ब्याज' : 'Interest'}</span>
+                  <span className="text-xs font-bold text-[#0F766E]">{defaultInterest}% {isHindi ? 'ब्याज' : 'Interest'}</span>
                 </div>
                 <div>
-                  <div className="text-[10px] text-slate-400 uppercase">{isHindi ? 'प्रतिदिन की क़िस्त' : 'Daily Installment'}</div>
-                  <div className="text-2xl font-black text-emerald-400">₹{dailyEmiGovt} <span className="text-xs text-slate-400">/{isHindi ? 'दिन' : 'day'}</span></div>
+                  <div className="text-[10px] text-slate-500 uppercase">{isHindi ? 'प्रतिदिन की क़िस्त' : 'Daily Installment'}</div>
+                  <div className="text-2xl font-black text-[#0F766E]">₹{dailyEmiGovt} <span className="text-xs text-slate-500 font-normal">/{isHindi ? 'दिन' : 'day'}</span></div>
                 </div>
-                <div className="space-y-1 pt-2 border-t border-emerald-500/20 text-[11px] text-slate-300">
+                <div className="space-y-1 pt-2 border-t border-[#CCFBF1] text-[11px] text-slate-600">
                   <div className="flex justify-between">
                     <span>{isHindi ? 'मासिक क़िस्त:' : 'Monthly EMI:'}</span>
-                    <span className="font-bold text-white">₹{monthlyEmiGovt.toLocaleString('en-IN')}</span>
+                    <span className="font-bold text-[#173B57]">₹{monthlyEmiGovt.toLocaleString('en-IN')}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>{isHindi ? 'सरकारी सब्सिडी (छूट):' : 'Govt Subsidy:'}</span>
-                    <span className="font-bold text-emerald-400">₹{subsidyAmount.toLocaleString('en-IN')}</span>
+                    <span className="font-bold text-[#0F766E]">₹{subsidyAmount.toLocaleString('en-IN')}</span>
                   </div>
                 </div>
               </div>
 
               {/* Private Moneylender Card */}
-              <div className="p-4 rounded-2xl bg-rose-950/20 border border-rose-500/30 space-y-3">
+              <div className="p-4 rounded-xl bg-[#FFF1F2] border border-rose-200 space-y-3 shadow-2xs">
                 <div className="flex items-center justify-between">
-                  <span className="px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-[10px] font-black uppercase">
+                  <span className="px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-bold uppercase">
                     {isHindi ? '🔴 प्राइवेट साहूकार / माइक्रोफाइनेंस' : '🔴 Private Moneylender / MFI'}
                   </span>
-                  <span className="text-xs font-black text-rose-400">18%+ {isHindi ? 'ब्याज' : 'Interest'}</span>
+                  <span className="text-xs font-bold text-rose-700">18%+ {isHindi ? 'ब्याज' : 'Interest'}</span>
                 </div>
                 <div>
-                  <div className="text-[10px] text-slate-400 uppercase">{isHindi ? 'प्रतिदिन की क़िस्त' : 'Daily Installment'}</div>
-                  <div className="text-2xl font-black text-rose-400">₹{dailyEmiPrivate} <span className="text-xs text-slate-400">/{isHindi ? 'दिन' : 'day'}</span></div>
+                  <div className="text-[10px] text-slate-500 uppercase">{isHindi ? 'प्रतिदिन की क़िस्त' : 'Daily Installment'}</div>
+                  <div className="text-2xl font-black text-rose-700">₹{dailyEmiPrivate} <span className="text-xs text-slate-500 font-normal">/{isHindi ? 'दिन' : 'day'}</span></div>
                 </div>
-                <div className="space-y-1 pt-2 border-t border-rose-500/20 text-[11px] text-slate-300">
+                <div className="space-y-1 pt-2 border-t border-rose-200 text-[11px] text-slate-600">
                   <div className="flex justify-between">
                     <span>{isHindi ? 'मासिक क़िस्त:' : 'Monthly EMI:'}</span>
-                    <span className="font-bold text-white">₹{monthlyEmiPrivate.toLocaleString('en-IN')}</span>
+                    <span className="font-bold text-[#173B57]">₹{monthlyEmiPrivate.toLocaleString('en-IN')}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>{isHindi ? 'सब्सिडी छूट:' : 'Subsidy Discount:'}</span>
-                    <span className="font-bold text-rose-400">₹0 {isHindi ? '(शून्य)' : '(Zero)'}</span>
+                    <span className="font-bold text-rose-700">₹0 {isHindi ? '(शून्य)' : '(Zero)'}</span>
                   </div>
                 </div>
               </div>
@@ -232,36 +233,36 @@ export default function DailyCashflowSimulatorModal({
           </div>
 
           {/* 5-Year Total Lifetime Savings Highlight */}
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-emerald-500/10 to-transparent border border-amber-500/30 flex items-center justify-between gap-4">
+          <div className="p-4 rounded-xl bg-[#FEF3C7] border border-[#F59E0B]/30 flex items-center justify-between gap-4">
             <div className="space-y-1">
-              <div className="text-[11px] font-bold text-amber-300 flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-amber-400" />
+              <div className="text-[11px] font-bold text-[#92400E] flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-[#D97706]" />
                 <span>{isHindi ? 'सरकारी योजना चुनने पर आपकी 5 वर्ष की कुल बचत:' : 'Total 5-Year Lifetime Savings with Govt Scheme:'}</span>
               </div>
-              <div className="text-xl sm:text-2xl font-black text-white">
+              <div className="text-xl sm:text-2xl font-black text-[#173B57]">
                 ₹{netFiveYearSavings.toLocaleString('en-IN')} {isHindi ? 'शुद्ध बचत!' : 'Net Savings!'}
               </div>
             </div>
-            <div className="text-right text-[11px] text-emerald-300 font-bold hidden sm:block">
+            <div className="text-right text-[11px] text-[#0F766E] font-bold hidden sm:block">
               {isHindi ? 'ब्याज व सब्सिडी का सीधा लाभ' : 'Direct interest & subsidy benefit'}
             </div>
           </div>
 
           {/* Profit Safety Gauge */}
-          <div className="p-4 rounded-2xl bg-slate-800/60 border border-slate-700 space-y-2">
+          <div className="p-4 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-2">
             <div className="flex justify-between text-xs">
-              <span className="text-slate-300 font-bold">{isHindi ? 'आपकी दैनिक कमाई में क़िस्त का हिस्सा:' : 'EMI Share of Daily Profit:'}</span>
-              <span className="font-bold text-emerald-400">{emiShareOfDailyProfit}%</span>
+              <span className="text-[#173B57] font-bold">{isHindi ? 'आपकी दैनिक कमाई में क़िस्त का हिस्सा:' : 'EMI Share of Daily Profit:'}</span>
+              <span className="font-bold text-[#0F766E]">{emiShareOfDailyProfit}%</span>
             </div>
-            <div className="w-full bg-slate-700 h-2.5 rounded-full overflow-hidden">
+            <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
               <div 
-                className="bg-emerald-400 h-full rounded-full transition-all duration-500" 
+                className="bg-[#0F766E] h-full rounded-full transition-all duration-500" 
                 style={{ width: `${Math.min(emiShareOfDailyProfit, 100)}%` }}
               />
             </div>
-            <div className="flex justify-between text-[11px] text-slate-400 pt-1">
+            <div className="flex justify-between text-[11px] text-slate-600 pt-1">
               <span>{isHindi ? 'क़िस्त देने के बाद रोज़ आपकी जेब में बचेगा:' : 'Remaining in your pocket daily after EMI:'}</span>
-              <span className="font-bold text-white">
+              <span className="font-bold text-[#173B57]">
                 ₹{profitRemainingAfterEmi}/{isHindi ? 'दिन' : 'day'} (₹{(profitRemainingAfterEmi * 30).toLocaleString('en-IN')}/{isHindi ? 'माह' : 'mo'})
               </span>
             </div>
@@ -270,16 +271,16 @@ export default function DailyCashflowSimulatorModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 sm:p-5 bg-slate-950 border-t border-slate-800 flex items-center justify-between gap-3">
-          <div className="text-[11px] text-slate-400 flex items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+        <div className="p-4 sm:p-5 bg-[#F8FAFC] border-t border-[#E2E8F0] flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
+            <ShieldCheck className="w-4 h-4 text-[#0F766E]" />
             <span>{isHindi ? '₹10 लाख तक के ऋण पर कोई ज़मीन या गारंटी बंधक नहीं रखी जाती।' : 'No collateral or third-party guarantee required up to ₹10 Lakh.'}</span>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-md transition active:scale-95"
+            className="ys-btn-primary"
           >
             {isHindi ? 'समझ आ गया • बंद करें' : 'Understood • Close'}
           </button>

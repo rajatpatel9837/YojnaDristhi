@@ -23,9 +23,13 @@ import {
   FileCheck,
   Camera,
   Phone,
-  X
+  X,
+  ClipboardList,
+  MousePointerClick,
+  ChevronRight
 } from 'lucide-react';
 import DocumentOCRUploadZone from '../components/DocumentOCRUploadZone';
+import { SchemeSearchBar, SchemeQuickDiscovery } from '../components/SchemeDiscoveryHub';
 
 export default function LandingPage({ onOpenAiModal }) {
   const { t, isHindi } = useLanguage();
@@ -68,123 +72,88 @@ export default function LandingPage({ onOpenAiModal }) {
   };
 
   return (
-    <div className="space-y-16 py-6 sm:py-10">
+    <div className="space-y-6 sm:space-y-8 pb-16">
       
-      {/* Hero Section */}
-      <section className="relative overflow-hidden pt-4 pb-12 sm:pb-16 bg-gradient-to-b from-[#F0FDFA]/60 via-[#F7FAFA] to-[#F7FAFA] border-b border-[#E2E8F0]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 sm:space-y-8 relative z-10">
-          
-          {/* Brand Emblem & SIH 2026 Top Badge */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <img 
-              src="/logo.png" 
-              alt="Yojna दृष्टि Official Emblem" 
-              className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-contain shadow-md border-2 border-[#E2E8F0] p-1 bg-white hover:scale-105 transition-transform" 
-            />
-            
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#CCFBF1] border border-[#14B8A6]/40 text-[#115E59] text-xs font-bold tracking-wide shadow-sm">
-              <Sparkles className="w-3.5 h-3.5 text-[#0F766E]" />
-              <span>{t('hero_sih_badge')}</span>
-            </div>
-          </div>
+      {/* 1. Unified Scheme Search & Live Stats Bar (Extended wide, merged seamlessly) */}
+      <SchemeSearchBar />
 
-          <div className="space-y-3 max-w-4xl mx-auto">
-            <div className="text-xs sm:text-sm font-extrabold uppercase tracking-widest text-[#0F766E]">
+      {/* 3. Hero Section (Middle logo removed as requested, sized for optimal 100% zoom viewport visibility) */}
+      <section className="relative overflow-hidden py-5 sm:py-7 bg-gradient-to-b from-[#F0FDFA]/60 via-[#F7FAFA] to-[#F7FAFA] border-t border-b border-[#E2E8F0]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-3 sm:space-y-4 relative z-10">
+
+          <div className="space-y-1.5 sm:space-y-2 max-w-4xl mx-auto">
+            <div className="text-[11px] sm:text-xs font-extrabold uppercase tracking-widest text-[#0F766E]">
               {t('hero_initiative')}
             </div>
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-[#173B57] tracking-tight leading-tight sm:leading-tight">
+            <h1 className="text-2xl sm:text-4xl lg:text-[40px] font-black text-[#173B57] tracking-tight leading-tight sm:leading-snug">
               {t('hero_heading')}
             </h1>
-            <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-600 max-w-2xl mx-auto leading-relaxed">
               {t('hero_subheading')}
             </p>
           </div>
 
           {/* Core Pillars from Brand Emblem: FIND | MATCH | GUIDE | EMPOWER */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto pt-1">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 max-w-2xl mx-auto pt-0.5">
             {[
               { label: t('pillar_find_label'), icon: Search, text: t('pillar_find_desc'), color: 'text-[#F59E0B] bg-amber-50 border-amber-200' },
               { label: t('pillar_match_label'), icon: CheckSquare, text: t('pillar_match_desc'), color: 'text-[#0F766E] bg-[#CCFBF1] border-[#14B8A6]/40' },
               { label: t('pillar_guide_label'), icon: Target, text: t('pillar_guide_desc'), color: 'text-[#F59E0B] bg-amber-50 border-amber-200' },
               { label: t('pillar_empower_label'), icon: TrendingUp, text: t('pillar_empower_desc'), color: 'text-[#0F766E] bg-[#CCFBF1] border-[#14B8A6]/40' }
             ].map((pillar, idx) => (
-              <div key={idx} className={`p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1 ${pillar.color}`}>
-                <pillar.icon className="w-4 h-4" />
-                <span className="text-[11px] font-extrabold tracking-wider">{pillar.label}</span>
-                <span className="text-[10px] text-slate-600 font-medium">{pillar.text}</span>
+              <div key={idx} className={`p-2 sm:p-2.5 rounded-xl border flex flex-col items-center justify-center gap-0.5 ${pillar.color}`}>
+                <pillar.icon className="w-3.5 h-3.5" />
+                <span className="text-[10.5px] font-extrabold tracking-wider">{pillar.label}</span>
+                <span className="text-[9.5px] text-slate-600 font-medium">{pillar.text}</span>
               </div>
             ))}
           </div>
 
-          {/* Hero CTAs */}
-          <div className="flex flex-wrap justify-center items-center gap-3.5 pt-2">
+          {/* Hero CTAs: Single Primary Action with Clean Secondary Options */}
+          <div className="flex flex-wrap justify-center items-center gap-2.5 pt-1">
             <button
               onClick={() => navigate('/wizard')}
-              className="px-6 py-3.5 rounded-xl bg-[#0F766E] hover:bg-[#115E59] text-white font-extrabold text-sm shadow-md hover:shadow-lg transition flex items-center gap-2"
+              className="ys-btn-primary px-5 py-2.5 text-xs sm:text-sm shadow-sm"
             >
-              <Briefcase className="w-4 h-4" />
+              <Briefcase className="w-3.5 h-3.5" />
               <span>{t('hero_cta_primary')}</span>
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
 
             <button
               onClick={handleDemoProfile}
-              className="px-5 py-3.5 rounded-xl bg-white hover:bg-slate-50 text-[#173B57] font-bold text-sm border border-[#CBD5E1] shadow-sm transition flex items-center gap-2"
+              className="ys-btn-secondary px-4 sm:px-5 py-2.5 text-xs sm:text-sm"
             >
-              <Sparkles className="w-4 h-4 text-[#0F766E]" />
+              <Sparkles className="w-3.5 h-3.5 text-[#0F766E]" />
               <span>{t('hero_cta_secondary')}</span>
             </button>
 
             <button
               onClick={() => navigate('/track-application')}
-              className="px-5 py-3.5 rounded-xl bg-[#F0FDFA] hover:bg-[#CCFBF1] text-[#0F766E] font-bold text-sm border border-[#14B8A6]/40 shadow-sm transition flex items-center gap-2"
+              className="ys-btn-secondary px-4 sm:px-5 py-2.5 text-xs sm:text-sm"
             >
-              <ShieldCheck className="w-4 h-4 text-[#0F766E]" />
+              <ShieldCheck className="w-3.5 h-3.5 text-[#0F766E]" />
               <span>{t('hero_cta_track')}</span>
             </button>
 
             <button
               type="button"
               onClick={() => window.dispatchEvent(new CustomEvent('yojnasetu_open_call_assistant'))}
-              className="px-5 py-3.5 rounded-xl bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-700 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold text-sm shadow-md hover:shadow-lg transition flex items-center gap-2 active:scale-95 border border-emerald-400/40"
+              className="ys-btn-secondary px-4 sm:px-5 py-2.5 text-xs sm:text-sm"
             >
-              <Phone className="w-4 h-4 text-emerald-200" />
+              <Phone className="w-3.5 h-3.5 text-[#0F766E]" />
               <span>{t('hero_cta_call')}</span>
             </button>
           </div>
 
-          {/* Zero-Typing OCR Grassroots Hero Card */}
-          <div className="max-w-2xl mx-auto p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-teal-950 via-[#173B57] to-[#0F766E] text-white shadow-xl border border-teal-500/30 flex flex-col sm:flex-row items-center justify-between gap-4 text-left">
-            <div className="space-y-1 text-center sm:text-left">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 text-[10px] font-black uppercase tracking-wider border border-amber-300/30">
-                <Sparkles className="w-3 h-3 text-amber-300" />
-                <span>{t('hero_ocr_badge')}</span>
-              </div>
-              <h3 className="text-base sm:text-lg font-black text-white">
-                {t('hero_ocr_title')}
-              </h3>
-              <p className="text-xs text-slate-200">
-                {t('hero_ocr_desc')}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsSnapModalOpen(true)}
-              className="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs shadow-md transition flex items-center gap-2 shrink-0 active:scale-95"
-            >
-              <Camera className="w-4 h-4 text-slate-950" />
-              <span>{t('hero_ocr_btn')}</span>
-            </button>
-          </div>
-
-          {/* Trust Banner */}
-          <div className="pt-2 flex justify-center items-center gap-2 text-xs text-slate-700 font-medium bg-white py-2.5 px-4 rounded-xl border border-[#E2E8F0] shadow-sm max-w-2xl mx-auto">
-            <ShieldCheck className="w-4 h-4 text-[#0F766E] shrink-0" />
-            <span>{t('disclaimer_trust')}</span>
-          </div>
-
         </div>
       </section>
+
+      {/* 4. Scheme Quick Discovery Actions (Placed in original location below Hero section) */}
+      <SchemeQuickDiscovery 
+        onOpenSnapModal={() => setIsSnapModalOpen(true)}
+        onOpenAiModal={onOpenAiModal}
+      />
 
       {/* Core Capabilities Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -274,73 +243,84 @@ export default function LandingPage({ onOpenAiModal }) {
         </div>
       </section>
 
-      {/* How It Works (8-Step Visual Workflow) */}
+      {/* How It Works (Simplified 3-Step Clear Workflow inspired by reference) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 sm:p-10 shadow-sm space-y-8">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-white to-[#F0FDFA]/30 border border-[#E2E8F0] p-6 sm:p-12 shadow-xs">
           
-          <div className="text-center max-w-xl mx-auto space-y-1">
-            <span className="text-xs font-bold text-[#0F766E] uppercase tracking-wider">
-              {isHindi ? 'पारदर्शी व सुगम यात्रा' : 'Clear & Transparent Journey'}
+          {/* Section Header */}
+          <div className="text-center max-w-2xl mx-auto space-y-2 mb-10 sm:mb-12">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              {isHindi ? 'यह कैसे काम करता है' : 'How it works'}
             </span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#173B57]">
-              {isHindi ? 'योजना दृष्टि कैसे काम करता है' : 'How Yojna दृष्टि Works'}
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-[#173B57] tracking-tight">
+              {isHindi ? 'सरकारी योजनाओं के लिए आवेदन के सरल चरण' : 'Easy steps to apply for Government Schemes'}
             </h2>
-            <p className="text-xs text-slate-500">
-              {isHindi 
-                ? 'एकल प्रोफ़ाइल इनपुट से लेकर बैंक खाते में आधिकारिक संवितरण तक 8 चरण' 
-                : 'From single profile input to official fund disbursal in 8 structured steps'}
-            </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-            {[
-              { 
-                num: '01', 
-                title: isHindi ? 'अपनी बुनियादी जानकारी बताएं' : 'Tell Us About Yourself', 
-                desc: isHindi ? 'व्यक्तिगत और श्रेणी विवरण एक बार दर्ज करें' : 'Enter personal & category details once' 
-              },
-              { 
-                num: '02', 
-                title: isHindi ? 'व्यवसाय का दायरा जोड़ें' : 'Add Enterprise Scope', 
-                desc: isHindi ? 'व्यवसाय स्तर, क्षेत्र, टर्नओवर और उद्यम स्थिति' : 'Business stage, sector, turnover & Udyam' 
-              },
-              { 
-                num: '03', 
-                title: isHindi ? 'सख्त पात्रता फ़िल्टरिंग' : 'Eligibility Filtering', 
-                desc: isHindi ? 'नियम-आधारित सरकारी मानदंडों का सत्यापन' : 'Rule-based hard criteria verification' 
-              },
-              { 
-                num: '04', 
-                title: isHindi ? 'अनुकूलता स्कोर गणना' : 'Compatibility Score', 
-                desc: isHindi ? 'अधिकतम लाभ हेतु भारित स्कोरिंग' : 'Weighted scoring for maximum benefits' 
-              },
-              { 
-                num: '05', 
-                title: isHindi ? 'व्यक्तिगत योजना मिलान' : 'Personalized Matches', 
-                desc: isHindi ? '🟢 पूर्णतः पात्र और 🟡 सत्यापन आवश्यक में वर्गीकृत' : 'Classified into 🟢 Eligible & 🟡 Verify' 
-              },
-              { 
-                num: '06', 
-                title: isHindi ? 'दस्तावेज़ AI व OCR स्कैन' : 'DocVerifier AI Scan', 
-                desc: isHindi ? 'प्रमाण पत्रों की तुरंत सत्यता जांच' : 'Instant OCR check on certificates' 
-              },
-              { 
-                num: '07', 
-                title: isHindi ? 'चैनल पार्टनर बैंक मैप' : 'Channel Partner Map', 
-                desc: isHindi ? 'नज़दीकी अधिकृत नोडल बैंक शाखाएं खोजें' : 'Locate authorized nodal bank branches' 
-              },
-              { 
-                num: '08', 
-                title: isHindi ? 'संवितरण व PFMS ट्रैकिंग' : 'End-to-End Tracking', 
-                desc: isHindi ? 'ट्रेजरी स्वीकृति और बैंक खाते में DBT अपडेट' : 'Real-time PFMS treasury & DBT updates' 
-              }
-            ].map((step, i) => (
-              <div key={i} className="p-4 rounded-xl bg-[#F7FAFA] border border-[#E2E8F0] hover:border-[#14B8A6] transition space-y-2">
-                <span className="text-xs font-black text-[#0F766E] font-mono bg-[#CCFBF1] px-2 py-0.5 rounded">{step.num}</span>
-                <h4 className="font-bold text-[#173B57] text-xs pt-1">{step.title}</h4>
-                <p className="text-[11px] text-slate-500 leading-normal">{step.desc}</p>
+          {/* 3 Step Cards with Chevrons */}
+          <div className="flex flex-col md:flex-row items-center justify-center gap-4 sm:gap-6">
+            
+            {/* Step 1: Enter Details */}
+            <div className="w-full md:w-1/3 bg-white rounded-2xl p-6 sm:p-8 border border-[#E2E8F0] shadow-sm hover:shadow-md hover:border-[#0F766E]/40 transition-all text-center flex flex-col items-center group">
+              <div className="w-16 h-16 rounded-2xl bg-[#F0FDFA] border border-[#CCFBF1] text-[#0F766E] flex items-center justify-center mb-4 group-hover:scale-105 transition-transform shadow-2xs">
+                <ClipboardList className="w-8 h-8 text-[#0F766E]" />
               </div>
-            ))}
+              <h3 className="text-lg sm:text-xl font-bold text-[#0F766E] mb-2">
+                {isHindi ? 'विवरण दर्ज करें' : 'Enter Details'}
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-xs">
+                {isHindi ? (
+                  <>अपनी <strong>बुनियादी जानकारी</strong> दर्ज करके या <strong>दस्तावेज़ स्कैन</strong> करके शुरुआत करें!</>
+                ) : (
+                  <>Start by entering your <strong>basic details</strong> or <strong>scanning your document</strong>!</>
+                )}
+              </p>
+            </div>
+
+            {/* Connecting Chevron 1 */}
+            <div className="hidden md:flex items-center justify-center text-[#99F6E4] shrink-0">
+              <ChevronRight className="w-8 h-8 text-[#0F766E]/30 stroke-[2.5]" />
+            </div>
+
+            {/* Step 2: Search */}
+            <div className="w-full md:w-1/3 bg-white rounded-2xl p-6 sm:p-8 border border-[#E2E8F0] shadow-sm hover:shadow-md hover:border-[#0F766E]/40 transition-all text-center flex flex-col items-center group">
+              <div className="w-16 h-16 rounded-2xl bg-[#F0FDFA] border border-[#CCFBF1] text-[#0F766E] flex items-center justify-center mb-4 group-hover:scale-105 transition-transform shadow-2xs">
+                <Search className="w-8 h-8 text-[#0F766E]" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-bold text-[#0F766E] mb-2">
+                {isHindi ? 'योजना खोजें' : 'Search'}
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-xs">
+                {isHindi ? (
+                  <>हमारा खोज इंजन आपके लिए <strong>सर्वाधिक प्रासंगिक योजनाएं</strong> खोजेगा!</>
+                ) : (
+                  <>Our search engine will <strong>find the relevant schemes</strong> for you!</>
+                )}
+              </p>
+            </div>
+
+            {/* Connecting Chevron 2 */}
+            <div className="hidden md:flex items-center justify-center text-[#99F6E4] shrink-0">
+              <ChevronRight className="w-8 h-8 text-[#0F766E]/30 stroke-[2.5]" />
+            </div>
+
+            {/* Step 3: Select & Apply */}
+            <div className="w-full md:w-1/3 bg-white rounded-2xl p-6 sm:p-8 border border-[#E2E8F0] shadow-sm hover:shadow-md hover:border-[#0F766E]/40 transition-all text-center flex flex-col items-center group">
+              <div className="w-16 h-16 rounded-2xl bg-[#F0FDFA] border border-[#CCFBF1] text-[#0F766E] flex items-center justify-center mb-4 group-hover:scale-105 transition-transform shadow-2xs">
+                <MousePointerClick className="w-8 h-8 text-[#0F766E]" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-bold text-[#0F766E] mb-2">
+                {isHindi ? 'चुनें एवं आवेदन करें' : 'Select & Apply'}
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-xs">
+                {isHindi ? (
+                  <>सबसे उपयुक्त योजना <strong>चुनें और मार्गदर्शन के साथ आवेदन करें</strong>!</>
+                ) : (
+                  <><strong>Select and apply</strong> for the best suited scheme with guidance!</>
+                )}
+              </p>
+            </div>
+
           </div>
 
         </div>

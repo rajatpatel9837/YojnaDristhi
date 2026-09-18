@@ -271,7 +271,7 @@ export default function AskYojnaSetuChatbot() {
 
       {/* Floating Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-4 right-4 z-50 w-[92vw] sm:w-[420px] h-[580px] bg-white border border-[#E2E8F0] rounded-2xl shadow-2xl flex flex-col overflow-hidden text-[#173B57] animate-fadeIn">
+        <div className="fixed bottom-4 right-4 z-50 w-[calc(100vw-2rem)] sm:w-[420px] max-w-[420px] h-[580px] max-h-[calc(100vh-2rem)] bg-white border border-[#E2E8F0] rounded-2xl shadow-2xl flex flex-col overflow-hidden text-[#173B57] animate-fadeIn">
           
           {/* Header Bar */}
           <div className="bg-[#F8FAFC] p-4 border-b border-[#E2E8F0] flex items-center justify-between">

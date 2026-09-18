@@ -3,7 +3,7 @@
  * 
  * ARCHITECTURE NOTE FOR PRODUCTION DEPLOYMENT:
  * This layer abstracts external Government & PFMS (Public Financial Management System) API integrations.
- * Currently returns mock government responses for SIH demonstration.
+ * Currently returns mock government responses for demonstration.
  * In a live production environment, this service adapter is replaced with authorized government OAuth/REST/SOAP endpoints.
  */
 

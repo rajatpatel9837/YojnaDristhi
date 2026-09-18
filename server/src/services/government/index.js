@@ -4,7 +4,7 @@ const StatusProcessor = require('./StatusProcessor');
 /**
  * Factory that returns the active government/PFMS provider instance.
  * When a real authorized API is enabled via environment variable (e.g. GOVERNMENT_API_PROVIDER=LIVE),
- * it returns the authorized provider adapter. Defaults to MockGovernmentProvider for SIH/Demonstration.
+ * it returns the authorized provider adapter. Defaults to MockGovernmentProvider for demonstration.
  */
 const getGovernmentProvider = () => {
   const providerType = process.env.GOVERNMENT_API_PROVIDER || 'MOCK';

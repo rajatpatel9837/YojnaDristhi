@@ -47,7 +47,7 @@ export function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="e.g. sunita@demo.in"
-              className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3.5 py-2.5 text-[#173B57] focus:outline-none focus:border-[#0F766E]"
+              className="ys-input"
               required
             />
           </div>
@@ -59,7 +59,7 @@ export function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3.5 py-2.5 text-[#173B57] focus:outline-none focus:border-[#0F766E]"
+              className="ys-input"
               required
             />
           </div>
@@ -67,7 +67,7 @@ export function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-xl bg-[#0F766E] hover:bg-[#115E59] text-white font-bold transition shadow-sm"
+            className="ys-btn-primary w-full py-3"
           >
             {loading ? 'Authenticating...' : 'Sign In'}
           </button>
@@ -122,7 +122,7 @@ export function RegisterPage() {
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3.5 py-2.5 text-[#173B57] font-bold focus:outline-none focus:border-[#0F766E]"
+              className="ys-select font-bold"
             >
               <option value="BENEFICIARY">Citizen / Entrepreneur / Beneficiary</option>
               <option value="PROVIDER">Company / CSR Organization</option>
@@ -136,7 +136,7 @@ export function RegisterPage() {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3.5 py-2.5 text-[#173B57] focus:outline-none focus:border-[#0F766E]"
+              className="ys-input"
               required
             />
           </div>
@@ -147,7 +147,7 @@ export function RegisterPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3.5 py-2.5 text-[#173B57] focus:outline-none focus:border-[#0F766E]"
+              className="ys-input"
               required
             />
           </div>
@@ -158,14 +158,14 @@ export function RegisterPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3.5 py-2.5 text-[#173B57] focus:outline-none focus:border-[#0F766E]"
+              className="ys-input"
               required
             />
           </div>
 
           <button
             type="submit"
-            className="w-full py-3 rounded-xl bg-[#0F766E] hover:bg-[#115E59] text-white font-bold transition shadow-sm"
+            className="ys-btn-primary w-full py-3"
           >
             Create Account
           </button>

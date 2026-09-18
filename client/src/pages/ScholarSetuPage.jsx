@@ -66,7 +66,7 @@ export default function ScholarSetuPage() {
             <select
               value={studentProfile.educationLevel}
               onChange={(e) => setStudentProfile({ ...studentProfile, educationLevel: e.target.value })}
-              className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E]"
+              className="ys-select text-xs"
             >
               <option value="Undergraduate">{isHindi ? 'स्नातक (UG)' : 'Undergraduate'}</option>
               <option value="Postgraduate">{isHindi ? 'परास्नातक (PG)' : 'Postgraduate'}</option>
@@ -79,7 +79,7 @@ export default function ScholarSetuPage() {
             <select
               value={studentProfile.category}
               onChange={(e) => setStudentProfile({ ...studentProfile, category: e.target.value })}
-              className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] focus:outline-none focus:border-[#0F766E]"
+              className="ys-select text-xs"
             >
               <option value="SC">SC</option>
               <option value="ST">ST</option>
@@ -95,7 +95,7 @@ export default function ScholarSetuPage() {
               type="number"
               value={studentProfile.familyIncome}
               onChange={(e) => setStudentProfile({ ...studentProfile, familyIncome: Number(e.target.value) })}
-              className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] font-bold focus:outline-none focus:border-[#0F766E]"
+              className="ys-input text-xs font-bold"
             />
           </div>
 
@@ -105,14 +105,14 @@ export default function ScholarSetuPage() {
               type="number"
               value={studentProfile.marksPercentage}
               onChange={(e) => setStudentProfile({ ...studentProfile, marksPercentage: Number(e.target.value) })}
-              className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#173B57] font-bold focus:outline-none focus:border-[#0F766E]"
+              className="ys-input text-xs font-bold"
             />
           </div>
         </div>
 
         <button
           onClick={fetchScholarships}
-          className="px-4 py-2.5 rounded-xl bg-[#0F766E] hover:bg-[#115E59] text-white font-bold text-xs transition flex items-center gap-1.5 shadow-sm"
+          className="ys-btn-primary text-xs py-2.5 px-4 min-h-[40px]"
         >
           <Sparkles className="w-4 h-4" /> 
           <span>{isHindi ? 'पात्रता पुनः जांचें' : 'Re-Evaluate Scholarship Fits'}</span>

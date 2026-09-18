@@ -48,20 +48,20 @@ export default function BankCounterGuideModal({ isOpen, onClose }) {
   const goldenRule = isHindi ? BANK_COUNTER_GUIDE_DATA.goldenRule_hi : BANK_COUNTER_GUIDE_DATA.goldenRule_en;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-fadeIn">
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-300 w-full max-w-3xl overflow-hidden flex flex-col max-h-[92vh]">
+    <div className="ys-modal-overlay animate-fadeIn">
+      <div className="ys-modal-dialog max-w-3xl">
         
         {/* Header Bar */}
-        <div className="bg-gradient-to-r from-slate-900 via-[#173B57] to-[#0F766E] text-white p-5 sm:p-6 flex items-start justify-between gap-3">
+        <div className="ys-modal-header">
           <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-extrabold uppercase tracking-wider border border-emerald-400/30">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#CCFBF1] text-[#0F766E] text-xs font-bold uppercase tracking-wider border border-[#14B8A6]/30">
+              <ShieldCheck className="w-4 h-4 text-[#0F766E]" />
               <span>{isHindi ? 'बैंक काउंटर रक्षा शील्ड (Citizen Legal Armor)' : 'Bank Counter Defense Shield (Citizen Legal Armor)'}</span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+            <h2 className="text-xl sm:text-2xl font-black text-[#173B57] tracking-tight">
               {title}
             </h2>
-            <p className="text-xs text-slate-200 leading-relaxed max-w-xl">
+            <p className="text-xs text-slate-600 leading-relaxed max-w-xl">
               {subtitle}
             </p>
           </div>
@@ -69,7 +69,7 @@ export default function BankCounterGuideModal({ isOpen, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 transition"
+            className="p-2 rounded-xl text-slate-400 hover:text-[#173B57] hover:bg-slate-100 transition shrink-0"
             title={isHindi ? 'बंद करें' : 'Close'}
           >
             <X className="w-5 h-5" />
@@ -170,16 +170,16 @@ export default function BankCounterGuideModal({ isOpen, onClose }) {
                       </div>
 
                       {/* RBI Regulatory Citation */}
-                      <div className="p-3 rounded-xl bg-slate-900 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-xs">
+                      <div className="p-3.5 rounded-xl bg-[#173B57] text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-xs">
                         <div className="space-y-0.5">
-                          <span className="text-[10px] text-emerald-400 uppercase font-extrabold tracking-wider block">
+                          <span className="text-[10px] text-[#5EEAD4] uppercase font-extrabold tracking-wider block">
                             {isHindi ? 'वैधानिक नियम एवं सर्कुलर (Govt & RBI Mandate)' : 'Statutory Mandate & Circular (Govt & RBI)'}
                           </span>
                           <span className="text-xs font-bold text-slate-100 block">
                             {item.rbiCircularTitle}
                           </span>
                         </div>
-                        <span className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-mono text-[11px] border border-emerald-400/30">
+                        <span className="px-2.5 py-1 rounded-lg bg-[#0F766E]/40 text-[#5EEAD4] font-mono text-[11px] border border-[#14B8A6]/40">
                           {item.rbiCircularCode}
                         </span>
                       </div>
@@ -259,11 +259,11 @@ export default function BankCounterGuideModal({ isOpen, onClose }) {
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+        <div className="p-4 bg-[#F8FAFC] border-t border-[#E2E8F0] flex justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2 rounded-xl bg-[#173B57] hover:bg-[#0F766E] text-white font-bold text-xs transition shadow-sm"
+            className="ys-btn-primary"
           >
             {isHindi ? 'समझ गया, बंद करें' : 'Understood, Close'}
           </button>

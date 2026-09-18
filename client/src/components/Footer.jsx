@@ -7,9 +7,9 @@ export default function Footer() {
   const { t } = useLanguage();
 
   return (
-    <footer className="bg-white text-slate-600 border-t border-[#E2E8F0] text-sm mt-auto">
+    <footer id="about-section" className="bg-white text-slate-600 border-t border-[#E2E8F0] text-sm mt-auto scroll-mt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <div id="contact-section" className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 scroll-mt-20">
           
           <div className="space-y-4 md:col-span-2">
             <div className="flex items-center space-x-3">

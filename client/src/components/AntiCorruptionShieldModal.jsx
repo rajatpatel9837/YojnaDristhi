@@ -60,20 +60,20 @@ Kindly initiate swift investigation and appropriate legal action under the Preve
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-fadeIn">
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[92vh] text-slate-100">
+    <div className="ys-modal-overlay animate-fadeIn">
+      <div className="ys-modal-dialog max-w-3xl">
         
         {/* Header */}
-        <div className="bg-gradient-to-r from-amber-950 via-slate-900 to-slate-950 p-5 sm:p-6 border-b border-amber-500/20 flex items-start justify-between gap-3">
+        <div className="ys-modal-header">
           <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-black uppercase tracking-wider border border-amber-400/30">
-              <ShieldAlert className="w-3.5 h-3.5 text-amber-300" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FEF3C7] text-[#92400E] text-xs font-bold uppercase tracking-wider border border-[#F59E0B]/30">
+              <ShieldAlert className="w-3.5 h-3.5 text-[#D97706]" />
               <span>{isHindi ? 'भ्रष्टाचार एवं दलाल रोधी शील्ड • Anti-Corruption Shield' : 'Anti-Corruption & Anti-Middleman Shield'}</span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
+            <h2 className="text-xl sm:text-2xl font-black text-[#173B57] flex items-center gap-2">
               <span>{isHindi ? '🛡️ 100% निःशुल्क सरकारी योजना — दलालों से सावधान!' : '🛡️ 100% Free Govt Schemes — Beware of Middlemen!'}</span>
             </h2>
-            <p className="text-xs text-slate-300 max-w-xl leading-relaxed">
+            <p className="text-xs text-slate-600 max-w-xl leading-relaxed">
               {isHindi
                 ? 'भारत सरकार या राज्य सरकार की किसी भी योजना में आवेदन करने का कोई गुप्त शुल्क या कमीशन नहीं होता। रिश्वत मांगना व देना दोनों संज्ञेय अपराध हैं।'
                 : 'There is zero hidden commission or fee to apply for central or state government schemes. Offering or demanding bribes is a cognizable offense.'}
@@ -83,75 +83,76 @@ Kindly initiate swift investigation and appropriate legal action under the Preve
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition active:scale-95 shrink-0"
+            className="p-2 rounded-xl text-slate-400 hover:text-[#173B57] hover:bg-slate-100 transition shrink-0"
+            aria-label="Close"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Scrollable Content */}
-        <div className="p-5 sm:p-6 overflow-y-auto space-y-6 text-xs">
+        <div className="p-5 sm:p-6 overflow-y-auto space-y-6 text-xs text-[#173B57]">
           
           {/* Zero-Fee Certificate Stamp */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-emerald-950/30 border border-emerald-500/40 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="p-4 sm:p-5 rounded-xl bg-[#F0FDFA] border border-[#14B8A6]/40 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="space-y-1 text-center sm:text-left">
-              <div className="text-xs font-extrabold text-emerald-400 uppercase tracking-wide flex items-center justify-center sm:justify-start gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <div className="text-xs font-bold text-[#0F766E] uppercase tracking-wide flex items-center justify-center sm:justify-start gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-[#0F766E]" />
                 <span>{isHindi ? 'आधिकारिक भारत सरकार अधिदेश (Zero-Fee Rule)' : 'Official Government of India Mandate (Zero-Fee Rule)'}</span>
               </div>
-              <div className="text-base sm:text-lg font-black text-white">
+              <div className="text-base sm:text-lg font-black text-[#173B57]">
                 {isHindi ? 'योजना पोर्टल रजिस्ट्रेशन व बैंक फॉर्म पूर्णतः मुफ़्त है' : 'Scheme Portal Registration & Bank Forms are 100% Free'}
               </div>
-              <p className="text-[11px] text-slate-300">
+              <p className="text-[11px] text-slate-600">
                 {isHindi
                   ? 'यदि कोई व्यक्ति या सीएससी ऑपरेटर सामान्य सरकारी फ़ीस (₹15-30) से अधिक कमीशन मांगता है, तो वह पूरी तरह अवैध है।'
                   : 'If any individual or CSC operator demands commissions above nominal portal charges (₹15-30), it is completely illegal.'}
               </p>
             </div>
 
-            <div className="px-4 py-2 rounded-xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-mono font-black text-sm text-center shrink-0">
+            <div className="px-4 py-2 rounded-xl bg-white border border-[#14B8A6]/40 text-[#0F766E] font-mono font-black text-sm text-center shrink-0 shadow-xs">
               {isHindi ? '₹0 शुल्क' : '₹0 Fee'}
             </div>
           </div>
 
           {/* 3 Red Flag Warnings */}
           <div className="space-y-2">
-            <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-              <AlertTriangle className="w-4 h-4 text-amber-400" />
+            <h3 className="text-xs font-bold text-[#173B57] uppercase tracking-wider flex items-center gap-1.5">
+              <AlertTriangle className="w-4 h-4 text-amber-500" />
               <span>{isHindi ? 'दलालों व धोखेबाज़ों की 3 प्रमुख पहचान (Beware of These Signs):' : '3 Warning Signs of Middlemen Fraud:'}</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="p-3.5 rounded-xl bg-slate-800/70 border border-slate-700/80 space-y-1.5">
-                <div className="font-bold text-rose-400 flex items-center gap-1">
-                  <UserX className="w-3.5 h-3.5" />
-                  <span>{isHindi ? '5% - 10% कमीशन मांगना' : 'Demanding 5% - 10% Commission'}</span>
+              <div className="p-3.5 rounded-xl bg-white border border-rose-200 space-y-1.5 shadow-2xs">
+                <div className="font-bold text-rose-700 flex items-center gap-1 text-xs">
+                  <UserX className="w-3.5 h-3.5 text-rose-600" />
+                  <span>{isHindi ? '5% - 10% कमीशन मांगना' : 'Demanding 5% - 10% Cut'}</span>
                 </div>
-                <p className="text-[11px] text-slate-400">
+                <p className="text-[11px] text-slate-600 leading-relaxed">
                   {isHindi
                     ? '"लोन पास कराने के लिए बैंक मैनेजर को हिस्सा देना पड़ेगा" — यह 100% झूठ और धोखाधड़ी है।'
-                    : '"Must give commission to bank manager to get loan passed" — This is completely fraudulent.'}
+                    : '"Must give cut to bank manager to get loan passed" — This is completely fraudulent.'}
                 </p>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-slate-800/70 border border-slate-700/80 space-y-1.5">
-                <div className="font-bold text-amber-400 flex items-center gap-1">
-                  <Lock className="w-3.5 h-3.5" />
-                  <span>{isHindi ? 'निजी खाते में पैसे मंगाना' : 'Demanding Money in Personal Account'}</span>
+              <div className="p-3.5 rounded-xl bg-white border border-amber-200 space-y-1.5 shadow-2xs">
+                <div className="font-bold text-amber-800 flex items-center gap-1 text-xs">
+                  <Lock className="w-3.5 h-3.5 text-amber-600" />
+                  <span>{isHindi ? 'निजी खाते में पैसे मंगाना' : 'Demanding Personal Transfer'}</span>
                 </div>
-                <p className="text-[11px] text-slate-400">
+                <p className="text-[11px] text-slate-600 leading-relaxed">
                   {isHindi
                     ? 'सरकारी सब्सिडी सीधे आपके बैंक खाते (DBT) में आती है, किसी भी बिचौलिये के खाते में नहीं।'
                     : 'Government subsidies credit directly into your DBT account, never to any intermediary.'}
                 </p>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-slate-800/70 border border-slate-700/80 space-y-1.5">
-                <div className="font-bold text-sky-400 flex items-center gap-1">
-                  <ShieldAlert className="w-3.5 h-3.5" />
-                  <span>{isHindi ? 'फर्जी मंज़ूरी पत्र (Fake Sanction)' : 'Fake Sanction / Approval Letter'}</span>
+              <div className="p-3.5 rounded-xl bg-white border border-sky-200 space-y-1.5 shadow-2xs">
+                <div className="font-bold text-sky-800 flex items-center gap-1 text-xs">
+                  <ShieldAlert className="w-3.5 h-3.5 text-sky-600" />
+                  <span>{isHindi ? 'फर्जी मंज़ूरी पत्र (Fake Sanction)' : 'Fake Sanction Letter'}</span>
                 </div>
-                <p className="text-[11px] text-slate-400">
+                <p className="text-[11px] text-slate-600 leading-relaxed">
                   {isHindi
                     ? 'व्हाट्सएप पर आए किसी भी अनधिकृत लोन पत्र पर विश्वास न करें। हमेशा बैंक शाखा जाकर पुष्टि करें।'
                     : 'Never trust unauthorized sanction letters received on WhatsApp. Always verify directly at the branch.'}
@@ -162,58 +163,58 @@ Kindly initiate swift investigation and appropriate legal action under the Preve
 
           {/* Official Vigilance & Anti-Corruption Hotlines */}
           <div className="space-y-3">
-            <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">
+            <h3 className="text-xs font-bold text-[#173B57] uppercase tracking-wider">
               {isHindi ? 'सीधी शिकायत हेतु आधिकारिक सरकारी सतर्कता नंबर (Toll-Free Vigilance Helplines):' : 'Official Government Anti-Corruption Hotlines:'}
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="p-4 rounded-xl bg-slate-800/90 border border-slate-700 flex items-center justify-between">
+              <div className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-between">
                 <div>
-                  <div className="font-bold text-white text-xs">{isHindi ? 'केंद्रीय सतर्कता आयोग (CVC)' : 'Central Vigilance Commission (CVC)'}</div>
-                  <div className="text-[11px] text-slate-400">{isHindi ? 'भ्रष्टाचार विरोधी राष्ट्रीय हेल्पलाइन' : 'National Anti-Corruption Helpline'}</div>
+                  <div className="font-bold text-[#173B57] text-xs">{isHindi ? 'केंद्रीय सतर्कता आयोग (CVC)' : 'Central Vigilance Commission (CVC)'}</div>
+                  <div className="text-[11px] text-slate-500">{isHindi ? 'भ्रष्टाचार विरोधी राष्ट्रीय हेल्पलाइन' : 'National Anti-Corruption Helpline'}</div>
                 </div>
                 <a
                   href="tel:1964"
-                  className="px-3 py-1.5 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-400/30 font-bold hover:bg-rose-500/30 transition flex items-center gap-1"
+                  className="px-3 py-1.5 rounded-lg bg-white text-rose-700 border border-rose-200 font-bold hover:bg-rose-50 transition flex items-center gap-1 text-xs"
                 >
                   <PhoneCall className="w-3.5 h-3.5" /> 1964
                 </a>
               </div>
 
-              <div className="p-4 rounded-xl bg-slate-800/90 border border-slate-700 flex items-center justify-between">
+              <div className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-between">
                 <div>
-                  <div className="font-bold text-white text-xs">{isHindi ? 'CBI भ्रष्टाचार निरोधक ब्यूरो' : 'CBI Anti-Corruption Bureau'}</div>
-                  <div className="text-[11px] text-slate-400">{isHindi ? 'बैंक अधिकारियों द्वारा रिश्वत मांग पर' : 'For bribes demanded by bank officers'}</div>
+                  <div className="font-bold text-[#173B57] text-xs">{isHindi ? 'CBI भ्रष्टाचार निरोधक ब्यूरो' : 'CBI Anti-Corruption Bureau'}</div>
+                  <div className="text-[11px] text-slate-500">{isHindi ? 'बैंक अधिकारियों द्वारा रिश्वत मांग पर' : 'For bribes demanded by bank officers'}</div>
                 </div>
                 <a
                   href="tel:1800115555"
-                  className="px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-400/30 font-bold hover:bg-amber-500/30 transition flex items-center gap-1"
+                  className="px-3 py-1.5 rounded-lg bg-white text-amber-800 border border-amber-200 font-bold hover:bg-amber-50 transition flex items-center gap-1 text-xs"
                 >
                   <PhoneCall className="w-3.5 h-3.5" /> 1800-11-5555
                 </a>
               </div>
 
-              <div className="p-4 rounded-xl bg-slate-800/90 border border-slate-700 flex items-center justify-between">
+              <div className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-between">
                 <div>
-                  <div className="font-bold text-white text-xs">{isHindi ? 'राज्य सतर्कता अन्वेषण ब्यूरो (ACB)' : 'State Vigilance & ACB Bureau'}</div>
-                  <div className="text-[11px] text-slate-400">{isHindi ? 'राज्य स्तर पर सरकारी दफ्तरों में रिश्वतखोरी पर' : 'For bribes in state government offices'}</div>
+                  <div className="font-bold text-[#173B57] text-xs">{isHindi ? 'राज्य सतर्कता अन्वेषण ब्यूरो (ACB)' : 'State Vigilance & ACB Bureau'}</div>
+                  <div className="text-[11px] text-slate-500">{isHindi ? 'राज्य स्तर पर सरकारी दफ्तरों में रिश्वतखोरी पर' : 'For bribes in state government offices'}</div>
                 </div>
                 <a
                   href="tel:1064"
-                  className="px-3 py-1.5 rounded-lg bg-sky-500/20 text-sky-300 border border-sky-400/30 font-bold hover:bg-sky-500/30 transition flex items-center gap-1"
+                  className="px-3 py-1.5 rounded-lg bg-white text-sky-800 border border-sky-200 font-bold hover:bg-sky-50 transition flex items-center gap-1 text-xs"
                 >
                   <PhoneCall className="w-3.5 h-3.5" /> 1064
                 </a>
               </div>
 
-              <div className="p-4 rounded-xl bg-slate-800/90 border border-slate-700 flex items-center justify-between">
+              <div className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-between">
                 <div>
-                  <div className="font-bold text-white text-xs">{isHindi ? 'MSME समाधान व लोकपाल' : 'MSME Samadhaan & Ombudsman'}</div>
-                  <div className="text-[11px] text-slate-400">{isHindi ? 'एमएसएमई उद्यमियों की सीधी सहायता' : 'Direct entrepreneur grievance assistance'}</div>
+                  <div className="font-bold text-[#173B57] text-xs">{isHindi ? 'MSME समाधान व लोकपाल' : 'MSME Samadhaan & Ombudsman'}</div>
+                  <div className="text-[11px] text-slate-500">{isHindi ? 'एमएसएमई उद्यमियों की सीधी सहायता' : 'Direct entrepreneur grievance assistance'}</div>
                 </div>
                 <a
                   href="tel:14448"
-                  className="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 font-bold hover:bg-emerald-500/30 transition flex items-center gap-1"
+                  className="px-3 py-1.5 rounded-lg bg-white text-[#0F766E] border border-[#14B8A6]/40 font-bold hover:bg-[#F0FDFA] transition flex items-center gap-1 text-xs"
                 >
                   <PhoneCall className="w-3.5 h-3.5" /> 14448
                 </a>
@@ -222,22 +223,22 @@ Kindly initiate swift investigation and appropriate legal action under the Preve
           </div>
 
           {/* Quick Copy Complaint Template */}
-          <div className="p-4 rounded-2xl bg-slate-800/50 border border-slate-700 space-y-2">
+          <div className="p-4 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-2">
             <div className="flex items-center justify-between">
-              <span className="font-bold text-slate-300 text-xs flex items-center gap-1.5">
-                <FileText className="w-4 h-4 text-emerald-400" />
+              <span className="font-bold text-[#173B57] text-xs flex items-center gap-1.5">
+                <FileText className="w-4 h-4 text-[#0F766E]" />
                 <span>{isHindi ? 'तैयार शिकायत प्रारूप (Copyable Complaint Text):' : 'Copyable Complaint Template:'}</span>
               </span>
               <button
                 type="button"
                 onClick={handleCopy}
-                className="px-2.5 py-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold text-[11px] transition flex items-center gap-1 active:scale-95"
+                className="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-[#173B57] border border-[#CBD5E1] font-bold text-xs transition flex items-center gap-1.5 shadow-2xs"
               >
-                {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                {copied ? <Check className="w-3.5 h-3.5 text-[#0F766E]" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
                 <span>{copied ? (isHindi ? 'कॉपी हो गया' : 'Copied!') : (isHindi ? 'कॉपी करें' : 'Copy Text')}</span>
               </button>
             </div>
-            <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-[11px] text-slate-300 font-mono whitespace-pre-line select-text leading-relaxed">
+            <div className="p-3.5 rounded-xl bg-white border border-[#CBD5E1] text-[11px] text-[#173B57] font-mono whitespace-pre-line select-text leading-relaxed">
               {complaintTemplate}
             </div>
           </div>
@@ -245,11 +246,11 @@ Kindly initiate swift investigation and appropriate legal action under the Preve
         </div>
 
         {/* Footer */}
-        <div className="p-4 sm:p-5 bg-slate-950 border-t border-slate-800 flex justify-end">
+        <div className="p-4 sm:p-5 bg-[#F8FAFC] border-t border-[#E2E8F0] flex justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs transition active:scale-95"
+            className="ys-btn-secondary"
           >
             {isHindi ? 'सुरक्षित समझें • बंद करें' : 'Got It • Close'}
           </button>

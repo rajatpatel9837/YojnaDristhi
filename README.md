@@ -1,5 +1,4 @@
 # 🇮🇳 YojnaSetu AI — Smart Government Scheme & Financial Matching Platform
-> **Smart India Hackathon (SIH) Problem Statement 26092**  
 > *Tagline: Discover. Apply. Track.*
 
 **YojnaSetu AI** (योजना दृष्टि) is an AI-driven Indian public welfare and financial enablement platform designed to eliminate information asymmetry, empower poor, rural, and illiterate citizens, and connect beneficiaries to central & state government schemes, subsidies, and credit opportunities.
@@ -8,7 +7,7 @@
 
 ## 🏛️ System Architecture & What's Real vs Mocked
 
-In compliance with hackathon guidelines, here is the transparent breakdown of our engineering implementation:
+Here is the transparent breakdown of our engineering implementation:
 
 ### 1. What's 100% Real
 * **Real MongoDB Persistence Layer**: Authoritative MongoDB models for `User`, `EntrepreneurProfile`, `StudentProfile`, `Scheme`, `Scholarship`, `Application`, `AuditLog`, `Organization`, and `ChannelPartner`.
@@ -124,4 +123,4 @@ Open **[http://localhost:5173](http://localhost:5173)** in your browser.
 ---
 
 ## 📄 License
-Developed for Smart India Hackathon (SIH 2026). Licensed under the MIT License.
+Licensed under the MIT License.

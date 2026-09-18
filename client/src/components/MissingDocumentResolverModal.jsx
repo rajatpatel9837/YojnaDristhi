@@ -58,21 +58,21 @@ export default function MissingDocumentResolverModal({
   const docRequired = isHindi ? (doc.requiredDocs_hi || []) : (doc.requiredDocs_en || doc.requiredDocs_hi || []);
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="ys-modal-overlay animate-fadeIn">
+      <div className="ys-modal-dialog max-w-2xl">
         
         {/* Header Bar */}
-        <div className="bg-gradient-to-r from-amber-700 via-amber-800 to-amber-900 text-white p-5 flex items-start justify-between gap-3">
+        <div className="ys-modal-header">
           <div className="space-y-1">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/30 text-amber-200 text-[10px] font-extrabold uppercase tracking-wider border border-amber-400/30">
-              <Sparkles className="w-3 h-3 text-amber-300" />
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FEF3C7] text-[#92400E] text-[10px] font-extrabold uppercase tracking-wider border border-[#F59E0B]/30">
+              <Sparkles className="w-3 h-3 text-amber-600" />
               <span>{isHindi ? 'कागज़ नहीं है? ऐसे बनवाएं (Gap Solver)' : 'Missing Document? Resolve Here (Gap Solver)'}</span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
+            <h2 className="text-xl sm:text-2xl font-black text-[#173B57] flex items-center gap-2">
               <span>{doc.icon || '📄'}</span>
               <span>{docLabel}</span>
             </h2>
-            <p className="text-xs text-amber-100/90 font-medium">
+            <p className="text-xs text-slate-600 font-medium">
               {isHindi ? 'आधिकारिक सरकारी प्रक्रिया, न्यूनतम फीस और डायरेक्ट पोर्टल लिंक' : 'Official government procedure, minimal statutory fees, and direct portal links'}
             </p>
           </div>
@@ -80,7 +80,7 @@ export default function MissingDocumentResolverModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-xl text-amber-200 hover:text-white hover:bg-amber-800/80 transition"
+            className="p-2 rounded-xl text-slate-400 hover:text-[#173B57] hover:bg-slate-100 transition shrink-0"
             title={isHindi ? 'बंद करें' : 'Close'}
           >
             <X className="w-5 h-5" />
@@ -187,14 +187,14 @@ export default function MissingDocumentResolverModal({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="p-4 bg-[#F8FAFC] border-t border-[#E2E8F0] flex flex-wrap items-center justify-between gap-3 text-xs">
           <button
             type="button"
             onClick={() => {
               onClose();
               if (onViewCSCMap) onViewCSCMap();
             }}
-            className="px-4 py-2.5 rounded-xl bg-[#0F766E] hover:bg-[#115E59] text-white font-bold transition flex items-center gap-2 shadow-sm"
+            className="ys-btn-primary"
           >
             <MapPin className="w-4 h-4" />
             <span>{isHindi ? '🗺️ नज़दीकी सीएससी / बैंक शाखा देखें' : '🗺️ Locate Nearby CSC / Bank Branch'}</span>
@@ -203,7 +203,7 @@ export default function MissingDocumentResolverModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-bold border border-slate-300 transition"
+            className="ys-btn-secondary"
           >
             {isHindi ? 'बंद करें' : 'Close'}
           </button>

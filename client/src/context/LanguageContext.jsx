@@ -2,8 +2,12 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import en from '../i18n/en.json';
 import hi from '../i18n/hi.json';
 import pa from '../i18n/pa.json';
+import ml from '../i18n/ml.json';
+import te from '../i18n/te.json';
+import ur from '../i18n/ur.json';
 
-const translations = { en, hi, pa };
+const SUPPORTED_LANGS = ['en', 'hi', 'pa', 'ml', 'te', 'ur'];
+const translations = { en, hi, pa, ml, te, ur };
 
 const LanguageContext = createContext();
 
@@ -11,7 +15,7 @@ export const LanguageProvider = ({ children }) => {
   const [currentLang, setCurrentLang] = useState(() => {
     try {
       const saved = localStorage.getItem('ys_lang');
-      if (saved && (saved === 'hi' || saved === 'pa' || saved === 'en')) {
+      if (saved && SUPPORTED_LANGS.includes(saved)) {
         return saved;
       }
     } catch (e) {}
@@ -21,7 +25,7 @@ export const LanguageProvider = ({ children }) => {
   useEffect(() => {
     try {
       localStorage.setItem('ys_lang', currentLang);
-      document.documentElement.lang = currentLang === 'pa' ? 'pa' : currentLang === 'hi' ? 'hi' : 'en';
+      document.documentElement.lang = currentLang;
     } catch (e) {}
   }, [currentLang]);
 

@@ -121,10 +121,10 @@ export default function SchemeParchaaModal({
       <div className="bg-white rounded-3xl shadow-2xl border border-slate-300 w-full max-w-3xl overflow-hidden flex flex-col max-h-[92vh] print:max-h-none print:shadow-none print:border-0">
         
         {/* Top Floating Action Bar (Hidden in Print) */}
-        <div className="no-print bg-slate-900 text-white px-5 py-3 flex items-center justify-between border-b border-slate-800">
+        <div className="no-print bg-[#173B57] text-white px-5 py-3 flex items-center justify-between border-b border-[#115E59]/40">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-            <span className="text-xs font-bold tracking-wide text-emerald-400">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#14B8A6] animate-pulse" />
+            <span className="text-xs font-bold tracking-wide text-white">
               योजना पर्चा जनरेटर (Official Citizen Handout)
             </span>
           </div>
@@ -133,17 +133,17 @@ export default function SchemeParchaaModal({
             <button
               type="button"
               onClick={handleWhatsAppShare}
-              className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95"
+              className="ys-btn-secondary text-xs py-1.5 px-3 min-h-[36px]"
               title="व्हाट्सएप पर शेयर करें"
             >
-              <Share2 className="w-3.5 h-3.5" />
+              <Share2 className="w-3.5 h-3.5 text-[#0F766E]" />
               <span className="hidden sm:inline">व्हाट्सएप पर भेजें</span>
             </button>
 
             <button
               type="button"
               onClick={handlePrint}
-              className="px-3.5 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95"
+              className="ys-btn-primary text-xs py-1.5 px-3.5 min-h-[36px]"
               title="पर्चा प्रिंट करें या PDF सहेजें"
             >
               <Printer className="w-3.5 h-3.5" />
@@ -153,7 +153,7 @@ export default function SchemeParchaaModal({
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition"
+              className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition"
               title="बंद करें"
             >
               <X className="w-5 h-5" />

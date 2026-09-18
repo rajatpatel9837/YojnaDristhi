@@ -36,11 +36,11 @@ export default function App() {
       <LanguageProvider>
         <VoiceProvider>
           <Router>
-            <div className="min-h-screen flex flex-col bg-[#F7FAFA] text-[#173B57] selection:bg-[#0F766E] selection:text-white font-sans">
+            <div className="min-h-screen flex flex-col bg-[#F7FAFA] text-[#173B57] selection:bg-[#0F766E] selection:text-white font-sans overflow-x-hidden w-full max-w-full">
               
               <Navbar onOpenAiModal={() => setIsAiModalOpen(true)} />
 
-              <main className="flex-1">
+              <main className="flex-1 w-full max-w-full overflow-x-hidden">
                 <Routes>
                   <Route path="/" element={<LandingPage onOpenAiModal={() => setIsAiModalOpen(true)} />} />
                   <Route path="/wizard" element={<EntrepreneurWizard />} />

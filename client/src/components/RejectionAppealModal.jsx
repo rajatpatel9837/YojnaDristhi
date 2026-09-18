@@ -179,7 +179,7 @@ Copy forwarded for necessary information & intervention to:
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 print:p-0 print:bg-white print:static animate-fadeIn">
+    <div className="ys-modal-overlay print:p-0 print:bg-white print:static animate-fadeIn">
       
       {/* Print isolation styles */}
       <style>{`
@@ -210,19 +210,19 @@ Copy forwarded for necessary information & intervention to:
         }
       `}</style>
 
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[92vh] text-slate-100 print:max-h-none print:shadow-none print:border-0">
+      <div className="ys-modal-dialog max-w-4xl print:max-h-none print:shadow-none print:border-0">
         
         {/* Header Bar */}
-        <div className="no-print bg-gradient-to-r from-rose-900 via-slate-900 to-slate-950 p-5 sm:p-6 border-b border-rose-500/20 flex items-start justify-between gap-3">
+        <div className="no-print ys-modal-header">
           <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 text-xs font-black uppercase tracking-wider border border-rose-400/30">
-              <Scale className="w-3.5 h-3.5 text-rose-400" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-700 text-xs font-bold uppercase tracking-wider border border-rose-200">
+              <Scale className="w-3.5 h-3.5 text-rose-600" />
               <span>{isHindi ? 'AI Rejection Reverser • विधिक अपील जनरेटर' : 'AI Rejection Reverser • Legal Appeal Generator'}</span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
+            <h2 className="text-xl sm:text-2xl font-black text-[#173B57] flex items-center gap-2">
               <span>{isHindi ? '⚖️ बैंक ऋण अस्वीकृति / विलंब अपील पत्र' : '⚖️ Bank Loan Denial & Delay Appeal Notice'}</span>
             </h2>
-            <p className="text-xs text-slate-300 max-w-xl leading-relaxed">
+            <p className="text-xs text-slate-600 max-w-xl leading-relaxed">
               {isHindi
                 ? 'अगर बैंक मैनेजर ने आपका लोन बिना लिखित कारण के मना किया या ज़मीन मांगी है, तो यह 1-क्लिक में आधिकारिक कानूनी नोटिस तैयार करता है।'
                 : 'If a bank manager rejected your loan without written justification or demanded collateral, generate an official legal notice in 1-click.'}
@@ -232,23 +232,24 @@ Copy forwarded for necessary information & intervention to:
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition active:scale-95 shrink-0"
+            className="p-2 rounded-xl text-slate-400 hover:text-[#173B57] hover:bg-slate-100 transition shrink-0"
+            aria-label="Close"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Scrollable Content */}
-        <div className="p-5 sm:p-6 overflow-y-auto space-y-6 text-xs">
+        <div className="p-5 sm:p-6 overflow-y-auto space-y-6 text-xs text-[#173B57]">
           
           {/* Step 1: Select Bank Excuse */}
           <div className="no-print space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-                <AlertTriangle className="w-4 h-4 text-amber-400" />
+              <h3 className="text-xs font-bold text-[#173B57] uppercase tracking-wider flex items-center gap-1.5">
+                <AlertTriangle className="w-4 h-4 text-amber-500" />
                 <span>{isHindi ? 'चरण 1: बैंक मैनेजर ने क्या बहाना बनाया? (कारण चुनें)' : 'Step 1: What excuse did the bank give?'}</span>
               </h3>
-              <span className="text-[11px] text-slate-400">{isHindi ? 'आरबीआई नियम स्वतः शामिल होंगे' : 'RBI rules cited automatically'}</span>
+              <span className="text-[11px] text-slate-500">{isHindi ? 'आरबीआई नियम स्वतः शामिल होंगे' : 'RBI rules cited automatically'}</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -259,51 +260,51 @@ Copy forwarded for necessary information & intervention to:
                   onClick={() => setSelectedExcuse(excuse.id)}
                   className={`p-3.5 rounded-xl border text-left transition flex flex-col justify-between gap-1.5 ${
                     selectedExcuse === excuse.id
-                      ? 'bg-rose-950/40 border-rose-500 text-white ring-1 ring-rose-500'
-                      : 'bg-slate-800/60 border-slate-700/80 hover:border-slate-600 text-slate-300'
+                      ? 'bg-[#F0FDFA] border-[#0F766E] text-[#115E59] shadow-xs'
+                      : 'bg-white border-[#E2E8F0] hover:border-[#CBD5E1] text-[#173B57]'
                   }`}
                 >
                   <div className="font-bold text-sm flex items-center justify-between">
                     <span>{excuse.title}</span>
                     {selectedExcuse === excuse.id && (
-                      <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                      <span className="w-2 h-2 rounded-full bg-[#0F766E]" />
                     )}
                   </div>
-                  <p className="text-[11px] text-slate-400 line-clamp-2">{excuse.desc}</p>
+                  <p className="text-[11px] text-slate-600 line-clamp-2">{excuse.desc}</p>
                 </button>
               ))}
             </div>
           </div>
 
           {/* Step 2: Quick Bank Inputs */}
-          <div className="no-print p-4 rounded-2xl bg-slate-800/50 border border-slate-700/70 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="no-print p-4 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="text-[10px] text-slate-400 font-bold uppercase">{isHindi ? 'बैंक का नाम' : 'Bank Name'}</label>
+              <label className="text-[11px] text-[#173B57] font-bold block mb-1">{isHindi ? 'बैंक का नाम' : 'Bank Name'}</label>
               <input
                 type="text"
                 value={bankName}
                 onChange={(e) => setBankName(e.target.value)}
-                className="mt-1 w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-rose-500"
+                className="ys-input"
                 placeholder={isHindi ? "उदा. State Bank of India" : "e.g. State Bank of India"}
               />
             </div>
             <div>
-              <label className="text-[10px] text-slate-400 font-bold uppercase">{isHindi ? 'शाखा / शाखा पता' : 'Branch Address'}</label>
+              <label className="text-[11px] text-[#173B57] font-bold block mb-1">{isHindi ? 'शाखा / शाखा पता' : 'Branch Address'}</label>
               <input
                 type="text"
                 value={branchAddress}
                 onChange={(e) => setBranchAddress(e.target.value)}
-                className="mt-1 w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-rose-500"
+                className="ys-input"
                 placeholder={isHindi ? "उदा. गांधी मैदान शाखा, पटना" : "e.g. Main Branch, Patna"}
               />
             </div>
             <div>
-              <label className="text-[10px] text-slate-400 font-bold uppercase">{isHindi ? 'आवेदन / पावती संख्या' : 'Application Ref'}</label>
+              <label className="text-[11px] text-[#173B57] font-bold block mb-1">{isHindi ? 'आवेदन / पावती संख्या' : 'Application Ref'}</label>
               <input
                 type="text"
                 value={applicationRef}
                 onChange={(e) => setApplicationRef(e.target.value)}
-                className="mt-1 w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-rose-500"
+                className="ys-input"
                 placeholder="PMEGP-2026-98124"
               />
             </div>
@@ -312,8 +313,8 @@ Copy forwarded for necessary information & intervention to:
           {/* Step 3: Generated Formal Legal Notice Preview */}
           <div className="space-y-2">
             <div className="no-print flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-200">
-                <FileText className="w-4 h-4 text-emerald-400" />
+              <div className="flex items-center gap-2 text-xs font-bold text-[#173B57]">
+                <FileText className="w-4 h-4 text-[#0F766E]" />
                 <span>{isHindi ? 'तैयार विधिक अभ्यावेदन पत्र (Legal Grievance Letter):' : 'Generated Legal Grievance Letter:'}</span>
               </div>
 
@@ -321,16 +322,16 @@ Copy forwarded for necessary information & intervention to:
                 <button
                   type="button"
                   onClick={handleCopy}
-                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition flex items-center gap-1.5 border border-slate-700 active:scale-95"
+                  className="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-[#173B57] font-bold text-xs transition flex items-center gap-1.5 border border-[#CBD5E1] shadow-2xs"
                 >
-                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copied ? <Check className="w-3.5 h-3.5 text-[#0F766E]" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
                   <span>{copied ? (isHindi ? 'कॉपी हो गया!' : 'Copied!') : (isHindi ? 'पत्र कॉपी करें' : 'Copy Notice')}</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handlePrint}
-                  className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-sm active:scale-95"
+                  className="px-3 py-1.5 rounded-lg bg-[#0F766E] hover:bg-[#115E59] text-white font-bold text-xs transition flex items-center gap-1.5 shadow-2xs"
                 >
                   <Printer className="w-3.5 h-3.5" />
                   <span>{isHindi ? 'प्रिंट / PDF' : 'Print / PDF'}</span>
@@ -341,22 +342,22 @@ Copy forwarded for necessary information & intervention to:
             {/* The Printable Letter Paper */}
             <div 
               id="printable-appeal-letter"
-              className="p-6 sm:p-8 rounded-2xl bg-white text-slate-900 shadow-inner border border-slate-300 font-serif leading-relaxed whitespace-pre-line text-xs sm:text-sm select-text"
+              className="p-6 sm:p-8 rounded-xl bg-white text-slate-900 shadow-2xs border border-[#CBD5E1] font-serif leading-relaxed whitespace-pre-line text-xs sm:text-sm select-text"
             >
               {fullLetterText}
             </div>
           </div>
 
           {/* Legal Escalation Hotlines */}
-          <div className="no-print p-4 rounded-2xl bg-slate-800/40 border border-slate-700/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-300 text-xs">
+          <div className="no-print p-4 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-600 text-xs">
             <div className="flex items-center gap-2">
-              <PhoneCall className="w-4 h-4 text-emerald-400 shrink-0" />
+              <PhoneCall className="w-4 h-4 text-[#0F766E] shrink-0" />
               <span>{isHindi ? 'अगर बैंक फिर भी न सुने, तो सीधे रिज़र्व बैंक लोकपाल को कॉल करें:' : 'If the bank still stalls, escalate to RBI Banking Ombudsman:'}</span>
             </div>
             <div className="flex items-center gap-2">
               <a
                 href="tel:14448"
-                className="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 font-bold hover:bg-emerald-500/30 transition flex items-center gap-1"
+                className="px-3 py-1.5 rounded-lg bg-white text-[#0F766E] border border-[#14B8A6]/40 font-bold hover:bg-[#F0FDFA] transition flex items-center gap-1"
               >
                 <span>📞 RBI Ombudsman: 14448</span>
               </a>
@@ -364,7 +365,7 @@ Copy forwarded for necessary information & intervention to:
                 href="https://cms.rbi.org.in"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-3 py-1.5 rounded-lg bg-sky-500/20 text-sky-300 border border-sky-400/30 font-bold hover:bg-sky-500/30 transition flex items-center gap-1"
+                className="px-3 py-1.5 rounded-lg bg-white text-[#0369A1] border border-[#38BDF8]/40 font-bold hover:bg-[#F0F9FF] transition flex items-center gap-1"
               >
                 <span>CMS Portal ↗</span>
               </a>
@@ -374,18 +375,18 @@ Copy forwarded for necessary information & intervention to:
         </div>
 
         {/* Footer */}
-        <div className="no-print p-4 sm:p-5 bg-slate-950 border-t border-slate-800 flex justify-end gap-2">
+        <div className="no-print p-4 sm:p-5 bg-[#F8FAFC] border-t border-[#E2E8F0] flex justify-end gap-2.5">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition"
+            className="ys-btn-secondary"
           >
             {isHindi ? 'बंद करें' : 'Close'}
           </button>
           <button
             type="button"
             onClick={handlePrint}
-            className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs shadow-md transition flex items-center gap-2 active:scale-95"
+            className="ys-btn-primary"
           >
             <Printer className="w-4 h-4" />
             <span>{isHindi ? 'पत्र प्रिंट / PDF डाउनलोड करें' : 'Print / Save PDF Notice'}</span>

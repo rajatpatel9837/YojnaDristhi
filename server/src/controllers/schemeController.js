@@ -345,4 +345,85 @@ const getSchemeBySlug = async (req, res) => {
   }
 };
 
-module.exports = { matchSchemes, getAllSchemes, getSchemeBySlug };
+/**
+ * Live Dynamic Scheme Statistics
+ * Computes live counts from real active schemes
+ */
+const getSchemeStats = async (req, res) => {
+  try {
+    const schemes = await getActiveSchemes();
+    const totalSchemes = schemes.length;
+    const centralSchemes = schemes.filter(s => s.sourceType === 'Central Government').length;
+    const stateSchemes = schemes.filter(s => s.sourceType === 'State Government').length;
+    const categoriesSet = new Set(schemes.map(s => s.category).filter(Boolean));
+    const categoriesCount = categoriesSet.size;
+    const verifiedCount = schemes.filter(s => s.verificationStatus === 'OFFICIAL_GOVERNMENT_SCHEME' || s.verificationStatus === 'VERIFIED').length;
+    const statesSet = new Set();
+    schemes.forEach(s => {
+      if (Array.isArray(s.states)) {
+        s.states.forEach(st => {
+          if (st && st !== 'All') statesSet.add(st);
+        });
+      }
+    });
+
+    res.json({
+      success: true,
+      data: {
+        totalSchemes,
+        centralSchemes,
+        stateSchemes,
+        categoriesCount,
+        verifiedCount,
+        statesCovered: statesSet.size > 0 ? statesSet.size : 28
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * Generic Search & Autocomplete by Name/Keyword
+ * Returns maximum 5 suggestions with clean overview fields
+ */
+const searchSchemesByName = async (req, res) => {
+  try {
+    const q = (req.query.q || '').toLowerCase().trim();
+    const limit = Math.min(parseInt(req.query.limit) || 5, 10);
+
+    if (!q) {
+      return res.json({ success: true, count: 0, data: [] });
+    }
+
+    const schemes = await getActiveSchemes();
+    const matches = schemes.filter(s => {
+      const name = (s.name || '').toLowerCase();
+      const provider = (s.provider || '').toLowerCase();
+      const category = (s.category || '').toLowerCase();
+      const desc = (s.description || '').toLowerCase();
+      return name.includes(q) || provider.includes(q) || category.includes(q) || desc.includes(q);
+    }).slice(0, limit);
+
+    const data = matches.map(s => ({
+      _id: s._id,
+      id: s._id,
+      slug: s.slug,
+      name: s.name,
+      provider: s.provider,
+      category: s.category,
+      benefit: s.maximumSupport 
+        ? `Up to ₹${(s.maximumSupport / 100000).toFixed(1)} Lakh` 
+        : (s.subsidyPercentage ? `${s.subsidyPercentage}% Subsidy` : 'Financial Support'),
+      maximumSupport: s.maximumSupport,
+      subsidyPercentage: s.subsidyPercentage,
+      sourceType: s.sourceType
+    }));
+
+    res.json({ success: true, count: data.length, data });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+module.exports = { matchSchemes, getAllSchemes, getSchemeBySlug, getSchemeStats, searchSchemesByName };

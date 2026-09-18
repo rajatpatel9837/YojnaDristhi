@@ -1,7 +1,7 @@
 {
   "name": "yojnasetu-ai",
   "version": "1.0.0",
-  "description": "AI-Driven Scheme Matching & Financial Opportunity Platform (SIH Problem ID: SIH26092)",
+  "description": "AI-Driven Scheme Matching & Financial Opportunity Platform",
   "main": "server/src/server.js",
   "scripts": {
     "dev": "node scripts/dev.js",

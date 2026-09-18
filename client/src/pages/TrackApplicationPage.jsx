@@ -131,9 +131,9 @@ export default function TrackApplicationPage() {
         <div className="flex items-center gap-3 shrink-0">
           <button
             onClick={() => setShowOfficerModal(true)}
-            className="px-4 py-2.5 rounded-xl bg-[#F59E0B] hover:bg-[#D97706] text-white font-bold text-xs shadow-sm transition flex items-center gap-2"
+            className="ys-btn-secondary text-xs min-h-[40px]"
           >
-            <Sliders className="w-4 h-4" />
+            <Sliders className="w-4 h-4 text-[#0F766E]" />
             <span>{isHindi ? 'अधिकारी पोर्टल मोड (स्थिति बदलें)' : 'Officer Portal Mode (Update Status)'}</span>
           </button>
         </div>
@@ -306,14 +306,14 @@ export default function TrackApplicationPage() {
                 <button
                   type="button"
                   onClick={() => setShowOfficerModal(false)}
-                  className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-[#173B57] font-bold"
+                  className="ys-btn-secondary text-xs min-h-[40px]"
                 >
                   {isHindi ? 'रद्द करें' : 'Cancel'}
                 </button>
                 <button
                   type="submit"
                   disabled={updating}
-                  className="px-5 py-2 rounded-lg bg-[#0F766E] hover:bg-[#115E59] text-white font-bold shadow-sm disabled:opacity-50"
+                  className="ys-btn-primary text-xs min-h-[40px]"
                 >
                   {updating ? (isHindi ? 'अपडेट हो रहा है...' : 'Updating...') : (isHindi ? 'स्थिति अपडेट करें' : 'Update Status')}
                 </button>
